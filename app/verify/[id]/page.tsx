@@ -17,6 +17,13 @@ export default async function VerifyPage({ params }: { params: { id: string } })
             <XCircle className="w-16 h-16 text-rose-500" />
             <h1 className="text-2xl font-bold text-gray-900">Invalid ID Card</h1>
             <p className="text-gray-500">This QR code does not match any registered volunteer in our system. It may be forged or deleted.</p>
+            {error && (
+              <div className="mt-4 p-3 bg-red-50 text-red-600 text-xs rounded border border-red-200 break-all w-full text-left">
+                <strong>Debug Error:</strong> {error.message || JSON.stringify(error)}
+                <br/>
+                <strong>ID:</strong> {params.id}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
