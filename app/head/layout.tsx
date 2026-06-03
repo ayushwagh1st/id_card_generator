@@ -12,7 +12,7 @@ export default function HeadLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-muted/20 overflow-hidden">
+    <div className="flex h-screen bg-gradient-to-tr from-cyan-50 via-yellow-50 to-pink-50 overflow-hidden font-sans">
       {/* Desktop Sidebar (Fixed Left) */}
       <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-30">
         <Sidebar role="MODEL_HEAD" />

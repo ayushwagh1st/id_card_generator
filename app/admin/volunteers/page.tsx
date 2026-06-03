@@ -20,6 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, UploadCloud, Loader2, ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
@@ -60,6 +61,7 @@ export default function VolunteersPage() {
   const [branch, setBranch] = useState('')
   const [remarks, setRemarks] = useState('')
   const [photoUrl, setPhotoUrl] = useState('')
+  const [accommodation, setAccommodation] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   const supabase = createClient()
@@ -112,6 +114,7 @@ export default function VolunteersPage() {
         model_id: modelId === 'none' ? null : modelId,
         role,
         branch,
+        accommodation,
         designation: role,
         remarks,
         photo_url: photoUrl || null,
@@ -124,7 +127,7 @@ export default function VolunteersPage() {
       toast.success('Volunteer added successfully')
       setIsAddOpen(false)
       // Reset
-      setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer');
+      setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer'); setAccommodation(false);
       
       fetchVolunteers()
     } catch (err: any) {
@@ -143,6 +146,7 @@ export default function VolunteersPage() {
     setModelId(vol.model_id || 'none')
     setRole(vol.role || 'Volunteer')
     setBranch(vol.branch || '')
+    setAccommodation(vol.accommodation || false)
     setRemarks(vol.remarks || '')
     setPhotoUrl(vol.photo_url || '')
     setIsEditOpen(true)
@@ -163,6 +167,7 @@ export default function VolunteersPage() {
         model_id: modelId === 'none' ? null : modelId,
         role,
         branch,
+        accommodation,
         designation: role,
         remarks,
         photo_url: photoUrl || null
@@ -431,12 +436,12 @@ export default function VolunteersPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-4">
+                    <div className="grid grid-cols-4 gap-4 items-end">
                       <div className="space-y-1">
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
                         <Input value={branch} onChange={e => setBranch(e.target.value)} />
                       </div>
-                      <div className="space-y-1 col-span-3">
+                      <div className="space-y-1 col-span-2">
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
                         <Select value={modelId} onValueChange={(val) => setModelId(val || 'none')}>
                           <SelectTrigger>
@@ -449,6 +454,10 @@ export default function VolunteersPage() {
                             ))}
                           </SelectContent>
                         </Select>
+                      </div>
+                      <div className="flex items-center justify-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm">
+                        <Checkbox id="add-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} />
+                        <Label htmlFor="add-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
                       </div>
                     </div>
 
@@ -530,7 +539,7 @@ export default function VolunteersPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-4 gap-4 items-end">
                   <div className="space-y-1">
                     <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
                     <Input value={branch} onChange={e => setBranch(e.target.value)} />
@@ -548,6 +557,10 @@ export default function VolunteersPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="flex items-center justify-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm">
+                    <Checkbox id="edit-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} />
+                    <Label htmlFor="edit-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
                   </div>
                 </div>
 

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Users, Database, FileText, BarChart, LogOut, Printer, Shield, X } from 'lucide-react'
+import { Tent, Users, Database, FileText, BarChart, LogOut, Printer, Shield, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -51,9 +51,11 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
   return (
     <div className="flex h-screen w-full flex-col border-r bg-card shadow-sm">
       <div className="flex h-16 items-center justify-between border-b px-6">
-        <div className="flex items-center gap-2 font-bold text-xl text-primary tracking-tight">
-          <Users className="h-6 w-6" />
-          <span>VolunTrack</span>
+        <div className="flex items-center gap-2 font-black text-[17px] tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-orange-400">
+          <div className="bg-gradient-to-tr from-pink-500 to-orange-400 p-1.5 rounded shadow-sm">
+            <Tent className="h-4 w-4 text-white" />
+          </div>
+          <span>Bal Pradarshani</span>
         </div>
         {closeMobileMenu && (
           <button 
@@ -78,8 +80,8 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:scale-[1.01]",
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-md font-semibold"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-md font-bold"
+                    : "text-muted-foreground hover:bg-pink-50 hover:text-pink-600"
                 )}
               >
                 <Icon className="h-4 w-4" />

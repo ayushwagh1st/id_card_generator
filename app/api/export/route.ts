@@ -48,6 +48,7 @@ export async function GET(request: Request) {
         address,
         models:model_id (name),
         branch,
+        accommodation,
         designation,
         status,
         created_at
@@ -94,7 +95,7 @@ export async function GET(request: Request) {
     // Build CSV
     const headers = [
       'SNK ID', 'Full Name', 'Mobile Number', 'Gender', 'Age', 
-      'Address', 'Model/Division', 'Branch', 'Duty/Designation', 'Status', 'Registered Date'
+      'Address', 'Model/Division', 'Branch', 'Accommodation', 'Duty/Designation', 'Status', 'Registered Date'
     ]
     
     const rows = data.map(v => {
@@ -111,6 +112,7 @@ export async function GET(request: Request) {
         `"${(v.address || '').replace(/"/g, '""')}"`,
         `"${modelName}"`,
         `"${(v.branch || '').replace(/"/g, '""')}"`,
+        `"${v.accommodation ? 'Yes' : 'No'}"`,
         `"${(v.designation || '').replace(/"/g, '""')}"`,
         `"${v.status || ''}"`,
         `"${dateStr}"`

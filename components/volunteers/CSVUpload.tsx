@@ -95,6 +95,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
               role: row['Role'] || row['Designation'] || 'Volunteer',
               designation: row['Role'] || row['Designation'] || 'Volunteer',
               branch: row['Branch'] || '',
+              accommodation: ['yes', 'true', '1'].includes(String(row['Accommodation'] || '').toLowerCase().trim()),
               remarks: row['Remarks'] || '',
               status: 'Pending',
               model_id: matchedModelId,
@@ -213,6 +214,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
                       <TableHead className="text-xs">Mobile</TableHead>
                       <TableHead className="text-xs">Model Area</TableHead>
                       <TableHead className="font-bold text-xs uppercase text-muted-foreground min-w-[100px]">Branch</TableHead>
+                      <TableHead className="font-bold text-xs uppercase text-muted-foreground min-w-[80px]">Accomm.</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -222,6 +224,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
                         <TableCell className="text-xs">{row.mobile_number}</TableCell>
                         <TableCell className="text-xs">{row.original_model_name || 'None'}</TableCell>
                         <TableCell className="text-xs">{row.branch}</TableCell>
+                        <TableCell className="text-xs font-semibold">{row.accommodation ? 'Yes' : 'No'}</TableCell>
                         <TableCell className="text-xs text-emerald-600 font-semibold">Valid</TableCell>
                       </TableRow>
                     ))}

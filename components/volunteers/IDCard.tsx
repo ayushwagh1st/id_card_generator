@@ -11,6 +11,7 @@ interface IDCardProps {
     headName?: string
     role: string
     photoUrl?: string
+    accommodation?: boolean
     emergencyContact: string
   }
   size?: 'standard' | 'large'
@@ -29,7 +30,8 @@ export function IDCard({ volunteer, size = 'standard', side = 'front' }: IDCardP
   })
 
   // Verification URL for back QR
-  const verifyUrl = `https://samagam2027.example.com/verify/${volunteer.id}`
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://balpradershaniidportal.vercel.app'
+  const verifyUrl = `${baseUrl}/verify/${volunteer.id}`
 
   const dims = size === 'standard' 
     ? { width: '54mm', height: '86mm', photo: { w: '30mm', h: '35mm' }, qr: 36 } 
@@ -56,6 +58,13 @@ export function IDCard({ volunteer, size = 'standard', side = 'front' }: IDCardP
   if (side === 'front') {
     return (
       <CardWrapper>
+        {/* Accommodation Indicator (Top Right Edge) */}
+        <div 
+          className={`absolute top-[20mm] right-0 w-[3mm] h-[6mm] rounded-l-full z-40 border border-r-0 border-white/50 shadow-sm ${
+            volunteer.accommodation ? 'bg-green-500' : 'bg-red-500'
+          }`} 
+        />
+
         {/* Left Vertical Red Bar */}
         <div className="absolute left-0 top-0 bottom-0 w-[12mm] bg-[#EF4444] flex items-center justify-center z-20 shadow-[2px_0_4px_rgba(0,0,0,0.15)]">
           <span className="text-white font-black text-[11px] uppercase tracking-widest whitespace-nowrap" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>

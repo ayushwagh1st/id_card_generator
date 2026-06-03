@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, UploadCloud, Loader2, Download } from 'lucide-react'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
@@ -40,6 +41,7 @@ export default function HeadVolunteersPage() {
   const [branch, setBranch] = useState('')
   const [remarks, setRemarks] = useState('')
   const [photoUrl, setPhotoUrl] = useState('')
+  const [accommodation, setAccommodation] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   const supabase = createClient()
@@ -153,7 +155,7 @@ export default function HeadVolunteersPage() {
       toast.success('Volunteer added successfully')
       setIsAddOpen(false)
       // Reset
-      setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer');
+      setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer'); setAccommodation(false);
       
       fetchData()
     } catch (err: any) {
@@ -173,6 +175,7 @@ export default function HeadVolunteersPage() {
     setModelId(vol.model_id)
     setRole(vol.role || 'Volunteer')
     setBranch(vol.branch || '')
+    setAccommodation(vol.accommodation || false)
     setRemarks(vol.remarks || '')
     setPhotoUrl(vol.photo_url || '')
     setIsEditOpen(true)
@@ -443,19 +446,15 @@ export default function HeadVolunteersPage() {
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Role/Duty</Label>
                         <Input value={role} onChange={e => setRole(e.target.value)} />
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-4 items-end">
                       <div className="space-y-1">
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
                         <Input value={branch} onChange={e => setBranch(e.target.value)} />
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact</Label>
-                        <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Assigned Model</Label>
+                      <div className="space-y-1 col-span-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
                         <Select value={modelId} onValueChange={(val) => setModelId(val || '')}>
                           <SelectTrigger>
                             <SelectValue placeholder="Choose Division" />
@@ -467,11 +466,21 @@ export default function HeadVolunteersPage() {
                           </SelectContent>
                         </Select>
                       </div>
+                      <div className="flex items-center justify-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm">
+                        <Checkbox id="add-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} />
+                        <Label htmlFor="add-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
+                      </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
-                      <Input value={address} onChange={e => setAddress(e.target.value)} />
+                    <div className="grid grid-cols-2 gap-4 items-end">
+                      <div className="space-y-1">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact</Label>
+                        <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
+                        <Input value={address} onChange={e => setAddress(e.target.value)} />
+                      </div>
                     </div>
 
                     <div className="space-y-1">
@@ -545,7 +554,7 @@ export default function HeadVolunteersPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4 items-end">
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact</Label>
                       <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
@@ -565,9 +574,16 @@ export default function HeadVolunteersPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
-                    <Input value={address} onChange={e => setAddress(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
+                  <div className="grid grid-cols-2 gap-4 items-end">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
+                      <Input value={address} onChange={e => setAddress(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
+                    </div>
+
+                    <div className="flex items-center justify-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm">
+                      <Checkbox id="edit-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} disabled={currentVolunteer?.status === 'Approved'} />
+                      <Label htmlFor="edit-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
