@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle2, XCircle, AlertTriangle, Building, Users, Phone, Hash } from 'lucide-react'
 import Image from 'next/image'
 
-export default async function VerifyPage({ params }: { params: { id: string } }) {
+export default async function VerifyPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
   const supabase = await createClient()
 
   const { data: volunteer, error } = await supabase
-    .rpc('verify_volunteer', { v_id: params.id })
+    .rpc('verify_volunteer', { v_id: resolvedParams.id })
 
   if (error || !volunteer) {
     return (
@@ -21,7 +22,7 @@ export default async function VerifyPage({ params }: { params: { id: string } })
               <div className="mt-4 p-3 bg-red-50 text-red-600 text-xs rounded border border-red-200 break-all w-full text-left">
                 <strong>Debug Error:</strong> {error.message || JSON.stringify(error)}
                 <br/>
-                <strong>ID:</strong> {params.id}
+                <strong>ID:</strong> {resolvedParams.id}
               </div>
             )}
           </CardContent>

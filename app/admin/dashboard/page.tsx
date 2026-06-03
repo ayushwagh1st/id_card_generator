@@ -98,13 +98,14 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="h-[300px] w-full">
+            <div className="h-[300px] w-full min-h-[300px] min-w-full relative" style={{ minWidth: '100%', minHeight: 300 }}>
               {chartData.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
                   No records to display. Allocate volunteers to see statistics.
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%" minHeight={300} minWidth={100}>
+                <div className="absolute inset-0">
+                  <ResponsiveContainer width="99%" height="100%">
                   <BarChart data={chartData}>
                     <defs>
                       <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
@@ -118,7 +119,8 @@ export default function AdminDashboard() {
                     <Tooltip cursor={{ fill: 'rgba(0, 0, 0, 0.02)' }} />
                     <Bar dataKey="volunteers" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
                   </BarChart>
-                </ResponsiveContainer>
+                  </ResponsiveContainer>
+                </div>
               )}
             </div>
           </CardContent>
