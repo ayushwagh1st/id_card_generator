@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Users, Database, CheckCircle, Clock, Loader2, BarChart2, TrendingUp, Activity } from 'lucide-react'
+import { Users, Database, CheckCircle, Clock, Loader2, BarChart2, TrendingUp, Activity, ScanLine } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
 import { getDashboardStatsAction } from '@/app/actions/dashboard'
+import { QRScannerDialog } from '@/components/QRScannerDialog'
+import { Button } from '@/components/ui/button'
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
@@ -17,6 +19,7 @@ export default function AdminDashboard() {
   })
   const [chartData, setChartData] = useState<any[]>([])
   const [activities, setActivities] = useState<any[]>([])
+  const [scannerOpen, setScannerOpen] = useState(false)
 
   const fetchDashboardData = async () => {
     setLoading(true)
@@ -57,11 +60,21 @@ export default function AdminDashboard() {
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-6 text-white shadow-lg">
         <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight">Super Admin Hub</h1>
-          <p className="text-indigo-100 mt-2 text-sm max-w-xl">
-            Live overview of volunteer networks, approval statistics, and division allocations.
-          </p>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight">Super Admin Hub</h1>
+            <p className="text-indigo-100 mt-2 text-sm max-w-xl">
+              Live overview of volunteer networks, approval statistics, and division allocations.
+            </p>
+          </div>
+          <Button 
+            onClick={() => setScannerOpen(true)}
+            variant="secondary" 
+            className="w-full md:w-auto bg-white/20 hover:bg-white/30 text-white border-0 shadow-sm backdrop-blur-md font-bold"
+          >
+            <ScanLine className="w-4 h-4 mr-2" />
+            Scan ID Card
+          </Button>
         </div>
       </div>
 
@@ -165,6 +178,8 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <QRScannerDialog open={scannerOpen} onOpenChange={setScannerOpen} />
     </div>
   )
 }
