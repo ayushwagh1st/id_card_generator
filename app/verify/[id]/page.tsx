@@ -7,13 +7,7 @@ export default async function VerifyPage({ params }: { params: { id: string } })
   const supabase = await createClient()
 
   const { data: volunteer, error } = await supabase
-    .from('volunteers')
-    .select(`
-      *,
-      models:model_id ( name )
-    `)
-    .eq('id', params.id)
-    .single()
+    .rpc('verify_volunteer', { v_id: params.id })
 
   if (error || !volunteer) {
     return (
