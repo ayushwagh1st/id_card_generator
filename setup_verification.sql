@@ -12,11 +12,6 @@ AS $$
 DECLARE
   res json;
 BEGIN
-  -- Basic UUID format validation to prevent cast errors
-  IF v_id !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
-    RETURN NULL;
-  END IF;
-
   SELECT json_build_object(
     'id', v.id,
     'full_name', v.full_name,
@@ -32,7 +27,7 @@ BEGIN
   INTO res
   FROM volunteers v
   LEFT JOIN models m ON v.model_id = m.id
-  WHERE v.id = v_id::uuid;
+  WHERE v.id::text = v_id OR v.snk_id = v_id;
   
   RETURN res;
 END;
