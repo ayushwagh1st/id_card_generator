@@ -7,9 +7,11 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Plus, Search, Shield, Users, Loader2, Database, Download, Edit, Trash2, KeyRound } from 'lucide-react'
+import { Plus, Search, Shield, Users, Database, Download, Edit, Trash2, KeyRound } from 'lucide-react'
+import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { Skeleton } from '@/components/ui/skeleton'
 import { createModelHeadAction, updateModelHeadAction, resetModelHeadPasswordAction, deleteModelHeadAction } from '../models/actions'
 
 export default function HeadsPage() {
@@ -325,7 +327,7 @@ export default function HeadsPage() {
                 <DialogFooter className="pt-2">
                   <Button type="button" variant="outline" onClick={() => setIsAddHeadOpen(false)}>Cancel</Button>
                   <Button type="submit" disabled={isCreatingHead}>
-                    {isCreatingHead ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Creating...</> : 'Create Account'}
+                    {isCreatingHead ? <><AnimatedLoader className="mr-2 h-4 w-4" /> Creating...</> : 'Create Account'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -351,7 +353,7 @@ export default function HeadsPage() {
                 <DialogFooter className="pt-2">
                   <Button type="button" variant="outline" onClick={() => setIsEditHeadOpen(false)}>Cancel</Button>
                   <Button type="submit" disabled={isUpdating}>
-                    {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : 'Save Changes'}
+                    {isUpdating ? <AnimatedLoader className="h-4 w-4" /> : 'Save Changes'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -373,7 +375,7 @@ export default function HeadsPage() {
                 <DialogFooter className="pt-2">
                   <Button type="button" variant="outline" onClick={() => setIsResetPassOpen(false)}>Cancel</Button>
                   <Button type="submit" disabled={isUpdating}>
-                    {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : 'Reset Password'}
+                    {isUpdating ? <AnimatedLoader className="h-4 w-4" /> : 'Reset Password'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -393,7 +395,7 @@ export default function HeadsPage() {
               <DialogFooter className="pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDeleteOpen(false)}>Cancel</Button>
                 <Button variant="destructive" onClick={handleDeleteHead} disabled={isUpdating}>
-                  {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : 'Yes, Delete Account'}
+                  {isUpdating ? <AnimatedLoader className="h-4 w-4" /> : 'Yes, Delete Account'}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -406,9 +408,31 @@ export default function HeadsPage() {
       <Card className="shadow-lg border-primary/10 overflow-hidden backdrop-blur-md bg-card">
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-sm font-semibold">Loading model head directory...</p>
+            <div className="p-4 space-y-4">
+              <div className="rounded-md border">
+                <div className="border-b px-4 py-3 flex gap-4 bg-muted/40">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-24 ml-auto" />
+                </div>
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="px-4 py-4 flex items-center gap-4 border-b last:border-0">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-6 w-24 rounded-md" />
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                    <div className="flex gap-1.5 ml-auto">
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <Table>

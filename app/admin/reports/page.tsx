@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { FileText, Download, Shield, Database, Calendar, RefreshCw, Loader2 } from 'lucide-react'
+import { FileText, Download, Shield, Database, Calendar, RefreshCw } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { Skeleton } from '@/components/ui/skeleton'
+import { AnimatedLoader } from '@/components/ui/animated-loader'
 
 export default function ReportsPage() {
   const [logs, setLogs] = useState<any[]>([])
@@ -237,7 +239,7 @@ export default function ReportsPage() {
                 disabled={downloading !== null}
                 className="w-full gap-2 rounded-xl"
               >
-                {downloading === 'all-volunteers' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                {downloading === 'all-volunteers' ? <AnimatedLoader className="w-4 h-4" /> : <Download className="w-4 h-4" />}
                 Export All Volunteers
               </Button>
             </div>
@@ -253,7 +255,7 @@ export default function ReportsPage() {
                 variant="secondary" 
                 className="w-full gap-2 rounded-xl"
               >
-                {downloading === 'approved-volunteers' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                {downloading === 'approved-volunteers' ? <AnimatedLoader className="w-4 h-4" /> : <Download className="w-4 h-4" />}
                 Export Approved Only
               </Button>
             </div>
@@ -269,7 +271,7 @@ export default function ReportsPage() {
                 variant="outline" 
                 className="w-full gap-2 rounded-xl"
               >
-                {downloading === 'models' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                {downloading === 'models' ? <AnimatedLoader className="w-4 h-4" /> : <Download className="w-4 h-4" />}
                 Export Model Matrix
               </Button>
             </div>
@@ -284,7 +286,7 @@ export default function ReportsPage() {
                 variant="outline" 
                 className="w-full gap-2 rounded-xl border-purple-500/20 text-purple-650 hover:bg-purple-50/70"
               >
-                {downloading === 'model-heads' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                {downloading === 'model-heads' ? <AnimatedLoader className="w-4 h-4" /> : <Download className="w-4 h-4" />}
                 Export Credentials Matrix
               </Button>
             </div>
@@ -307,9 +309,26 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <p className="text-sm font-semibold">Retrieving audit trace...</p>
+              <div className="p-4 space-y-4">
+                <div className="rounded-md border">
+                  <div className="border-b px-6 py-3 flex gap-4 bg-muted/40">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-full max-w-[200px]" />
+                  </div>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="px-6 py-4 flex items-center gap-4 border-b last:border-0">
+                      <Skeleton className="h-4 w-32" />
+                      <div className="space-y-2 w-40">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-3 w-2/3" />
+                      </div>
+                      <Skeleton className="h-6 w-24 rounded-full" />
+                      <Skeleton className="h-4 w-full max-w-[200px]" />
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : logs.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground text-sm font-semibold">

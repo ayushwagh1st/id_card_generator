@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Tent, Loader2, Mail, Lock, Rocket, Palette, Sparkles, Smile, Star } from 'lucide-react'
+import { Tent, Mail, Lock, Rocket, Palette, Sparkles, Smile, Star } from 'lucide-react'
+import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
@@ -138,7 +139,7 @@ export default function LoginPage() {
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <AnimatedLoader className="w-5 h-5" />
                   Entering...
                 </>
               ) : 'Hop In! 🚀'}

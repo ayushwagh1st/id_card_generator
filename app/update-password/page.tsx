@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Loader2, KeyRound, CheckCircle2, Lock } from 'lucide-react'
+import { KeyRound, CheckCircle2, Lock } from 'lucide-react'
+import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
@@ -93,7 +94,7 @@ export default function UpdatePasswordPage() {
         {isSuccess ? (
           <CardContent className="space-y-4 text-center pb-6">
             <p className="text-sm text-zinc-300">Redirecting to login securely...</p>
-            <Loader2 className="w-6 h-6 animate-spin mx-auto text-emerald-500" />
+            <AnimatedLoader className="w-6 h-6 mx-auto" />
           </CardContent>
         ) : (
           <form onSubmit={handleUpdatePassword}>
@@ -139,7 +140,7 @@ export default function UpdatePasswordPage() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <AnimatedLoader className="w-4 h-4" />
                     Updating...
                   </>
                 ) : 'Update Password'}

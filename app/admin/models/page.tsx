@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Plus, Search, Edit, Trash2, Database, Shield, Layers, HelpCircle, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
@@ -283,9 +284,9 @@ export default function ModelsPage() {
                     <SelectValue placeholder="Select a Model Head" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No Head Assigned</SelectItem>
+                    <SelectItem value="none" label="No Head Assigned">No Head Assigned</SelectItem>
                     {heads.map(h => (
-                      <SelectItem key={h.id} value={h.id}>{h.full_name} ({h.email})</SelectItem>
+                      <SelectItem key={h.id} value={h.id} label={`${h.full_name} (${h.email})`}>{h.full_name} ({h.email})</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -297,8 +298,8 @@ export default function ModelsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
+                    <SelectItem value="Active" label="Active">Active</SelectItem>
+                    <SelectItem value="Inactive" label="Inactive">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -341,9 +342,9 @@ export default function ModelsPage() {
                   <SelectValue placeholder="Select a Model Head" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No Head Assigned</SelectItem>
+                  <SelectItem value="none" label="No Head Assigned">No Head Assigned</SelectItem>
                   {heads.map(h => (
-                    <SelectItem key={h.id} value={h.id}>{h.full_name} ({h.email})</SelectItem>
+                    <SelectItem key={h.id} value={h.id} label={`${h.full_name} (${h.email})`}>{h.full_name} ({h.email})</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -355,8 +356,8 @@ export default function ModelsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Active" label="Active">Active</SelectItem>
+                  <SelectItem value="Inactive" label="Inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -372,9 +373,31 @@ export default function ModelsPage() {
       <Card className="shadow-lg border-primary/10 overflow-hidden backdrop-blur-md bg-card">
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-sm font-semibold">Loading model records...</p>
+            <div className="p-4 space-y-4">
+              <div className="rounded-md border">
+                <div className="border-b px-4 py-3 flex gap-4 bg-muted/40">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-16 ml-auto" />
+                </div>
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="px-4 py-4 flex items-center gap-4 border-b last:border-0">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-4 w-24" />
+                    <div className="space-y-2 w-48">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-40" />
+                    </div>
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <div className="flex gap-1.5 ml-auto">
+                      <Skeleton className="h-8 w-8 rounded-xl" />
+                      <Skeleton className="h-8 w-8 rounded-xl" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <Table>

@@ -11,6 +11,7 @@ import { IDCard } from '@/components/volunteers/IDCard'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function PrintCenter() {
   const [volunteers, setVolunteers] = useState<any[]>([])
@@ -234,8 +235,8 @@ export default function PrintCenter() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="standard">Standard (54 x 86mm)</SelectItem>
-                  <SelectItem value="large">Large (60 x 95mm)</SelectItem>
+                  <SelectItem value="standard" label="Standard (54 x 86mm)">Standard (54 x 86mm)</SelectItem>
+                  <SelectItem value="large" label="Large (60 x 95mm)">Large (60 x 95mm)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -247,9 +248,9 @@ export default function PrintCenter() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="duplex">Front + Back (Duplex)</SelectItem>
-                  <SelectItem value="front">Front Only</SelectItem>
-                  <SelectItem value="back">Back Only</SelectItem>
+                  <SelectItem value="duplex" label="Front + Back (Duplex)">Front + Back (Duplex)</SelectItem>
+                  <SelectItem value="front" label="Front Only">Front Only</SelectItem>
+                  <SelectItem value="back" label="Back Only">Back Only</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-[10px] text-muted-foreground mt-1">
@@ -304,9 +305,13 @@ export default function PrintCenter() {
           <CardContent className="overflow-x-auto p-4 sm:p-8 flex justify-start md:justify-center min-h-[600px] relative w-full">
             
             {loading ? (
-              <div className="flex flex-col items-center justify-center text-zinc-500 gap-3 mt-20">
-                <Loader2 className="w-8 h-8 animate-spin" />
-                <p className="text-sm font-semibold">Generating print layout preview...</p>
+              <div className="flex flex-col items-center justify-center gap-6 mt-10 w-full max-w-2xl">
+                <div className="grid grid-cols-3 gap-6 w-full p-6">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <Skeleton key={i} className="aspect-[54/86] w-full rounded-xl bg-zinc-800" />
+                  ))}
+                </div>
+                <p className="text-sm font-semibold text-zinc-500">Generating print layout preview...</p>
               </div>
             ) : volunteers.length === 0 ? (
               <div className="text-center mt-20 text-zinc-500">

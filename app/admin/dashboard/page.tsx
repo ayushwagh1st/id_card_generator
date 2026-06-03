@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { getDashboardStatsAction } from '@/app/actions/dashboard'
 import { QRScannerDialog } from '@/components/QRScannerDialog'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
@@ -48,9 +49,22 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-muted-foreground gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-sm font-semibold">Generating live analytics...</p>
+      <div className="space-y-6">
+        {/* Banner Skeleton */}
+        <Skeleton className="h-32 w-full rounded-2xl" />
+        
+        {/* Grid Statistics Skeleton */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-xl" />
+          ))}
+        </div>
+
+        {/* Chart and Activities Skeleton */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+          <Skeleton className="col-span-4 h-[400px] rounded-xl" />
+          <Skeleton className="col-span-3 h-[400px] rounded-xl" />
+        </div>
       </div>
     )
   }

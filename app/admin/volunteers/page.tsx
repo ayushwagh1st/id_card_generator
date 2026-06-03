@@ -22,7 +22,9 @@ import {
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, UploadCloud, Loader2, ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, UploadCloud, ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
@@ -327,9 +329,9 @@ export default function VolunteersPage() {
                   <SelectValue placeholder="Filter by Model" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Exhibition Models</SelectItem>
+                  <SelectItem value="all" label="All Exhibition Models">All Exhibition Models</SelectItem>
                   {models.map(m => (
-                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                    <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -339,10 +341,10 @@ export default function VolunteersPage() {
                   <SelectValue placeholder="Filter by Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Approved">Approved</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
+                  <SelectItem value="all" label="All Statuses">All Statuses</SelectItem>
+                  <SelectItem value="Approved" label="Approved">Approved</SelectItem>
+                  <SelectItem value="Pending" label="Pending">Pending</SelectItem>
+                  <SelectItem value="Rejected" label="Rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -403,7 +405,7 @@ export default function VolunteersPage() {
                     <DialogDescription>SNK IDs are auto-generated sequentially.</DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleCreateVolunteer} className="space-y-4 py-2">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name</Label>
                         <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
@@ -414,7 +416,7 @@ export default function VolunteersPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1">
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender</Label>
                         <Select value={gender} onValueChange={(val) => setGender(val || 'Male')}>
@@ -436,32 +438,30 @@ export default function VolunteersPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-4 items-end">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
                         <Input value={branch} onChange={e => setBranch(e.target.value)} />
                       </div>
-                      <div className="space-y-1 col-span-2">
+                      <div className="space-y-1">
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
                         <Select value={modelId} onValueChange={(val) => setModelId(val || 'none')}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Choose Division" />
+                            <SelectValue placeholder="Choose Division">
+                              {modelId === 'none' ? 'Not Assigned' : models.find(m => m.id === modelId)?.name}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">Not Assigned</SelectItem>
+                            <SelectItem value="none" label="Not Assigned">Not Assigned</SelectItem>
                             {models.map(m => (
-                              <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                              <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex items-center justify-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm">
-                        <Checkbox id="add-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} />
-                        <Label htmlFor="add-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
-                      </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact</Label>
                         <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} />
@@ -472,9 +472,18 @@ export default function VolunteersPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
-                      <Input value={remarks} onChange={e => setRemarks(e.target.value)} />
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                      <div className="space-y-1 md:col-span-4">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Requirements</Label>
+                        <div className="flex items-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm w-full">
+                          <Checkbox id="add-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} />
+                          <Label htmlFor="add-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
+                        </div>
+                      </div>
+                      <div className="space-y-1 md:col-span-8">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
+                        <Input value={remarks} onChange={e => setRemarks(e.target.value)} />
+                      </div>
                     </div>
 
                     <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
@@ -485,7 +494,7 @@ export default function VolunteersPage() {
                           <img src={photoUrl} alt="Preview" className="w-16 h-20 object-cover rounded-md border" />
                         )}
                         <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
-                        {uploadingPhoto && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                        {uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
                       </div>
                     </div>
 
@@ -506,7 +515,7 @@ export default function VolunteersPage() {
                 <DialogDescription>Modify fields and upload new assets for this volunteer card.</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleUpdateVolunteer} className="space-y-4 py-2">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name</Label>
                     <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
@@ -517,7 +526,7 @@ export default function VolunteersPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
                     <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender</Label>
                     <Select value={gender} onValueChange={(val) => setGender(val || 'Male')}>
@@ -539,32 +548,30 @@ export default function VolunteersPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-4 items-end">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
                     <Input value={branch} onChange={e => setBranch(e.target.value)} />
                   </div>
-                  <div className="space-y-1 col-span-2">
+                  <div className="space-y-1">
                     <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
                     <Select value={modelId} onValueChange={(val) => setModelId(val || 'none')}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose Division" />
+                        <SelectValue placeholder="Choose Division">
+                          {modelId === 'none' ? 'Not Assigned' : models.find(m => m.id === modelId)?.name}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Not Assigned</SelectItem>
+                        <SelectItem value="none" label="Not Assigned">Not Assigned</SelectItem>
                         {models.map(m => (
-                          <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                          <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-center justify-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm">
-                    <Checkbox id="edit-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} />
-                    <Label htmlFor="edit-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
-                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact</Label>
                     <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} />
@@ -572,6 +579,20 @@ export default function VolunteersPage() {
                   <div className="space-y-1">
                     <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
                     <Input value={address} onChange={e => setAddress(e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  <div className="space-y-1 md:col-span-4">
+                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Requirements</Label>
+                    <div className="flex items-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm w-full">
+                      <Checkbox id="edit-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} />
+                      <Label htmlFor="edit-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
+                    </div>
+                  </div>
+                  <div className="space-y-1 md:col-span-8">
+                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
+                    <Input value={remarks} onChange={e => setRemarks(e.target.value)} />
                   </div>
                 </div>
 
@@ -583,7 +604,7 @@ export default function VolunteersPage() {
                       <img src={photoUrl} alt="Preview" className="w-16 h-20 object-cover rounded-md border" />
                     )}
                     <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
-                    {uploadingPhoto && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                    {uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
                   </div>
                 </div>
 
@@ -598,9 +619,37 @@ export default function VolunteersPage() {
           <Card className="shadow-lg border-primary/10 overflow-hidden backdrop-blur-md bg-card">
             <CardContent className="p-0">
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  <p className="text-sm font-semibold">Retrieving database records...</p>
+                <div className="p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-8 w-[200px]" />
+                    <Skeleton className="h-8 w-[150px]" />
+                  </div>
+                  <div className="rounded-md border">
+                    <div className="border-b px-4 py-3 flex gap-4 bg-muted/40">
+                      <Skeleton className="h-4 w-6" />
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-4 w-12" />
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-4 w-full" />
+                    </div>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="px-4 py-4 flex items-center gap-4 border-b last:border-0">
+                        <Skeleton className="h-4 w-4" />
+                        <Skeleton className="h-6 w-24" />
+                        <Skeleton className="h-10 w-10 rounded-md" />
+                        <div className="space-y-2 w-48">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-3 w-2/3" />
+                        </div>
+                        <div className="space-y-2 w-48 hidden md:block">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-3 w-2/3" />
+                        </div>
+                        <Skeleton className="h-8 w-16 ml-auto rounded-full" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <>

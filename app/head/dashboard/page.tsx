@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Users, CheckCircle, Clock, Loader2, Database, TrendingUp, AlertTriangle, ScanLine } from 'lucide-react'
+import { Users, CheckCircle, Clock, Database, TrendingUp, AlertTriangle, ScanLine } from 'lucide-react'
+import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { QRScannerDialog } from '@/components/QRScannerDialog'
@@ -111,7 +112,7 @@ export default function HeadDashboard() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-muted-foreground gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <AnimatedLoader className="w-8 h-8" />
         <p className="text-sm font-semibold">Generating your dashboard stats...</p>
       </div>
     )

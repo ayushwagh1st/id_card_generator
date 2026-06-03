@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Loader2, Mail, KeyRound, ArrowLeft } from 'lucide-react'
+import { Mail, KeyRound, ArrowLeft } from 'lucide-react'
+import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
@@ -102,7 +103,7 @@ export default function ForgotPasswordPage() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <AnimatedLoader className="w-4 h-4" />
                     Sending Link...
                   </>
                 ) : 'Send Reset Link'}

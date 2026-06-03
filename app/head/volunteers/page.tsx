@@ -10,7 +10,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, UploadCloud, Loader2, Download } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, UploadCloud, Download } from 'lucide-react'
+import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
@@ -371,9 +373,9 @@ export default function HeadVolunteersPage() {
                     <SelectValue placeholder="All My Models" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All My Models</SelectItem>
+                    <SelectItem value="all" label="All My Models">All My Models</SelectItem>
                     {myModels.map(m => (
-                      <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                      <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -384,10 +386,10 @@ export default function HeadVolunteersPage() {
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
+                    <SelectItem value="all" label="All Statuses">All Statuses</SelectItem>
+                    <SelectItem value="Approved" label="Approved">Approved</SelectItem>
+                    <SelectItem value="Pending" label="Pending">Pending</SelectItem>
+                    <SelectItem value="Rejected" label="Rejected">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -496,7 +498,7 @@ export default function HeadVolunteersPage() {
                           <img src={photoUrl} alt="Preview" className="w-16 h-20 object-cover rounded-md border" />
                         )}
                         <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
-                        {uploadingPhoto && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                        {uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
                       </div>
                     </div>
 
@@ -594,7 +596,7 @@ export default function HeadVolunteersPage() {
                         <img src={photoUrl} alt="Preview" className="w-16 h-20 object-cover rounded-md border" />
                       )}
                       <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto || currentVolunteer?.status === 'Approved'} />
-                      {uploadingPhoto && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                      {uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
                     </div>
                   </div>
 
@@ -616,9 +618,36 @@ export default function HeadVolunteersPage() {
             <Card className="shadow-lg border-primary/10 overflow-hidden backdrop-blur-md bg-card">
               <CardContent className="p-0">
                 {loading ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    <p className="text-sm font-semibold">Retrieving volunteers list...</p>
+                  <div className="p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-8 w-[200px]" />
+                      <Skeleton className="h-8 w-[150px]" />
+                    </div>
+                    <div className="rounded-md border">
+                      <div className="border-b px-4 py-3 flex gap-4 bg-muted/40">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-12" />
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-16 ml-auto" />
+                      </div>
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className="px-4 py-4 flex items-center gap-4 border-b last:border-0">
+                          <Skeleton className="h-6 w-24" />
+                          <Skeleton className="h-10 w-10 rounded-md" />
+                          <div className="space-y-2 w-48">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-3 w-2/3" />
+                          </div>
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-6 w-20 rounded-full" />
+                          <Skeleton className="h-8 w-8 ml-auto rounded-xl" />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ) : volunteers.length === 0 ? (
                   <div className="text-center py-16 text-muted-foreground text-sm font-semibold">
