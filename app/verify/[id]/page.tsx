@@ -9,7 +9,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
 
   // Authentication Check (Block Outsiders)
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user || !['ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
+  if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full shadow-xl border-zinc-200">

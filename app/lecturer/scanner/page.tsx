@@ -59,7 +59,9 @@ function ScannerContent() {
           const { data: { user } } = await supabase.auth.getUser()
           if (!user) return
           try {
-            const res = await getSessionsAction(1, 100, '', 'all', user.id)
+            const role = user.user_metadata?.role
+            const lecturerFilter = role === 'LECTURER' ? user.id : 'all'
+            const res = await getSessionsAction(1, 100, '', 'all', lecturerFilter)
             setSessions(res.data || [])
             // Save sessions locally for offline use
             localStorage.setItem('lecturer_sessions', JSON.stringify(res.data || []))

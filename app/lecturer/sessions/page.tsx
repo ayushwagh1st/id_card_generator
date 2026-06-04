@@ -32,7 +32,10 @@ export default function LecturerSessionsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const res = await getSessionsAction(1, 100, searchTerm, 'all', user.id)
+      const role = user.user_metadata?.role
+      const lecturerFilter = role === 'LECTURER' ? user.id : 'all'
+
+      const res = await getSessionsAction(1, 100, searchTerm, 'all', lecturerFilter)
       setSessions(res.data || [])
     } catch (err: any) {
       toast.error('Failed to load your sessions')

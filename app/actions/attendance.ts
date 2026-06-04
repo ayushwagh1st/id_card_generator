@@ -11,10 +11,10 @@ export async function recordAttendanceAction(
 ) {
   const supabase = await createClient()
 
-  // 1. Get Logged in Lecturer
+  // 1. Get Logged in User
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.user_metadata?.role !== 'LECTURER') {
-    return { error: 'Unauthorized. Only lecturers can mark attendance.' }
+  if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
+    return { error: 'Unauthorized. You do not have permission to mark attendance.' }
   }
   const lecturerId = user.id
 
@@ -189,7 +189,7 @@ export async function getLecturerStatsAction() {
 export async function bulkSyncAttendanceAction(scans: any[]) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.user_metadata?.role !== 'LECTURER') {
+    if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
         return { error: 'Unauthorized.' }
     }
     const lecturerId = user.id
@@ -220,7 +220,7 @@ export async function bulkSyncAttendanceAction(scans: any[]) {
             const { data: volunteerData, error: volErr } = await query.single()
 
             if (volErr || !volunteerData) {
-                results.push({ scanData, status: 'error', message: 'Volunteer not found' })
+                results.push({ scanData, status: 'error', message: `Volunteer not found. Searched for: ${parsedScanData}` })
                 continue
             }
             
