@@ -35,6 +35,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const statusFilter = searchParams.get('status') || 'all'
     const modelFilter = searchParams.get('model') || 'all'
+    const querySearch = searchParams.get('search') || ''
 
     // Build Query
     let query = supabase
@@ -57,6 +58,10 @@ export async function GET(request: Request) {
 
     if (statusFilter !== 'all') {
       query = query.eq('status', statusFilter)
+    }
+
+    if (querySearch) {
+      query = query.or(`full_name.ilike.%${querySearch}%,mobile_number.ilike.%${querySearch}%,snk_id.ilike.%${querySearch}%`)
     }
 
     if (role === 'MODEL_HEAD') {

@@ -33,7 +33,7 @@ export async function recordAttendanceAction(
   // Check if parsedScanData is a valid UUID
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(parsedScanData)
   
-  let query = supabase.from('volunteers').select('id, full_name, snk_id')
+  let query = supabase.from('volunteers').select('id, full_name, snk_id, photo_url')
   if (isUuid) {
       query = query.eq('id', parsedScanData)
   } else {
@@ -115,7 +115,14 @@ export async function recordAttendanceAction(
           return { error: 'Database error recording attendance.' }
       }
 
-      return { success: true, message: `✅ Attendance Marked Successfully (${status}) for ${volunteerData.full_name}` }
+      return { 
+          success: true, 
+          message: `✅ Attendance Marked Successfully (${status}) for ${volunteerData.full_name}`,
+          volunteer: {
+              name: volunteerData.full_name,
+              photo: volunteerData.photo_url
+          }
+      }
 
   } else if (mode === 'check-out') {
       if (!existingAttendance) {
@@ -134,7 +141,14 @@ export async function recordAttendanceAction(
           return { error: 'Database error recording check-out.' }
       }
 
-      return { success: true, message: `✅ Check-out Marked Successfully for ${volunteerData.full_name}` }
+      return { 
+          success: true, 
+          message: `✅ Check-out Marked Successfully for ${volunteerData.full_name}`,
+          volunteer: {
+              name: volunteerData.full_name,
+              photo: volunteerData.photo_url
+          }
+      }
   }
 
   return { error: 'Invalid mode.' }

@@ -78,7 +78,9 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
       <div className="flex items-center gap-4">
         <div className="text-right text-sm">
           <div className="font-medium text-zinc-900 dark:text-zinc-100">{displayName}</div>
-          <div className="text-muted-foreground text-xs">{roleName === 'SUPER_ADMIN' ? 'Super Admin' : 'Model Head'}</div>
+          <div className="text-muted-foreground text-xs">
+            {roleName === 'SUPER_ADMIN' ? 'Super Admin' : roleName === 'MODEL_HEAD' ? 'Model Head' : 'Lecturer'}
+          </div>
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
           <User className="h-5 w-5" />

@@ -47,7 +47,7 @@ function ScannerContent() {
   const [recentScans, setRecentScans] = useState<{id: string, time: Date, status: string, msg: string}[]>([])
   const [isSyncing, setIsSyncing] = useState(false)
   
-  const [lastScanResult, setLastScanResult] = useState<{status: 'success'|'error'|'late'|'offline', message: string} | null>(null)
+  const [lastScanResult, setLastScanResult] = useState<{status: 'success'|'error'|'late'|'offline', message: string, volunteer?: {name: string, photo: string | null}} | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [manualId, setManualId] = useState('')
 
@@ -188,7 +188,7 @@ function ScannerContent() {
                   pushRecentScan(data, 'error', res.error)
               } else {
                   const st = res.message?.includes('Late') ? 'late' : 'success'
-                  setLastScanResult({ status: st, message: res.message || 'Success' })
+                  setLastScanResult({ status: st, message: res.message || 'Success', volunteer: res.volunteer })
                   pushRecentScan(data, st, res.message || 'Success')
               }
           }
@@ -324,18 +324,33 @@ function ScannerContent() {
 
                       {/* Overlay Result */}
                       {lastScanResult && (
-                          <div className={`absolute bottom-0 left-0 right-0 p-4 transform transition-transform animate-in slide-in-from-bottom-10 z-20 ${
-                              lastScanResult.status === 'success' ? 'bg-emerald-500 text-white' :
-                              lastScanResult.status === 'late' ? 'bg-amber-500 text-white' :
-                              lastScanResult.status === 'offline' ? 'bg-zinc-800 text-white' :
-                              'bg-rose-500 text-white'
+                          <div className={`absolute bottom-0 left-0 right-0 p-6 transform transition-transform animate-in slide-in-from-bottom-10 z-20 ${
+                              lastScanResult.status === 'success' ? 'bg-emerald-500/95 backdrop-blur-md text-white border-t border-emerald-400' :
+                              lastScanResult.status === 'late' ? 'bg-amber-500/95 backdrop-blur-md text-white border-t border-amber-400' :
+                              lastScanResult.status === 'offline' ? 'bg-zinc-800/95 backdrop-blur-md text-white border-t border-zinc-700' :
+                              'bg-rose-500/95 backdrop-blur-md text-white border-t border-rose-400'
                           }`}>
-                              <div className="flex items-center gap-3">
-                                  {lastScanResult.status === 'success' && <CheckCircle className="w-6 h-6 shrink-0" />}
-                                  {lastScanResult.status === 'late' && <Clock className="w-6 h-6 shrink-0" />}
-                                  {lastScanResult.status === 'offline' && <WifiOff className="w-6 h-6 shrink-0" />}
-                                  {lastScanResult.status === 'error' && <XCircle className="w-6 h-6 shrink-0" />}
-                                  <p className="font-bold">{lastScanResult.message}</p>
+                              <div className="flex items-center gap-4">
+                                  {lastScanResult.volunteer?.photo ? (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img src={lastScanResult.volunteer.photo} alt="Volunteer" className="w-16 h-16 rounded-full border-2 border-white shadow-md object-cover shrink-0 bg-white/20" />
+                                  ) : (
+                                      <div className="w-16 h-16 rounded-full border-2 border-white/50 bg-white/10 flex items-center justify-center shrink-0 shadow-md">
+                                          {lastScanResult.status === 'success' && <CheckCircle className="w-8 h-8 opacity-80" />}
+                                          {lastScanResult.status === 'late' && <Clock className="w-8 h-8 opacity-80" />}
+                                          {lastScanResult.status === 'offline' && <WifiOff className="w-8 h-8 opacity-80" />}
+                                          {lastScanResult.status === 'error' && <XCircle className="w-8 h-8 opacity-80" />}
+                                      </div>
+                                  )}
+                                  
+                                  <div className="flex flex-col">
+                                      {lastScanResult.volunteer?.name && (
+                                          <span className="text-xl font-extrabold tracking-tight drop-shadow-sm">
+                                              {lastScanResult.volunteer.name}
+                                          </span>
+                                      )}
+                                      <p className="font-semibold text-sm opacity-90 leading-tight mt-1">{lastScanResult.message}</p>
+                                  </div>
                               </div>
                           </div>
                       )}

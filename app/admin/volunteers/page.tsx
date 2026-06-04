@@ -374,6 +374,17 @@ export default function VolunteersPage() {
                 </div>
               )}
 
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-emerald-600 border-emerald-500/20"
+                onClick={() => {
+                  window.open(`/api/export?type=volunteers&status=${filterStatus}&model=${filterModel}&search=${searchTerm}`, '_blank')
+                }}
+              >
+                <Database className="w-4 h-4" />
+                Export CSV
+              </Button>
+
               <Button 
                 variant="outline"
                 className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-5 gap-2"
@@ -743,8 +754,18 @@ export default function VolunteersPage() {
                         ))}
                         {volunteers.length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={8} className="text-center py-12 text-muted-foreground text-sm font-semibold">
-                              No volunteers found matching current criteria.
+                            <TableCell colSpan={8} className="text-center py-16">
+                              <div className="flex flex-col items-center justify-center space-y-3">
+                                <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center">
+                                  <Users className="w-8 h-8 text-muted-foreground/50" />
+                                </div>
+                                <p className="text-muted-foreground font-semibold">No volunteers found</p>
+                                <p className="text-xs text-muted-foreground/70 max-w-sm mx-auto">
+                                  {searchTerm || filterStatus !== 'all' || filterModel !== 'all' 
+                                    ? "Try adjusting your search or filters to find what you're looking for." 
+                                    : "There are no volunteers in the system yet."}
+                                </p>
+                              </div>
                             </TableCell>
                           </TableRow>
                         )}

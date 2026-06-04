@@ -399,7 +399,17 @@ export default function SessionsPage() {
               ))}
               {!loading && sessions.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No sessions found.</TableCell>
+                  <TableCell colSpan={6} className="text-center py-16">
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center">
+                        <Database className="w-8 h-8 text-muted-foreground/50" />
+                      </div>
+                      <p className="text-muted-foreground font-semibold">No sessions found</p>
+                      <p className="text-xs text-muted-foreground/70 max-w-sm mx-auto">
+                        Create a new session to start tracking attendance.
+                      </p>
+                    </div>
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>

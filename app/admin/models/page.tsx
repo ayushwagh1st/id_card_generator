@@ -464,8 +464,16 @@ export default function ModelsPage() {
                 ))}
                 {filteredModels.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12 text-muted-foreground text-sm font-semibold">
-                      No models found in database. Create one above!
+                    <TableCell colSpan={5} className="text-center py-16">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center">
+                          <Database className="w-8 h-8 text-muted-foreground/50" />
+                        </div>
+                        <p className="text-muted-foreground font-semibold">No models found</p>
+                        <p className="text-xs text-muted-foreground/70 max-w-sm mx-auto">
+                          Create a new exhibition model to start organizing your volunteers.
+                        </p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}

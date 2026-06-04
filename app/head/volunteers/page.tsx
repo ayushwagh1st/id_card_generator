@@ -400,7 +400,7 @@ export default function HeadVolunteersPage() {
                 variant="outline"
                 className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-5 gap-2"
                 onClick={() => {
-                  window.location.href = `/api/export?status=${filterStatus}&model=${filterModel}`
+                  window.location.href = `/api/export?status=${filterStatus}&model=${filterModel}&search=${searchTerm}`
                 }}
               >
                 <Download className="h-4 w-4" />
@@ -722,8 +722,18 @@ export default function HeadVolunteersPage() {
                       ))}
                       {filteredVolunteers.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-sm font-semibold">
-                            No volunteers match the filters.
+                          <TableCell colSpan={7} className="text-center py-16">
+                            <div className="flex flex-col items-center justify-center space-y-3">
+                              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center">
+                                <Users className="w-8 h-8 text-muted-foreground/50" />
+                              </div>
+                              <p className="text-muted-foreground font-semibold">No volunteers found</p>
+                              <p className="text-xs text-muted-foreground/70 max-w-sm mx-auto">
+                                {searchTerm || filterStatus !== 'all' || filterModel !== 'all' 
+                                  ? "Try adjusting your search or filters to find what you're looking for." 
+                                  : "There are no volunteers in the system yet."}
+                              </p>
+                            </div>
                           </TableCell>
                         </TableRow>
                       )}
