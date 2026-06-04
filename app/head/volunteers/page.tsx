@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton'
 import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, UploadCloud, Download } from 'lucide-react'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
+import { compressImage } from '@/lib/image'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
@@ -226,9 +227,10 @@ export default function HeadVolunteersPage() {
   // Photo Upload Handler
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
+      const originalFile = e.target.files[0]
       setUploadingPhoto(true)
       try {
+        const file = await compressImage(originalFile, 800, 0.7) // Compress before upload
         const fileExt = file.name.split('.').pop()
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
         const filePath = `${fileName}`

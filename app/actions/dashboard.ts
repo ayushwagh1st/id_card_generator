@@ -76,12 +76,36 @@ export async function getDashboardStatsAction() {
     }
   })
 
+  // Fetch Sessions count
+  const { count: totalSessions } = await supabase.from('sessions').select('*', { count: 'exact', head: true })
+
+  // Fetch Lecturers count
+  const { count: totalLecturers } = await supabase.from('lecturers').select('*', { count: 'exact', head: true })
+
+  // Today's sessions
+  const todayStr = new Date().toISOString().split('T')[0]
+  const { count: todaySessions } = await supabase.from('sessions').select('*', { count: 'exact', head: true }).eq('date', todayStr)
+
+  // Total enrollments
+  const { count: totalEnrollments } = await supabase.from('volunteer_sessions').select('*', { count: 'exact', head: true })
+
+  // Total attendances marked Present or Late
+  const { count: totalPresent } = await supabase.from('attendance')
+    .select('*', { count: 'exact', head: true })
+    .in('attendance_status', ['Present', 'Late'])
+
+  const attendancePercentage = totalEnrollments ? Math.round(((totalPresent || 0) / totalEnrollments) * 100) : 0
+
   return {
     stats: {
       totalVolunteers: totalVolunteers || 0,
       totalModels: totalModels || 0,
       approvedCount: approvedCount || 0,
-      pendingCount: pendingCount || 0
+      pendingCount: pendingCount || 0,
+      totalSessions: totalSessions || 0,
+      totalLecturers: totalLecturers || 0,
+      todaySessions: todaySessions || 0,
+      attendancePercentage
     },
     chartData: formattedChart,
     activities: formattedActivities

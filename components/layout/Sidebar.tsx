@@ -3,12 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Tent, Users, Database, FileText, BarChart, LogOut, Printer, Shield, X } from 'lucide-react'
+import { Tent, Users, Database, FileText, BarChart, LogOut, Printer, Shield, X, Activity } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 interface SidebarProps {
-  role: 'SUPER_ADMIN' | 'MODEL_HEAD'
+  role: 'SUPER_ADMIN' | 'MODEL_HEAD' | 'LECTURER'
   closeMobileMenu?: () => void
 }
 
@@ -21,6 +21,10 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
     { name: 'Dashboard', href: '/admin/dashboard', icon: BarChart },
     { name: 'Models', href: '/admin/models', icon: Database },
     { name: 'Model Heads', href: '/admin/heads', icon: Shield },
+    { name: 'Lecturers', href: '/admin/lecturers', icon: Users },
+    { name: 'Sessions', href: '/admin/sessions', icon: Database },
+    { name: 'Enrollment', href: '/admin/session-enrollment', icon: Users },
+    { name: 'Live Tracking', href: '/admin/live-attendance', icon: Activity },
     { name: 'Volunteers', href: '/admin/volunteers', icon: Users },
     { name: 'Reports', href: '/admin/reports', icon: FileText },
     { name: 'Print Center', href: '/admin/print', icon: Printer },
@@ -31,7 +35,14 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
     { name: 'My Volunteers', href: '/head/volunteers', icon: Users },
   ]
 
-  const links = role === 'SUPER_ADMIN' ? adminLinks : headLinks
+  const lecturerLinks = [
+    { name: 'Dashboard', href: '/lecturer/dashboard', icon: BarChart },
+    { name: 'My Sessions', href: '/lecturer/sessions', icon: Database },
+    { name: 'QR Scanner', href: '/lecturer/scanner', icon: Shield },
+    { name: 'Reports', href: '/lecturer/reports', icon: FileText },
+  ]
+
+  const links = role === 'SUPER_ADMIN' ? adminLinks : role === 'MODEL_HEAD' ? headLinks : lecturerLinks
 
   const handleLogout = async () => {
     const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL ||

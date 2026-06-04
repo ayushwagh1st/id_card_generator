@@ -50,6 +50,9 @@ export default function LoginPage() {
         } else if (role === 'MODEL_HEAD') {
           router.refresh()
           router.push('/head/dashboard')
+        } else if (role === 'LECTURER') {
+          router.refresh()
+          router.push('/lecturer/dashboard')
         } else {
           router.refresh()
           router.push('/')

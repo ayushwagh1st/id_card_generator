@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Plus, Search, Shield, Users, Database, Download, Edit, Trash2, KeyRound } from 'lucide-react'
+import { Plus, Search, Shield, Users, Database, Download, Edit, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
@@ -32,6 +32,12 @@ export default function HeadsPage() {
   const [isResetPassOpen, setIsResetPassOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({})
+
+  const togglePassword = (id: string) => {
+    setVisiblePasswords(prev => ({ ...prev, [id]: !prev[id] }))
+  }
 
   const supabase = createClient()
 
@@ -454,7 +460,16 @@ export default function HeadsPage() {
                     <TableRow key={head.id} className="hover:bg-muted/20 transition-colors duration-200">
                       <TableCell className="font-semibold text-sm text-foreground py-4 px-6">{head.full_name}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{head.email}</TableCell>
-                      <TableCell className="text-sm font-mono text-xs text-amber-600 bg-amber-500/5 px-2 py-1.5 rounded">{head.temp_password || '••••••'}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs text-amber-600 bg-amber-500/5 px-2 py-1.5 rounded w-fit">
+                            {visiblePasswords[head.id] ? (head.temp_password || 'N/A') : '••••••'}
+                          </span>
+                          <button onClick={() => togglePassword(head.id)} className="text-muted-foreground hover:text-foreground transition-colors">
+                            {visiblePasswords[head.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </TableCell>
                       <TableCell className="text-sm">
                         <span className={`font-semibold ${isAssigned ? 'text-zinc-800 dark:text-zinc-200' : 'text-zinc-400'}`}>
                           {supervisedModels}

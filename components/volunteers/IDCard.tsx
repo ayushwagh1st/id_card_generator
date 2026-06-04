@@ -35,8 +35,8 @@ export function IDCard({ volunteer, size = 'standard', side = 'front' }: IDCardP
   const verifyUrl = `${baseUrl}/verify/${volunteer.id}`
 
   const dims = size === 'standard' 
-    ? { width: '54mm', height: '86mm', photo: { w: '30mm', h: '35mm' }, qr: 36 } 
-    : { width: '60mm', height: '95mm', photo: { w: '34mm', h: '40mm' }, qr: 42 }
+    ? { width: '54mm', height: '86mm', photo: { w: '30mm', h: '35mm' }, qr: 64 } 
+    : { width: '60mm', height: '95mm', photo: { w: '34mm', h: '40mm' }, qr: 76 }
 
   const CardWrapper = ({ children }: { children: React.ReactNode }) => (
     <div 
@@ -101,28 +101,28 @@ export function IDCard({ volunteer, size = 'standard', side = 'front' }: IDCardP
           </div>
 
           {/* Text Fields (Old style) */}
-          <div className="flex-1 flex flex-col justify-start mt-2 space-y-[4.5px] pl-2 pr-1 w-full text-[7.5px] text-gray-700 font-semibold relative z-30">
+          <div className="flex-1 flex flex-col justify-start mt-2 space-y-[3px] pl-2 pr-1 w-full text-[8.5px] text-gray-700 font-semibold relative z-30">
             <div className="flex items-end border-b-[0.5px] border-gray-400 pb-[1px]">
-              <span className="w-[10mm] flex-shrink-0">Name:</span>
-              <span className="font-bold text-black text-[9px] leading-none pl-1 truncate flex-1">{volunteer.name}</span>
+              <span className="w-[11mm] flex-shrink-0">Name:</span>
+              <span className="font-bold text-black text-[11px] leading-none pl-1 truncate flex-1">{volunteer.name}</span>
             </div>
             <div className="flex items-end border-b-[0.5px] border-gray-400 pb-[1px]">
-              <span className="w-[14mm] flex-shrink-0">Model Name:</span>
-              <span className="font-bold text-black text-[8px] leading-none pl-1 truncate flex-1">{volunteer.model}</span>
+              <span className="w-[16mm] flex-shrink-0">Model Name:</span>
+              <span className="font-bold text-black text-[10px] leading-none pl-1 truncate flex-1">{volunteer.model}</span>
             </div>
             <div className="flex items-end border-b-[0.5px] border-gray-400 pb-[1px]">
-              <span className="w-[18mm] flex-shrink-0">Incharge Name:</span>
-              <span className="font-bold text-black text-[8px] leading-none pl-1 truncate flex-1">{volunteer.headName || 'N/A'}</span>
+              <span className="w-[20mm] flex-shrink-0">Incharge Name:</span>
+              <span className="font-bold text-black text-[10px] leading-none pl-1 truncate flex-1">{volunteer.headName || 'N/A'}</span>
             </div>
             <div className="flex items-end border-b-[0.5px] border-gray-400 pb-[1px]">
-              <span className="w-[10mm] flex-shrink-0">Branch:</span>
-              <span className="font-bold text-black text-[8px] leading-none pl-1 truncate flex-1">{volunteer.branch || 'N/A'}</span>
+              <span className="w-[11mm] flex-shrink-0">Branch:</span>
+              <span className="font-bold text-black text-[10px] leading-none pl-1 truncate flex-1">{volunteer.branch || 'N/A'}</span>
             </div>
             
             {/* System Fields (Subtle) */}
             <div className="flex justify-between pt-[2px]">
-               <span className="text-[5.5px] text-gray-400 font-mono tracking-wider">{displayId}</span>
-               <span className="text-[5.5px] text-gray-400 font-bold uppercase">{volunteer.role}</span>
+               <span className="text-[6.5px] text-gray-400 font-mono tracking-wider">{displayId}</span>
+               <span className="text-[6.5px] text-gray-400 font-bold uppercase">{volunteer.role}</span>
             </div>
           </div>
 

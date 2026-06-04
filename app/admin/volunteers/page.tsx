@@ -25,10 +25,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton'
 import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, UploadCloud, ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
+import { compressImage } from '@/lib/image'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import imageCompression from 'browser-image-compression'
 import { getVolunteersAction, addVolunteerAction, updateVolunteerAction, deleteVolunteerAction, bulkDeleteVolunteersAction, bulkApproveVolunteersAction } from '@/app/actions/volunteers'
 
 export default function VolunteersPage() {
@@ -41,7 +41,7 @@ export default function VolunteersPage() {
   // Pagination
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
-  const limit = 10
+  const limit = 20
 
   // Filters
   const [filterModel, setFilterModel] = useState('all')
@@ -225,19 +225,10 @@ export default function VolunteersPage() {
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      let file = e.target.files[0]
+      const originalFile = e.target.files[0]
       setUploadingPhoto(true)
       try {
-        const options = {
-          maxSizeMB: 0.5,
-          maxWidthOrHeight: 800,
-          useWebWorker: true,
-        }
-        try {
-          file = await imageCompression(file, options)
-        } catch (error) {
-          console.error("Compression error:", error)
-        }
+        let file = await compressImage(originalFile, 800, 0.7)
 
         const fileExt = file.name.split('.').pop() || 'jpg'
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`

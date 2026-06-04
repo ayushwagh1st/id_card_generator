@@ -6,7 +6,7 @@ import { cookies } from 'next/headers'
 
 export async function getVolunteersAction(
   page: number = 1,
-  limit: number = 10,
+  limit: number = 20,
   query: string = '',
   statusFilter: string = 'all',
   modelFilter: string = 'all'

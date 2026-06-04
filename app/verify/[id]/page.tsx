@@ -1,11 +1,27 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle2, XCircle, AlertTriangle, Building, Users, Phone, Hash } from 'lucide-react'
+import { CheckCircle2, XCircle, AlertTriangle, Building, Users, Phone, Hash, ShieldAlert } from 'lucide-react'
 import Image from 'next/image'
 
 export default async function VerifyPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params
   const supabase = await createClient()
+
+  // Authentication Check (Block Outsiders)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || !['ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full shadow-xl border-zinc-200">
+          <CardContent className="pt-6 flex flex-col items-center text-center space-y-4">
+            <ShieldAlert className="w-16 h-16 text-zinc-500" />
+            <h1 className="text-2xl font-bold text-gray-900">Access Denied</h1>
+            <p className="text-gray-500">You do not have permission to view this volunteer's profile. Scanning must be performed by authorized staff.</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const { data: volunteer, error } = await supabase
     .rpc('verify_volunteer', { v_id: resolvedParams.id })

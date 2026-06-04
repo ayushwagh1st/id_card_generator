@@ -16,7 +16,11 @@ export default function AdminDashboard() {
     totalVolunteers: 0,
     totalModels: 0,
     approvedCount: 0,
-    pendingCount: 0
+    pendingCount: 0,
+    totalSessions: 0,
+    totalLecturers: 0,
+    todaySessions: 0,
+    attendancePercentage: 0
   })
   const [chartData, setChartData] = useState<any[]>([])
   const [activities, setActivities] = useState<any[]>([])
@@ -43,8 +47,10 @@ export default function AdminDashboard() {
   const statItems = [
     { title: 'Total Volunteers', value: stats.totalVolunteers.toLocaleString(), icon: Users, color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' },
     { title: 'Exhibition Models', value: stats.totalModels.toString(), icon: Database, color: 'text-purple-500 bg-purple-50 dark:bg-purple-950/20' },
-    { title: 'Approved Cards', value: stats.approvedCount.toLocaleString(), icon: CheckCircle, color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20' },
-    { title: 'Pending Approval', value: stats.pendingCount.toLocaleString(), icon: Clock, color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/20' },
+    { title: 'Total Sessions', value: stats.totalSessions.toString(), icon: CheckCircle, color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20' },
+    { title: 'Today\'s Sessions', value: stats.todaySessions.toString(), icon: Clock, color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/20' },
+    { title: 'Total Lecturers', value: stats.totalLecturers.toLocaleString(), icon: Users, color: 'text-blue-500 bg-blue-50 dark:bg-blue-950/20' },
+    { title: 'Attendance %', value: `${stats.attendancePercentage}%`, icon: BarChart2, color: 'text-pink-500 bg-pink-50 dark:bg-pink-950/20' },
   ]
 
   if (loading) {
@@ -54,8 +60,8 @@ export default function AdminDashboard() {
         <Skeleton className="h-32 w-full rounded-2xl" />
         
         {/* Grid Statistics Skeleton */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <Skeleton key={i} className="h-28 w-full rounded-xl" />
           ))}
         </div>
@@ -93,7 +99,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Grid Statistics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statItems.map((item, i) => (
           <Card key={i} className="shadow-md hover:shadow-lg transition-all duration-300 border-primary/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -125,14 +131,13 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="h-[300px] w-full min-h-[300px] min-w-full relative" style={{ minWidth: '100%', minHeight: 300 }}>
+            <div className="h-[300px] w-full mt-2">
               {chartData.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
                   No records to display. Allocate volunteers to see statistics.
                 </div>
               ) : (
-                <div className="absolute inset-0">
-                  <ResponsiveContainer width="99%" height="100%">
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <defs>
                       <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
@@ -146,8 +151,7 @@ export default function AdminDashboard() {
                     <Tooltip cursor={{ fill: 'rgba(0, 0, 0, 0.02)' }} />
                     <Bar dataKey="volunteers" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
                   </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                </ResponsiveContainer>
               )}
             </div>
           </CardContent>

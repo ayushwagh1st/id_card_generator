@@ -33,26 +33,34 @@ export async function updateSession(request: NextRequest) {
            return NextResponse.redirect(new URL('/admin/dashboard', request.url))
         } else if (role === 'MODEL_HEAD') {
            return NextResponse.redirect(new URL('/head/dashboard', request.url))
+        } else if (role === 'LECTURER') {
+           return NextResponse.redirect(new URL('/lecturer/dashboard', request.url))
         }
       }
 
       // Enforce Admin access
       if (request.nextUrl.pathname.startsWith('/admin') && role !== 'SUPER_ADMIN') {
-        return NextResponse.redirect(new URL('/head/dashboard', request.url))
+        return NextResponse.redirect(new URL('/login', request.url))
       }
 
       // Enforce Head access
       if (request.nextUrl.pathname.startsWith('/head') && role !== 'MODEL_HEAD') {
-        return NextResponse.redirect(new URL('/admin/dashboard', request.url))
+        return NextResponse.redirect(new URL('/login', request.url))
+      }
+
+      // Enforce Lecturer access
+      if (request.nextUrl.pathname.startsWith('/lecturer') && role !== 'LECTURER') {
+        return NextResponse.redirect(new URL('/login', request.url))
       }
 
       return supabaseResponse
     }
 
-    // Unauthenticated mock mode - protect admin/head routes
+    // Unauthenticated mock mode - protect admin/head/lecturer routes
     if (
       request.nextUrl.pathname.startsWith('/admin') ||
-      request.nextUrl.pathname.startsWith('/head')
+      request.nextUrl.pathname.startsWith('/head') ||
+      request.nextUrl.pathname.startsWith('/lecturer')
     ) {
       const urlObj = request.nextUrl.clone()
       urlObj.pathname = '/login'
@@ -91,7 +99,8 @@ export async function updateSession(request: NextRequest) {
     if (!user) {
       if (
         request.nextUrl.pathname.startsWith('/admin') ||
-        request.nextUrl.pathname.startsWith('/head')
+        request.nextUrl.pathname.startsWith('/head') ||
+        request.nextUrl.pathname.startsWith('/lecturer')
       ) {
         const urlObj = request.nextUrl.clone()
         urlObj.pathname = '/login'
@@ -108,6 +117,8 @@ export async function updateSession(request: NextRequest) {
          return NextResponse.redirect(new URL('/admin/dashboard', request.url))
       } else if (role === 'MODEL_HEAD') {
          return NextResponse.redirect(new URL('/head/dashboard', request.url))
+      } else if (role === 'LECTURER') {
+         return NextResponse.redirect(new URL('/lecturer/dashboard', request.url))
       }
     }
 
@@ -120,10 +131,15 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
+    if (request.nextUrl.pathname.startsWith('/lecturer') && role !== 'LECTURER') {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
   } catch (err) {
     if (
       request.nextUrl.pathname.startsWith('/admin') ||
-      request.nextUrl.pathname.startsWith('/head')
+      request.nextUrl.pathname.startsWith('/head') ||
+      request.nextUrl.pathname.startsWith('/lecturer')
     ) {
       const urlObj = request.nextUrl.clone()
       urlObj.pathname = '/login'
