@@ -411,7 +411,7 @@ export default function VolunteersPage() {
                         <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Mobile Number</Label>
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
                         <Input value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
                       </div>
                     </div>
@@ -463,8 +463,8 @@ export default function VolunteersPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact</Label>
-                        <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} />
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
+                        <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} required />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
@@ -521,7 +521,7 @@ export default function VolunteersPage() {
                     <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Mobile Number</Label>
+                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
                     <Input value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
                   </div>
                 </div>
@@ -573,8 +573,8 @@ export default function VolunteersPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact</Label>
-                    <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} />
+                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
+                    <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} required />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>

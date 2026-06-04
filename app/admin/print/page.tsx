@@ -221,7 +221,7 @@ export default function PrintCenter() {
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         
         {/* Controls */}
-        <Card className="xl:col-span-1 shadow-sm border-primary/10 h-fit sticky top-6">
+        <Card className="xl:col-span-1 shadow-sm border-primary/10 h-fit relative xl:sticky xl:top-6 z-10 mb-6 xl:mb-0">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg">Print Settings</CardTitle>
             <CardDescription>Configure output dimensions and paper rules.</CardDescription>
@@ -321,7 +321,7 @@ export default function PrintCenter() {
               </div>
             ) : (
               <div 
-                className="transition-transform origin-top"
+                className="transition-transform origin-top-left sm:origin-top"
                 style={{ transform: `scale(${zoom / 100})` }}
               >
                 {/* Render Container for react-to-print */}

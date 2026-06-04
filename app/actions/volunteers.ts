@@ -81,18 +81,6 @@ export async function getVolunteersAction(
 
 export async function addVolunteerAction(formData: any) {
   const supabase = await createClient()
-  
-  // Basic Duplicate Check by Mobile Number
-  const { data: existing } = await supabase
-    .from('volunteers')
-    .select('id')
-    .eq('mobile_number', formData.mobile_number)
-    .single()
-    
-  if (existing) {
-    return { error: 'A volunteer with this mobile number already exists.' }
-  }
-
   // Insert
   const { data, error } = await supabase.from('volunteers').insert([formData]).select().single()
   
@@ -108,19 +96,6 @@ export async function addVolunteerAction(formData: any) {
 
 export async function updateVolunteerAction(id: string, formData: any) {
   const supabase = await createClient()
-
-  if (formData.mobile_number) {
-    const { data: existing } = await supabase
-      .from('volunteers')
-      .select('id')
-      .eq('mobile_number', formData.mobile_number)
-      .neq('id', id)
-      .single()
-      
-    if (existing) {
-      return { error: 'A volunteer with this mobile number already exists.' }
-    }
-  }
 
   const { error } = await supabase.from('volunteers').update(formData).eq('id', id)
   
@@ -175,19 +150,12 @@ export async function bulkApproveVolunteersAction(ids: string[]) {
 
 export async function bulkImportVolunteersAction(records: any[]) {
   const supabase = await createClient()
-  
-  // Need to filter out existing mobile numbers
-  const mobiles = records.map(r => r.mobile_number)
-  const { data: existing } = await supabase.from('volunteers').select('mobile_number').in('mobile_number', mobiles)
-  
-  const existingSet = new Set((existing || []).map(e => e.mobile_number))
-  const newRecords = records.filter(r => !existingSet.has(r.mobile_number))
 
-  if (newRecords.length === 0) {
-    return { success: true, count: 0, duplicates: records.length }
+  if (records.length === 0) {
+    return { success: true, count: 0, duplicates: 0 }
   }
 
-  const { error } = await supabase.from('volunteers').insert(newRecords)
+  const { error } = await supabase.from('volunteers').insert(records)
   if (error) {
     console.error('[PROD_LOG] Error in bulkImportVolunteersAction:', error)
     return { error: 'Bulk import encountered a database error.' }
@@ -196,5 +164,5 @@ export async function bulkImportVolunteersAction(records: any[]) {
   revalidatePath('/admin/volunteers')
   revalidatePath('/head/volunteers')
   
-  return { success: true, count: newRecords.length, duplicates: existingSet.size }
+  return { success: true, count: records.length, duplicates: 0 }
 }

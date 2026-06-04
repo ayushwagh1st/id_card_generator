@@ -407,7 +407,15 @@ export default function HeadVolunteersPage() {
 
               {/* Add Trigger */}
               <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                <DialogTrigger render={<Button className="w-full sm:w-auto bg-gradient-to-r from-primary to-orange-600 hover:from-primary/95 text-white font-semibold rounded-xl px-5 gap-2" />}>
+                <DialogTrigger render={
+                  <Button 
+                    className="w-full sm:w-auto bg-gradient-to-r from-primary to-orange-600 hover:from-primary/95 text-white font-semibold rounded-xl px-5 gap-2"
+                    onClick={() => {
+                      setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer'); setAccommodation(false);
+                      if (myModels.length > 0) setModelId(myModels[0].id);
+                    }}
+                  />
+                }>
                   <Plus className="h-4 w-4" />
                   Add Volunteer
                 </DialogTrigger>
@@ -423,7 +431,7 @@ export default function HeadVolunteersPage() {
                         <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Mobile Number</Label>
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
                         <Input value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
                       </div>
                     </div>
@@ -459,11 +467,13 @@ export default function HeadVolunteersPage() {
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
                         <Select value={modelId} onValueChange={(val) => setModelId(val || '')}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Choose Division" />
+                            <SelectValue placeholder="Choose Division">
+                              {myModels.find(m => m.id === modelId)?.name || "Choose Division"}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {myModels.map(m => (
-                              <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                              <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -476,8 +486,8 @@ export default function HeadVolunteersPage() {
 
                     <div className="grid grid-cols-2 gap-4 items-end">
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact</Label>
-                        <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} />
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
+                        <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} required />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
@@ -524,10 +534,10 @@ export default function HeadVolunteersPage() {
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name</Label>
                       <Input value={fullName} onChange={e => setFullName(e.target.value)} required disabled={currentVolunteer?.status === 'Approved'} />
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Mobile Number</Label>
-                      <Input value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required disabled={currentVolunteer?.status === 'Approved'} />
-                    </div>
+                      <div className="space-y-1">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
+                        <Input value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} required />
+                      </div>
                   </div>
 
                   <div className="grid grid-cols-4 gap-4">
@@ -558,18 +568,20 @@ export default function HeadVolunteersPage() {
 
                   <div className="grid grid-cols-2 gap-4 items-end">
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact</Label>
-                      <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
+                      <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} required />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Assigned Model</Label>
                       <Select value={modelId} onValueChange={(val) => setModelId(val || '')} disabled={currentVolunteer?.status === 'Approved'}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose Division" />
+                        <SelectTrigger disabled={currentVolunteer?.status === 'Approved'}>
+                          <SelectValue placeholder="Choose Division">
+                            {myModels.find(m => m.id === modelId)?.name || "Choose Division"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {myModels.map(m => (
-                            <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                            <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

@@ -157,8 +157,9 @@ export function IDCard({ volunteer, size = 'standard', side = 'front' }: IDCardP
         
         {/* Contacts */}
         <div>
-          <h5 className="font-extrabold text-[7.5px] uppercase border-b border-gray-300 pb-[1px] mb-1">Emergency Contacts</h5>
+          <h5 className="font-extrabold text-[7.5px] uppercase border-b border-gray-300 pb-[1px] mb-1">Contact Details</h5>
           <div className="space-y-[1px] text-[7px] font-bold">
+            <div className="flex justify-between"><span>Mobile:</span> <span>{volunteer.mobile}</span></div>
             <div className="flex justify-between"><span>Emergency:</span> <span>{volunteer.emergencyContact}</span></div>
           </div>
         </div>
