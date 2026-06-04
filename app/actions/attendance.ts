@@ -37,7 +37,7 @@ export async function recordAttendanceAction(
   if (isUuid) {
       query = query.eq('id', parsedScanData)
   } else {
-      query = query.eq('snk_id', parsedScanData)
+      query = query.or(`id.eq.${parsedScanData},snk_id.eq.${parsedScanData}`)
   }
 
   const { data: volunteerData, error: volunteerError } = await query.single()
@@ -214,7 +214,7 @@ export async function bulkSyncAttendanceAction(scans: any[]) {
             if (isUuid) {
                 query = query.eq('id', parsedScanData)
             } else {
-                query = query.eq('snk_id', parsedScanData)
+                query = query.or(`id.eq.${parsedScanData},snk_id.eq.${parsedScanData}`)
             }
 
             const { data: volunteerData, error: volErr } = await query.single()
