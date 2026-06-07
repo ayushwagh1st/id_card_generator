@@ -8,12 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, Plus, Edit, Trash2 } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, FileText, Download, Database } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { exportToPDF } from '@/lib/pdf'
 import { getSessionsAction, addSessionAction, updateSessionAction, deleteSessionAction } from '@/app/actions/sessions'
 import { getLecturersAction } from '@/app/actions/lecturers'
-
+import { formatLecturerLabel } from '@/lib/formatters'
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<any[]>([])
   const [lecturers, setLecturers] = useState<any[]>([])
@@ -128,6 +129,50 @@ export default function SessionsPage() {
       setVenue(''); setDate(''); setStartTime(''); setEndTime(''); setCapacity(''); setStatus('Scheduled');
   }
 
+  const handleExportCSV = () => {
+    if (sessions.length === 0) return
+    const headers = ['Session Name', 'Category', 'Lecturer', 'Venue', 'Date', 'Time', 'Status']
+    const rows = sessions.map(s => [
+        s.name,
+        s.category || '',
+        s.lecturer?.name || 'Unassigned',
+        s.venue || '',
+        s.date || '',
+        `${s.start_time} - ${s.end_time}`,
+        s.status || ''
+    ])
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => `"${e.join('","')}"`)].join("\n")
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `Sessions_List.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleExportPDF = () => {
+    if (sessions.length === 0) return
+    const headers = ['Session Name', 'Category', 'Lecturer', 'Venue', 'Date', 'Time', 'Status']
+    const rows = sessions.map(s => [
+        s.name,
+        s.category || '',
+        s.lecturer?.name || 'Unassigned',
+        s.venue || '',
+        s.date || '',
+        `${s.start_time} - ${s.end_time}`,
+        s.status || ''
+    ])
+    exportToPDF({
+      title: 'Sessions Directory',
+      subtitle: 'Complete list of all scheduled sessions',
+      filename: 'Sessions_Directory.pdf',
+      headers,
+      data: rows,
+      themeColor: [16, 185, 129] // Emerald
+    })
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-600 to-indigo-600 p-6 text-white shadow-lg">
@@ -152,12 +197,19 @@ export default function SessionsPage() {
           />
         </div>
 
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger render={
-            <Button onClick={resetForm} className="w-full sm:w-auto bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/95 text-white font-semibold rounded-xl px-5 gap-2">
-              <Plus className="h-4 w-4" /> Create Session
-            </Button>
-          } />
+        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+          <Button onClick={handleExportCSV} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-emerald-600 border-emerald-500/20">
+            <FileText className="w-4 h-4" /> Export CSV
+          </Button>
+          <Button onClick={handleExportPDF} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-indigo-600 border-indigo-500/20">
+            <Download className="w-4 h-4" /> Export PDF
+          </Button>
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger render={
+              <Button onClick={resetForm} className="w-full sm:w-auto bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/95 text-white font-semibold rounded-xl px-5 gap-2">
+                <Plus className="h-4 w-4" /> Create Session
+              </Button>
+            } />
           <DialogContent className="sm:max-w-2xl rounded-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Session</DialogTitle>
@@ -178,11 +230,17 @@ export default function SessionsPage() {
                 <div className="space-y-2">
                   <Label>Lecturer / Trainer</Label>
                   <Select value={lecturerId} onValueChange={(val: any) => setLecturerId(val)}>
-                    <SelectTrigger><SelectValue placeholder="Assign Lecturer" /></SelectTrigger>
+                    <SelectTrigger>
+                      <span data-slot="select-value" className="flex flex-1 text-left truncate">
+                        {lecturerId !== 'none' && lecturers.length > 0
+                          ? formatLecturerLabel(lecturers.find(l => l.id === lecturerId))
+                          : "Assign Lecturer"}
+                      </span>
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Unassigned</SelectItem>
                       {lecturers.map(l => (
-                          <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                          <SelectItem key={l.id} value={l.id} label={formatLecturerLabel(l)}>{formatLecturerLabel(l)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -240,6 +298,7 @@ export default function SessionsPage() {
           </DialogContent>
         </Dialog>
       </div>
+      </div>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-2xl rounded-xl max-h-[90vh] overflow-y-auto">
@@ -262,11 +321,17 @@ export default function SessionsPage() {
                 <div className="space-y-2">
                   <Label>Lecturer / Trainer</Label>
                   <Select value={lecturerId} onValueChange={(val: any) => setLecturerId(val)}>
-                    <SelectTrigger><SelectValue placeholder="Assign Lecturer" /></SelectTrigger>
+                    <SelectTrigger>
+                      <span data-slot="select-value" className="flex flex-1 text-left truncate">
+                        {lecturerId !== 'none' && lecturers.length > 0
+                          ? formatLecturerLabel(lecturers.find(l => l.id === lecturerId))
+                          : "Assign Lecturer"}
+                      </span>
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Unassigned</SelectItem>
                       {lecturers.map(l => (
-                          <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                          <SelectItem key={l.id} value={l.id} label={formatLecturerLabel(l)}>{formatLecturerLabel(l)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

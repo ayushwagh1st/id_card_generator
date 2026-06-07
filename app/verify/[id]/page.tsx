@@ -35,9 +35,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
             <h1 className="text-2xl font-bold text-gray-900">Invalid ID Card</h1>
             <p className="text-gray-500">This QR code does not match any registered volunteer in our system. It may be forged or deleted.</p>
             <div className="mt-4 p-3 bg-red-50 text-red-600 text-xs rounded border border-red-200 break-all w-full text-left">
-              <strong>Debug Error:</strong> {error ? (error.message || JSON.stringify(error)) : "Volunteer not found in database (0 rows)"}
-              <br/>
-              <strong>ID Scanned:</strong> {resolvedParams.id}
+              <strong>ID Scanned:</strong> {error ? "Invalid Code" : resolvedParams.id.substring(0,8) + '...'}
             </div>
           </CardContent>
         </Card>

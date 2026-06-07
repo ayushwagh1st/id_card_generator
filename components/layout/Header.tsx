@@ -16,42 +16,57 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
 
   useEffect(() => {
     async function getUserName() {
-      // 1. Try supabase auth user first
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        if (user.user_metadata?.full_name) {
-          setDisplayName(user.user_metadata.full_name)
-          return
-        }
-        // Fallback to query profiles table
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', user.id)
-          .single()
-        if (profile?.full_name) {
-          setDisplayName(profile.full_name)
-          return
-        }
-      }
-      
-      // 2. Fallback to mock cookie check
-      const sessionUserStr = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('mock-user='))
-        ?.split('=')[1]
-      
-      if (sessionUserStr) {
-        const sessionUser = JSON.parse(decodeURIComponent(sessionUserStr))
-        if (sessionUser.email) {
+      try {
+        // 1. Try supabase auth user first
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          if (user.user_metadata?.full_name) {
+            setDisplayName(user.user_metadata.full_name)
+            return
+          }
+          // Fallback to query profiles table
           const { data: profile } = await supabase
             .from('profiles')
             .select('full_name')
-            .eq('email', sessionUser.email)
+            .eq('id', user.id)
             .single()
           if (profile?.full_name) {
             setDisplayName(profile.full_name)
+            return
           }
+        }
+        
+        // 2. Fallback to mock cookie check
+        const sessionUserStr = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('mock-user='))
+          ?.split('=')[1]
+        
+        if (sessionUserStr) {
+          const sessionUser = JSON.parse(decodeURIComponent(sessionUserStr))
+          if (sessionUser.email) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('email', sessionUser.email)
+              .single()
+            if (profile?.full_name) {
+              setDisplayName(profile.full_name)
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error)
+        // Fallback to cookie without database query if network fails
+        const sessionUserStr = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('mock-user='))
+          ?.split('=')[1]
+        if (sessionUserStr) {
+            try {
+                const sessionUser = JSON.parse(decodeURIComponent(sessionUserStr))
+                if (sessionUser.full_name) setDisplayName(sessionUser.full_name)
+            } catch(e) {}
         }
       }
     }

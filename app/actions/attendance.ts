@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logActivityAction } from './activity'
 
 // Process QR scan for attendance
 export async function recordAttendanceAction(
@@ -115,6 +116,8 @@ export async function recordAttendanceAction(
           return { error: 'Database error recording attendance.' }
       }
 
+      await logActivityAction('ATTENDANCE_SCAN', `Check-in (${status}) for ${volunteerData.full_name}`)
+
       return { 
           success: true, 
           message: `✅ Attendance Marked Successfully (${status}) for ${volunteerData.full_name}`,
@@ -140,6 +143,8 @@ export async function recordAttendanceAction(
           console.error('Error recording check-out:', updateError)
           return { error: 'Database error recording check-out.' }
       }
+
+      await logActivityAction('ATTENDANCE_SCAN', `Check-out for ${volunteerData.full_name}`)
 
       return { 
           success: true, 
@@ -285,7 +290,7 @@ export async function bulkSyncAttendanceAction(scans: any[]) {
                 
                 const status = (scanTimeMs > sessionStartTime + gracePeriodMs) ? 'Late' : 'Present'
 
-                await supabase.from('attendance').insert([{
+                const { error: insertError } = await supabase.from('attendance').insert([{
                     volunteer_id: volunteerId,
                     session_id: sessionId,
                     lecturer_id: lecturerId,
@@ -294,7 +299,12 @@ export async function bulkSyncAttendanceAction(scans: any[]) {
                     attendance_date: scanDateStr
                 }])
 
-                results.push({ scanData, status: 'success', message: 'Synced check-in' })
+                if (insertError) {
+                    results.push({ scanData, status: 'error', message: 'Database error.' })
+                } else {
+                    results.push({ scanData, status: 'success', message: `✅ Check-in (${status}) for ${volunteerData.full_name}` })
+                    await logActivityAction('BULK_ATTENDANCE_SCAN', `Bulk check-in (${status}) for ${volunteerData.full_name}`)
+                }
 
             } else if (mode === 'check-out') {
                 if (!existingAttendance) {
@@ -306,11 +316,16 @@ export async function bulkSyncAttendanceAction(scans: any[]) {
                     continue
                 }
 
-                await supabase.from('attendance')
+                const { error: updateError } = await supabase.from('attendance')
                     .update({ check_out_time: timestamp })
                     .eq('id', existingAttendance.id)
                 
-                results.push({ scanData, status: 'success', message: 'Synced check-out' })
+                if (updateError) {
+                    results.push({ scanData, status: 'error', message: 'Database error.' })
+                } else {
+                    results.push({ scanData, status: 'success', message: `✅ Check-out for ${volunteerData.full_name}` })
+                    await logActivityAction('BULK_ATTENDANCE_SCAN', `Bulk check-out for ${volunteerData.full_name}`)
+                }
             }
         } catch (err: any) {
             results.push({ scanData: scan.scanData, status: 'error', message: err.message })

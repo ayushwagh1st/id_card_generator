@@ -10,8 +10,10 @@ import { FileText, Download, CheckCircle, Clock, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getSessionsAction } from '@/app/actions/sessions'
+import { formatSessionLabel } from '@/lib/formatters'
 import { getSessionAttendanceAction } from '@/app/actions/attendance'
 import { createClient } from '@/lib/supabase/client'
+import { exportToPDF } from '@/lib/pdf'
 
 export default function LecturerReportsPage() {
   const [sessions, setSessions] = useState<any[]>([])
@@ -87,6 +89,33 @@ export default function LecturerReportsPage() {
       document.body.removeChild(link)
   }
 
+  const handleExportPDF = () => {
+      if (attendanceRecords.length === 0) return
+      
+      const session = sessions.find(s => s.id === selectedSessionId)
+      const sessionName = session ? session.name : 'Session'
+      
+      const headers = ['SNK ID', 'Name', 'Mobile', 'Status', 'Date', 'Check-In', 'Check-Out']
+      const rows = attendanceRecords.map(r => [
+          r.volunteer?.snk_id || 'Pending',
+          r.volunteer?.full_name || 'N/A',
+          r.volunteer?.mobile_number || 'N/A',
+          r.attendance_status || 'N/A',
+          r.attendance_date || 'N/A',
+          r.check_in_time ? new Date(r.check_in_time).toLocaleTimeString() : 'N/A',
+          r.check_out_time ? new Date(r.check_out_time).toLocaleTimeString() : 'N/A'
+      ])
+
+      exportToPDF({
+        title: `${sessionName} Attendance Report`,
+        subtitle: 'Official attendance records for this session',
+        filename: `${sessionName.replace(/\s+/g, '_')}_Attendance.pdf`,
+        headers,
+        data: rows,
+        themeColor: [13, 148, 136] // Teal theme for Lecturer
+      })
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-600 to-indigo-600 p-6 text-white shadow-lg">
@@ -98,15 +127,26 @@ export default function LecturerReportsPage() {
               View and export attendance records for your assigned sessions.
             </p>
           </div>
-          <Button 
-            onClick={handleExportCSV} 
-            disabled={attendanceRecords.length === 0}
-            variant="secondary" 
-            className="w-full md:w-auto bg-white/20 hover:bg-white/30 text-white border-0 shadow-sm backdrop-blur-md font-bold"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleExportCSV} 
+              disabled={attendanceRecords.length === 0}
+              variant="secondary" 
+              className="bg-white/20 hover:bg-white/30 text-white border-0 shadow-sm backdrop-blur-md font-bold"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button 
+              onClick={handleExportPDF} 
+              variant="secondary" 
+              className="bg-white/20 hover:bg-white/30 text-white border-0 shadow-sm backdrop-blur-md font-bold"
+              disabled={attendanceRecords.length === 0}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export PDF
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -114,12 +154,16 @@ export default function LecturerReportsPage() {
         <Label className="font-bold whitespace-nowrap">Select Session:</Label>
         <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
           <SelectTrigger className="w-full sm:w-[400px]">
-            <SelectValue placeholder="Choose a session" />
+            <span data-slot="select-value" className="flex flex-1 text-left truncate">
+              {selectedSessionId !== 'none' && sessions.length > 0
+                ? formatSessionLabel(sessions.find(s => s.id === selectedSessionId))
+                : "-- Select a Session --"}
+            </span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">-- Select a Session --</SelectItem>
             {sessions.map(s => (
-                <SelectItem key={s.id} value={s.id}>{s.name} ({s.date})</SelectItem>
+                <SelectItem key={s.id} value={s.id} label={formatSessionLabel(s)}>{formatSessionLabel(s)}</SelectItem>
             ))}
           </SelectContent>
         </Select>

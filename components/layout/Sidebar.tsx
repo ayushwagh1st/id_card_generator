@@ -33,6 +33,7 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
   const headLinks = [
     { name: 'Dashboard', href: '/head/dashboard', icon: BarChart },
     { name: 'My Volunteers', href: '/head/volunteers', icon: Users },
+    { name: 'Reports', href: '/head/reports', icon: FileText },
   ]
 
   const lecturerLinks = [

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Plus, Edit, Trash2, KeyRound, Download, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { exportToPDF } from '@/lib/pdf'
 import { getLecturersAction, addLecturerAction, updateLecturerAction, deleteLecturerAction, resetLecturerPasswordAction } from '@/app/actions/lecturers'
 
 export default function LecturersPage() {
@@ -151,6 +152,25 @@ export default function LecturersPage() {
     }
   }
 
+  const handleExportPDF = () => {
+    if (lecturers.length === 0) return
+    const headers = ['Name', 'Email (Login ID)', 'Mobile', 'Status']
+    const rows = lecturers.map(l => [
+        l.name,
+        l.email,
+        l.mobile || 'N/A',
+        l.status || 'Active'
+    ])
+    exportToPDF({
+      title: 'Lecturers Directory',
+      subtitle: 'Complete list of all registered lecturers',
+      filename: 'Lecturers_Directory.pdf',
+      headers,
+      data: rows,
+      themeColor: [59, 130, 246] // Blue
+    })
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 p-6 text-white shadow-lg">
@@ -175,17 +195,13 @@ export default function LecturersPage() {
           />
         </div>
 
-        <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2">
-          <Button 
-            variant="outline" 
-            onClick={handleExportCredentials} 
-            disabled={lecturers.length === 0} 
-            className="w-full sm:w-auto gap-2 border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4"
-          >
-            <Download className="h-4 w-4" />
-            Export Credentials
+        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+          <Button onClick={handleExportCredentials} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-emerald-600 border-emerald-500/20">
+            <Download className="w-4 h-4" /> Export CSV
           </Button>
-
+          <Button onClick={handleExportPDF} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-blue-600 border-blue-500/20">
+            <Download className="w-4 h-4" /> Export PDF
+          </Button>
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger render={
               <Button className="w-full sm:w-auto bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/95 text-white font-semibold rounded-xl px-5 gap-2">

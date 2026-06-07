@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { AlertCircle, CheckCircle, Clock, XCircle, Camera, Users, LogIn, LogOut, Wifi, WifiOff, RefreshCw, Activity } from 'lucide-react'
 import { toast } from 'sonner'
 import { getSessionsAction } from '@/app/actions/sessions'
+import { formatSessionLabel } from '@/lib/formatters'
 import { recordAttendanceAction, bulkSyncAttendanceAction } from '@/app/actions/attendance'
 import { createClient } from '@/lib/supabase/client'
 
@@ -243,12 +244,16 @@ function ScannerContent() {
           <div className="flex flex-col sm:flex-row gap-2 bg-white/10 p-2 rounded-xl backdrop-blur-md">
             <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
                 <SelectTrigger className="w-full sm:w-[250px] bg-white text-zinc-900 border-none font-semibold">
-                    <SelectValue placeholder="Select Session" />
+                    <span data-slot="select-value" className="flex flex-1 text-left truncate">
+                      {selectedSessionId !== 'none' && sessions.length > 0
+                        ? formatSessionLabel(sessions.find(s => s.id === selectedSessionId))
+                        : "-- Select Session --"}
+                    </span>
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="none">-- Select Session --</SelectItem>
                     {sessions.map(s => (
-                        <SelectItem key={s.id} value={s.id}>{s.name} ({s.date})</SelectItem>
+                        <SelectItem key={s.id} value={s.id} label={formatSessionLabel(s)}>{formatSessionLabel(s)}</SelectItem>
                     ))}
                 </SelectContent>
             </Select>
@@ -378,7 +383,7 @@ function ScannerContent() {
                                               r.status === 'offline' ? 'bg-zinc-100 border-zinc-200 text-zinc-900' :
                                               'bg-rose-50 border-rose-100 text-rose-900'
                                           }`}>
-                                              <span className="font-bold truncate max-w-[150px]">{r.id}</span>
+                                              <span className="font-bold truncate max-w-[150px]">{r.snk_id || r.volunteer?.full_name || 'Unknown Volunteer'}</span>
                                               <span className="font-semibold">{r.msg}</span>
                                           </div>
                                       ))}

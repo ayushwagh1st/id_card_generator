@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { getVolunteersAction, addVolunteerAction, updateVolunteerAction, deleteVolunteerAction, bulkDeleteVolunteersAction, bulkApproveVolunteersAction } from '@/app/actions/volunteers'
+import { formatModelLabel } from '@/lib/formatters'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, UploadCloud, Download } from 'lucide-react'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
@@ -17,6 +19,7 @@ import { compressImage } from '@/lib/image'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { exportToPDF } from '@/lib/pdf'
 
 export default function HeadVolunteersPage() {
   const [volunteers, setVolunteers] = useState<any[]>([])
@@ -224,6 +227,33 @@ export default function HeadVolunteersPage() {
     }
   }
 
+  const handleExportPDF = () => {
+    if (volunteers.length === 0) {
+      toast.error("No volunteers to export")
+      return
+    }
+
+    const headers = ['SNK ID', 'Name', 'Mobile', 'Gender', 'Role', 'Status', 'Model']
+    const rows = volunteers.map(v => [
+        v.snk_id || 'Pending',
+        v.full_name || 'N/A',
+        v.mobile_number || 'N/A',
+        v.gender || 'N/A',
+        v.role || 'Volunteer',
+        v.status || 'Pending',
+        v.models?.name || 'N/A'
+    ])
+
+    exportToPDF({
+      title: 'My Volunteers Directory',
+      subtitle: 'Official list of all registered volunteers in my models',
+      filename: 'My_Volunteers_Directory.pdf',
+      headers,
+      data: rows,
+      themeColor: [249, 115, 22] // Orange theme
+    })
+  }
+
   // Photo Upload Handler
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -377,7 +407,7 @@ export default function HeadVolunteersPage() {
                   <SelectContent>
                     <SelectItem value="all" label="All My Models">All My Models</SelectItem>
                     {myModels.map(m => (
-                      <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
+                      <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -396,16 +426,26 @@ export default function HeadVolunteersPage() {
                 </Select>
               </div>
 
-              <Button 
-                variant="outline"
-                className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-5 gap-2"
-                onClick={() => {
-                  window.location.href = `/api/export?status=${filterStatus}&model=${filterModel}&search=${searchTerm}`
-                }}
-              >
-                <Download className="h-4 w-4" />
-                Export CSV
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button 
+                  variant="outline"
+                  className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-emerald-600 border-emerald-500/20"
+                  onClick={() => {
+                    window.location.href = `/api/export?status=${filterStatus}&model=${filterModel}&search=${searchTerm}`
+                  }}
+                >
+                  <Download className="h-4 w-4" />
+                  Export CSV
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-orange-600 border-orange-500/20"
+                  onClick={handleExportPDF}
+                >
+                  <Download className="h-4 w-4" />
+                  Export PDF
+                </Button>
+              </div>
 
               {/* Add Trigger */}
               <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -470,12 +510,12 @@ export default function HeadVolunteersPage() {
                         <Select value={modelId} onValueChange={(val) => setModelId(val || '')}>
                           <SelectTrigger>
                             <SelectValue placeholder="Choose Division">
-                              {myModels.find(m => m.id === modelId)?.name || "Choose Division"}
+                              {myModels.find(m => m.id === modelId) ? formatModelLabel(myModels.find(m => m.id === modelId)) : "Choose Division"}
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {myModels.map(m => (
-                              <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
+                              <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -578,12 +618,12 @@ export default function HeadVolunteersPage() {
                       <Select value={modelId} onValueChange={(val) => setModelId(val || '')} disabled={currentVolunteer?.status === 'Approved'}>
                         <SelectTrigger disabled={currentVolunteer?.status === 'Approved'}>
                           <SelectValue placeholder="Choose Division">
-                            {myModels.find(m => m.id === modelId)?.name || "Choose Division"}
+                            {myModels.find(m => m.id === modelId) ? formatModelLabel(myModels.find(m => m.id === modelId)) : "Choose Division"}
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {myModels.map(m => (
-                            <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
+                            <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -683,7 +723,7 @@ export default function HeadVolunteersPage() {
                     <TableBody>
                       {filteredVolunteers.map((vol) => (
                         <TableRow key={vol.id} className="hover:bg-muted/20 transition-colors duration-200">
-                          <TableCell className="font-bold text-sm text-primary py-4 px-6">{vol.id}</TableCell>
+                          <TableCell className="font-bold text-sm text-primary py-4 px-6">{vol.snk_id || 'Pending'}</TableCell>
                           <TableCell>
                             <div className="w-10 h-12 rounded bg-muted overflow-hidden flex items-center justify-center border shadow-sm">
                               {vol.photo_url ? (

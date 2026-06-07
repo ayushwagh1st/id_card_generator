@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logActivityAction } from './activity'
 
 // Session CRUD
 export async function getSessionsAction(
@@ -55,6 +56,9 @@ export async function addSessionAction(formData: any) {
   }
 
   revalidatePath('/admin/sessions')
+  
+  await logActivityAction('CREATE_SESSION', `Session: ${formData.name}`, formData)
+  
   return { success: true, data }
 }
 
@@ -70,12 +74,17 @@ export async function updateSessionAction(id: string, formData: any) {
 
   revalidatePath('/admin/sessions')
   revalidatePath('/lecturer/dashboard')
+  
+  const sessionName = formData.name || id
+  await logActivityAction('UPDATE_SESSION', `Session: ${sessionName}`, formData)
+  
   return { success: true }
 }
 
 export async function deleteSessionAction(id: string) {
   const supabase = await createClient()
   
+  const { data: session } = await supabase.from('sessions').select('name').eq('id', id).single()
   const { error } = await supabase.from('sessions').delete().eq('id', id)
   
   if (error) {
@@ -84,6 +93,9 @@ export async function deleteSessionAction(id: string) {
   }
 
   revalidatePath('/admin/sessions')
+  
+  await logActivityAction('DELETE_SESSION', `Session: ${session?.name || id}`)
+  
   return { success: true }
 }
 
@@ -129,12 +141,17 @@ export async function enrollVolunteersAction(sessionId: string, volunteerIds: st
 
   revalidatePath('/admin/session-enrollment')
   revalidatePath('/lecturer/sessions')
+  
+  const { data: session } = await supabase.from('sessions').select('name').eq('id', sessionId).single()
+  await logActivityAction('ENROLL_VOLUNTEERS', `${volunteerIds.length} volunteers enrolled in session: ${session?.name || sessionId}`)
+  
   return { success: true }
 }
 
 export async function removeEnrollmentAction(enrollmentId: string) {
   const supabase = await createClient()
 
+  const { data: enrollment } = await supabase.from('volunteer_sessions').select('session:sessions(name), volunteer:volunteers(full_name)').eq('id', enrollmentId).single()
   const { error } = await supabase.from('volunteer_sessions').delete().eq('id', enrollmentId)
 
   if (error) {
@@ -143,5 +160,10 @@ export async function removeEnrollmentAction(enrollmentId: string) {
   }
 
   revalidatePath('/admin/session-enrollment')
+  
+  const sessionName = (enrollment?.session as any)?.name || 'Unknown Session'
+  const volName = (enrollment?.volunteer as any)?.full_name || 'Unknown Volunteer'
+  await logActivityAction('REMOVE_ENROLLMENT', `Removed ${volName} from ${sessionName}`)
+  
   return { success: true }
 }

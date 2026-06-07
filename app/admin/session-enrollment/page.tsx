@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { getSessionsAction, getSessionEnrollmentsAction, enrollVolunteersAction, removeEnrollmentAction } from '@/app/actions/sessions'
 import { getVolunteersAction } from '@/app/actions/volunteers'
 import { createClient } from '@/lib/supabase/client'
+import { formatSessionLabel, formatModelLabel, formatVolunteerLabel } from '@/lib/formatters'
 
 export default function SessionEnrollmentPage() {
   const [sessions, setSessions] = useState<any[]>([])
@@ -171,12 +172,16 @@ export default function SessionEnrollmentPage() {
         <Label className="font-bold whitespace-nowrap">Select Session:</Label>
         <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
           <SelectTrigger className="w-full sm:w-[400px]">
-            <SelectValue placeholder="Choose a session" />
+            <span data-slot="select-value" className="flex flex-1 text-left truncate">
+              {selectedSessionId !== 'none' && sessions.length > 0
+                ? formatSessionLabel(sessions.find(s => s.id === selectedSessionId))
+                : "Choose a session"}
+            </span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">-- Select a Session --</SelectItem>
             {sessions.map(s => (
-                <SelectItem key={s.id} value={s.id}>{s.name} ({s.date})</SelectItem>
+                <SelectItem key={s.id} value={s.id} label={formatSessionLabel(s)}>{formatSessionLabel(s)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -209,12 +214,16 @@ export default function SessionEnrollmentPage() {
                               </div>
                               <Select value={modelFilter} onValueChange={(val: any) => setModelFilter(val)}>
                                   <SelectTrigger>
-                                      <SelectValue placeholder="Filter by Model" />
+                                      <span data-slot="select-value" className="flex flex-1 text-left truncate">
+                                        {modelFilter !== 'all' && models.length > 0
+                                          ? formatModelLabel(models.find(m => m.id === modelFilter))
+                                          : "All Models"}
+                                      </span>
                                   </SelectTrigger>
                                   <SelectContent>
                                       <SelectItem value="all">All Models</SelectItem>
                                       {models.map(m => (
-                                          <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                          <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
                                       ))}
                                   </SelectContent>
                               </Select>
@@ -258,8 +267,8 @@ export default function SessionEnrollmentPage() {
                                             onCheckedChange={() => handleToggleVolunteer(v.id)}
                                           />
                                           <div className="flex flex-col flex-1">
-                                              <span className="font-semibold text-sm">{v.full_name}</span>
-                                              <span className="text-xs text-muted-foreground">{v.snk_id || 'Pending'} • {v.models?.name || 'No Model'}</span>
+                                              <span className="font-semibold text-sm">{formatVolunteerLabel(v)}</span>
+                                              <span className="text-xs text-muted-foreground">{v.models?.name ? formatModelLabel(v.models) : 'No Model'}</span>
                                           </div>
                                       </div>
                                   ))}

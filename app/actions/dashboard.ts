@@ -31,12 +31,12 @@ export async function getDashboardStatsAction() {
     .select('*', { count: 'exact', head: true })
     .eq('status', 'Pending')
 
-  // 5. Fetch recent 5 registrations
-  const { data: recentVolunteers } = await supabase
-    .from('volunteers')
-    .select('created_at, full_name, role')
+  // 5. Fetch recent 8 activities from activity_logs
+  const { data: recentActivities } = await supabase
+    .from('activity_logs')
+    .select('*')
     .order('created_at', { ascending: false })
-    .limit(5)
+    .limit(8)
 
   // 6. Fetch stats per model (we need to aggregate or just fetch all for chart, wait we can't fetch 5000 rows. We should use rpc or fetch grouped data. Since we don't have rpc, we'll fetch only model_id from volunteers to group manually, which is lighter than fetching everything)
   const { data: volModels } = await supabase
@@ -62,19 +62,25 @@ export async function getDashboardStatsAction() {
     volunteers: modelCounts[name]
   }))
 
-  const formattedActivities = (recentVolunteers || []).map(rv => {
-    const timeString = new Date(rv.created_at).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-    return {
-      action: `Volunteer Registered`,
-      user: `${rv.full_name} (${rv.role || 'Volunteer'})`,
-      time: timeString
-    }
-  })
+  let formattedActivities: any[] = []
+  if (recentActivities && recentActivities.length > 0) {
+      formattedActivities = recentActivities.map(act => {
+        const timeString = new Date(act.created_at).toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+        return {
+          action: act.action_type.replace(/_/g, ' '),
+          user: `${act.user_name} (${act.role})`,
+          time: timeString
+        }
+      })
+  } else {
+      // Fallback if table is empty or missing (graceful degradation)
+      formattedActivities = []
+  }
 
   // Fetch Sessions count
   const { count: totalSessions } = await supabase.from('sessions').select('*', { count: 'exact', head: true })

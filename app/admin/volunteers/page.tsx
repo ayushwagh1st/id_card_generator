@@ -29,7 +29,9 @@ import { compressImage } from '@/lib/image'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { exportToPDF } from '@/lib/pdf'
 import { getVolunteersAction, addVolunteerAction, updateVolunteerAction, deleteVolunteerAction, bulkDeleteVolunteersAction, bulkApproveVolunteersAction } from '@/app/actions/volunteers'
+import { formatModelLabel } from '@/lib/formatters'
 
 export default function VolunteersPage() {
   const [volunteers, setVolunteers] = useState<any[]>([])
@@ -211,16 +213,43 @@ export default function VolunteersPage() {
   }
 
   const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return
+    if (!selectedIds.length) return
     try {
       const res = await bulkDeleteVolunteersAction(selectedIds)
       if (res?.error) throw new Error(res.error)
-      toast.success(`Deleted ${selectedIds.length} volunteer records`)
+      toast.success(`${selectedIds.length} volunteers deleted`)
       setSelectedIds([])
       fetchVolunteers()
     } catch (err: any) {
-      toast.error(err.message || 'Error executing bulk delete')
+      toast.error(err.message || 'Error deleting volunteers')
     }
+  }
+
+  const handleExportPDF = () => {
+    if (volunteers.length === 0) {
+      toast.error("No volunteers to export")
+      return
+    }
+
+    const headers = ['SNK ID', 'Name', 'Mobile', 'Gender', 'Role', 'Status', 'Model']
+    const rows = volunteers.map(v => [
+        v.snk_id || 'Pending',
+        v.full_name || 'N/A',
+        v.mobile_number || 'N/A',
+        v.gender || 'N/A',
+        v.role || 'Volunteer',
+        v.status || 'Pending',
+        v.models?.name || 'N/A'
+    ])
+
+    exportToPDF({
+      title: 'Volunteers Directory',
+      subtitle: 'Official list of all registered volunteers',
+      filename: 'Volunteers_Directory.pdf',
+      headers,
+      data: rows,
+      themeColor: [79, 70, 229] // Indigo
+    })
   }
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -322,7 +351,7 @@ export default function VolunteersPage() {
                 <SelectContent>
                   <SelectItem value="all" label="All Exhibition Models">All Exhibition Models</SelectItem>
                   {models.map(m => (
-                    <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
+                    <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -381,19 +410,17 @@ export default function VolunteersPage() {
                   window.open(`/api/export?type=volunteers&status=${filterStatus}&model=${filterModel}&search=${searchTerm}`, '_blank')
                 }}
               >
-                <Database className="w-4 h-4" />
+                <Download className="w-4 h-4" />
                 Export CSV
               </Button>
 
-              <Button 
+              <Button
                 variant="outline"
-                className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-5 gap-2"
-                onClick={() => {
-                  window.location.href = `/api/export?status=${filterStatus}&model=${filterModel}`
-                }}
+                className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-indigo-600 border-indigo-500/20"
+                onClick={handleExportPDF}
               >
-                <Download className="h-4 w-4" />
-                Export CSV
+                <Download className="w-4 h-4" />
+                Export PDF
               </Button>
 
               <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -450,13 +477,13 @@ export default function VolunteersPage() {
                         <Select value={modelId} onValueChange={(val) => setModelId(val || 'none')}>
                           <SelectTrigger>
                             <SelectValue placeholder="Choose Division">
-                              {modelId === 'none' ? 'Not Assigned' : models.find(m => m.id === modelId)?.name}
+                              {modelId === 'none' ? 'Not Assigned' : models.find(m => m.id === modelId) ? formatModelLabel(models.find(m => m.id === modelId)) : 'Not Assigned'}
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none" label="Not Assigned">Not Assigned</SelectItem>
                             {models.map(m => (
-                              <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
+                              <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -560,13 +587,13 @@ export default function VolunteersPage() {
                     <Select value={modelId} onValueChange={(val) => setModelId(val || 'none')}>
                       <SelectTrigger>
                         <SelectValue placeholder="Choose Division">
-                          {modelId === 'none' ? 'Not Assigned' : models.find(m => m.id === modelId)?.name}
+                          {modelId === 'none' ? 'Not Assigned' : models.find(m => m.id === modelId) ? formatModelLabel(models.find(m => m.id === modelId)) : 'Not Assigned'}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none" label="Not Assigned">Not Assigned</SelectItem>
                         {models.map(m => (
-                          <SelectItem key={m.id} value={m.id} label={m.name}>{m.name}</SelectItem>
+                          <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

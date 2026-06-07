@@ -20,9 +20,11 @@ import {
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Plus, Search, Edit, Trash2, Database, Shield, Layers, HelpCircle, Loader2 } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Database, Shield, Layers, HelpCircle, Loader2, FileText, Download } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { exportToPDF } from '@/lib/pdf'
+import { formatHeadLabel } from '@/lib/formatters'
 
 export default function ModelsPage() {
   const [models, setModels] = useState<any[]>([])
@@ -172,6 +174,46 @@ export default function ModelsPage() {
     }
   }
 
+  const handleExportCSV = () => {
+    if (models.length === 0) return
+    const headers = ['Model Name', 'Category', 'Description', 'Model Head', 'Status']
+    const rows = models.map(m => [
+        m.name,
+        m.exhibition_category || '',
+        m.description || '',
+        m.profiles?.full_name || 'Unassigned',
+        m.status || 'Active'
+    ])
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => `"${e.join('","')}"`)].join("\n")
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `Exhibition_Models.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleExportPDF = () => {
+    if (models.length === 0) return
+    const headers = ['Model Name', 'Category', 'Description', 'Model Head', 'Status']
+    const rows = models.map(m => [
+        m.name,
+        m.exhibition_category || '',
+        m.description || '',
+        m.profiles?.full_name || 'Unassigned',
+        m.status || 'Active'
+    ])
+    exportToPDF({
+      title: 'Exhibition Models',
+      subtitle: 'Complete list of all models and their assigned heads',
+      filename: 'Exhibition_Models.pdf',
+      headers,
+      data: rows,
+      themeColor: [147, 51, 234] // Purple
+    })
+  }
+
   const filteredModels = models.filter(m => 
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (m.exhibition_category && m.exhibition_category.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -251,6 +293,13 @@ export default function ModelsPage() {
 
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
 
+          <Button onClick={handleExportCSV} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-emerald-600 border-emerald-500/20">
+            <FileText className="w-4 h-4" /> Export CSV
+          </Button>
+          <Button onClick={handleExportPDF} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-purple-600 border-purple-500/20">
+            <Download className="w-4 h-4" /> Export PDF
+          </Button>
+
           {/* Add Model Dialog */}
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger render={<Button className="w-full sm:w-auto bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-white shadow-md font-semibold rounded-xl px-5 gap-2" />}>
@@ -286,7 +335,7 @@ export default function ModelsPage() {
                   <SelectContent>
                     <SelectItem value="none" label="No Head Assigned">No Head Assigned</SelectItem>
                     {heads.map(h => (
-                      <SelectItem key={h.id} value={h.id} label={`${h.full_name} (${h.email})`}>{h.full_name} ({h.email})</SelectItem>
+                      <SelectItem key={h.id} value={h.id} label={formatHeadLabel(h)}>{formatHeadLabel(h)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -344,7 +393,7 @@ export default function ModelsPage() {
                 <SelectContent>
                   <SelectItem value="none" label="No Head Assigned">No Head Assigned</SelectItem>
                   {heads.map(h => (
-                    <SelectItem key={h.id} value={h.id} label={`${h.full_name} (${h.email})`}>{h.full_name} ({h.email})</SelectItem>
+                    <SelectItem key={h.id} value={h.id} label={formatHeadLabel(h)}>{formatHeadLabel(h)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -162,8 +162,8 @@ export default function AdminDashboard() {
           <CardHeader className="border-b border-primary/5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold">Recent Registrations</CardTitle>
-                <CardDescription className="text-xs">Latest database signups tracked</CardDescription>
+                <CardTitle className="text-lg font-bold">System Activity Feed</CardTitle>
+                <CardDescription className="text-xs">Latest database actions and scans tracked</CardDescription>
               </div>
               <Activity className="w-5 h-5 text-pink-500" />
             </div>
@@ -172,7 +172,7 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               {activities.length === 0 ? (
                 <div className="text-center text-sm py-12 text-muted-foreground">
-                  No recent registrations logged.
+                  No recent activities logged.
                 </div>
               ) : (
                 activities.map((activity, i) => (

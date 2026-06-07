@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
+import { logActivityAction } from './activity'
 
 export async function getVolunteersAction(
   page: number = 1,
@@ -91,6 +92,9 @@ export async function addVolunteerAction(formData: any) {
   
   revalidatePath('/admin/volunteers')
   revalidatePath('/head/volunteers')
+  
+  await logActivityAction('CREATE_VOLUNTEER', `Volunteer: ${formData.full_name}`, formData)
+  
   return { success: true, data }
 }
 
@@ -104,6 +108,9 @@ export async function updateVolunteerAction(id: string, formData: any) {
     return { error: 'Failed to update volunteer record.' }
   }
   
+  const volName = formData.full_name || id
+  await logActivityAction('UPDATE_VOLUNTEER', `Volunteer: ${volName}`, formData)
+
   revalidatePath('/admin/volunteers')
   revalidatePath('/head/volunteers')
   return { success: true }
@@ -111,12 +118,15 @@ export async function updateVolunteerAction(id: string, formData: any) {
 
 export async function deleteVolunteerAction(id: string) {
   const supabase = await createClient()
+  const { data: volunteer } = await supabase.from('volunteers').select('full_name').eq('id', id).single()
   const { error } = await supabase.from('volunteers').delete().eq('id', id)
   if (error) {
     console.error(`[PROD_LOG] Error in deleteVolunteerAction for ID ${id}:`, error)
     return { error: 'Failed to delete volunteer.' }
   }
   
+  await logActivityAction('DELETE_VOLUNTEER', `Volunteer: ${volunteer?.full_name || id}`)
+
   revalidatePath('/admin/volunteers')
   revalidatePath('/head/volunteers')
   return { success: true }
@@ -130,6 +140,8 @@ export async function bulkDeleteVolunteersAction(ids: string[]) {
     return { error: 'Failed to delete selected volunteers.' }
   }
   
+  await logActivityAction('BULK_DELETE', `${ids.length} volunteers deleted`)
+
   revalidatePath('/admin/volunteers')
   revalidatePath('/head/volunteers')
   return { success: true }
@@ -143,6 +155,8 @@ export async function bulkApproveVolunteersAction(ids: string[]) {
     return { error: 'Failed to approve selected volunteers.' }
   }
   
+  await logActivityAction('BULK_STATUS_UPDATE', `${ids.length} volunteers updated to Approved`)
+
   revalidatePath('/admin/volunteers')
   revalidatePath('/head/volunteers')
   return { success: true }
