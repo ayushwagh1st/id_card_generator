@@ -383,7 +383,7 @@ function ScannerContent() {
                                               r.status === 'offline' ? 'bg-zinc-100 border-zinc-200 text-zinc-900' :
                                               'bg-rose-50 border-rose-100 text-rose-900'
                                           }`}>
-                                              <span className="font-bold truncate max-w-[150px]">{r.snk_id || r.volunteer?.full_name || 'Unknown Volunteer'}</span>
+                                              <span className="font-bold truncate max-w-[150px]">{r.id || 'Unknown Volunteer'}</span>
                                               <span className="font-semibold">{r.msg}</span>
                                           </div>
                                       ))}
