@@ -76,27 +76,29 @@ export default function HeadReportsPage() {
       filename: 'Division_Report.pdf',
       headers,
       data: rows,
-      themeColor: [249, 115, 22] // Orange theme for Head
+      themeColor: [188, 166, 255] // Lavender theme for Head
     })
   }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight">Division Reports</h1>
-            <p className="text-orange-100 mt-2 text-sm max-w-xl">
+      <div className="rounded-[32px] bg-[var(--color-purple)] p-6 md:p-10 text-white border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between w-full md:items-end gap-4">
+          <div className="space-y-3">
+            <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
+              <Activity className="w-4 h-4 mr-2 text-ink" /> Reports
+            </div>
+            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-white">Division Reports</h1>
+            <p className="font-sans font-medium text-white/80 text-lg max-w-xl">
               Generate PDF and CSV reports for volunteers assigned to your exhibition models.
             </p>
           </div>
           <div className="flex gap-2">
-             <Button onClick={handleExportCSV} variant="secondary" className="bg-white/20 hover:bg-white/30 border-0 shadow-sm backdrop-blur-md">
+             <Button onClick={handleExportCSV} className="bg-white text-ink border-ink shadow-hard-xs hover:bg-muted font-bold h-11 px-5 rounded-xl transform transition-transform hover:-translate-y-1">
                <FileText className="w-4 h-4 mr-2" />
                Export CSV
              </Button>
-             <Button onClick={handleExportPDF} variant="secondary" className="bg-white/20 hover:bg-white/30 border-0 shadow-sm backdrop-blur-md">
+             <Button onClick={handleExportPDF} className="bg-white text-ink border-ink shadow-hard-xs hover:bg-muted font-bold h-11 px-5 rounded-xl transform transition-transform hover:-translate-y-1">
                <Download className="w-4 h-4 mr-2" />
                Export PDF
              </Button>
@@ -104,10 +106,10 @@ export default function HeadReportsPage() {
         </div>
       </div>
 
-      <Card className="shadow-lg border-primary/10 overflow-hidden">
-        <CardHeader className="border-b border-primary/5 bg-muted/30">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Activity className="w-5 h-5 text-orange-500" />
+      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0">
+        <CardHeader className="bg-muted/20 border-b border-ink/10">
+          <CardTitle className="text-lg flex items-center gap-2 font-bold text-ink">
+            <Activity className="w-5 h-5 text-blue-500" />
             Report Preview
           </CardTitle>
           <CardDescription>
@@ -117,22 +119,22 @@ export default function HeadReportsPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="p-6 space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
             </div>
           ) : volunteers.length === 0 ? (
             <div className="text-center py-16 px-4">
-              <div className="mx-auto w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center mb-4">
-                <Activity className="w-8 h-8 text-orange-500 opacity-80" />
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+                <Activity className="w-8 h-8 text-primary opacity-80" />
               </div>
               <h3 className="text-lg font-bold mb-1">No Data Available</h3>
-              <p className="text-muted-foreground text-sm">No volunteers have been assigned to your models yet.</p>
+              <p className="text-muted-foreground text-sm font-medium">No volunteers have been assigned to your models yet.</p>
             </div>
           ) : (
             <div className="max-h-[500px] overflow-auto">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/40">
                   <TableRow>
                     <TableHead>SNK ID</TableHead>
                     <TableHead>Name</TableHead>
@@ -143,20 +145,20 @@ export default function HeadReportsPage() {
                 <TableBody>
                   {volunteers.map((vol, idx) => (
                     <TableRow key={idx}>
-                      <TableCell className="font-medium whitespace-nowrap">
+                      <TableCell className="font-bold text-xs whitespace-nowrap">
                         {vol.snk_id || 'Pending'}
                       </TableCell>
-                      <TableCell>{vol.full_name}</TableCell>
+                      <TableCell className="font-semibold text-ink">{vol.full_name}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          vol.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' :
-                          vol.status === 'Rejected' ? 'bg-red-100 text-red-700' :
-                          'bg-amber-100 text-amber-700'
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
+                          vol.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                          vol.status === 'Rejected' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                          'bg-amber-50 text-amber-700 border-amber-200'
                         }`}>
                           {vol.status || 'Pending'}
                         </span>
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm max-w-xs truncate">
+                      <TableCell className="text-muted-foreground font-medium text-sm max-w-xs truncate">
                         {vol.models?.name || 'N/A'}
                       </TableCell>
                     </TableRow>
@@ -166,7 +168,7 @@ export default function HeadReportsPage() {
             </div>
           )}
         </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }

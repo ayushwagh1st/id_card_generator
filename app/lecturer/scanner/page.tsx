@@ -216,32 +216,31 @@ function ScannerContent() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10 flex flex-col md:flex-row gap-4 justify-between md:items-end">
+      <div className="rounded-[32px] bg-[var(--color-mint)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row gap-4 justify-between w-full md:items-end">
           <div>
             <div className="flex items-center gap-3 mb-2">
                 {isOnline ? (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 text-emerald-100 rounded-full text-xs font-bold backdrop-blur-md border border-emerald-400/20">
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 text-emerald-950 rounded-full text-xs font-bold backdrop-blur-md border border-emerald-400/20">
                         <Wifi className="w-3.5 h-3.5" /> ONLINE
                     </div>
                 ) : (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-500/20 text-rose-100 rounded-full text-xs font-bold backdrop-blur-md border border-rose-400/20">
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-500/20 text-rose-950 rounded-full text-xs font-bold backdrop-blur-md border border-rose-400/20">
                         <WifiOff className="w-3.5 h-3.5" /> OFFLINE
                     </div>
                 )}
                 {pendingScans.length > 0 && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-100 rounded-full text-xs font-bold backdrop-blur-md border border-amber-400/20 cursor-pointer" onClick={syncPendingScans}>
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-950 rounded-full text-xs font-bold backdrop-blur-md border border-amber-400/20 cursor-pointer" onClick={syncPendingScans}>
                         <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} /> {pendingScans.length} PENDING SYNC
                     </div>
                 )}
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight">QR Attendance Scanner</h1>
-            <p className="text-blue-100 mt-2 text-sm max-w-xl">
+            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">QR Attendance Scanner</h1>
+            <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
               Scan volunteer ID cards to record attendance. {isOnline ? 'Data saved in real-time.' : 'Data saved locally.'}
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 bg-white/10 p-2 rounded-xl backdrop-blur-md">
+          <div className="flex flex-col sm:flex-row gap-2 bg-white/50 border border-ink p-2 rounded-xl backdrop-blur-md shadow-hard-xs">
             <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
                 <SelectTrigger className="w-full sm:w-[250px] bg-white text-zinc-900 border-none font-semibold">
                     <span data-slot="select-value" className="flex flex-1 text-left truncate">
@@ -275,21 +274,21 @@ function ScannerContent() {
       </div>
 
       {selectedSessionId === 'none' ? (
-          <Card className="border-dashed border-2 bg-muted/20">
+          <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0">
               <CardContent className="flex flex-col items-center justify-center py-24 text-center">
                   <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
                       <Camera className="w-8 h-8 text-blue-500" />
                   </div>
-                  <h3 className="text-lg font-bold">Please select a session</h3>
-                  <p className="text-muted-foreground mt-2 max-w-sm">
+                  <h3 className="text-lg font-bold text-ink">Please select a session</h3>
+                  <p className="text-muted-foreground mt-2 max-w-sm font-medium">
                       You must select an active session from the top menu before you can start scanning ID cards.
                   </p>
               </CardContent>
-          </Card>
+          </div>
       ) : (
           <div className="grid md:grid-cols-2 gap-6">
-              <Card className="shadow-lg border-primary/10 overflow-hidden relative flex flex-col">
-                  <CardHeader className="bg-muted/30 pb-4 border-b flex flex-row items-center justify-between">
+              <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0 relative flex flex-col">
+                  <CardHeader className="bg-muted/30 pb-4 border-b border-ink/10 flex flex-row items-center justify-between">
                       <div>
                           <CardTitle className="flex items-center gap-2 text-lg">
                               <Camera className="w-5 h-5 text-indigo-500" /> Live Scanner
@@ -360,12 +359,12 @@ function ScannerContent() {
                           </div>
                       )}
                   </CardContent>
-              </Card>
+              </div>
 
               <div className="space-y-6 flex flex-col">
                   {/* Recent Scans in Bulk Mode */}
                   {isBulkMode && (
-                      <Card className="shadow-lg border-primary/10 flex-1 flex flex-col max-h-[300px]">
+                      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard flex-1 flex flex-col max-h-[300px]">
                           <CardHeader className="py-4">
                               <CardTitle className="text-sm flex items-center gap-2">
                                   <Activity className="w-4 h-4 text-indigo-500" /> Recent Scans
@@ -390,10 +389,10 @@ function ScannerContent() {
                                   </div>
                               )}
                           </CardContent>
-                      </Card>
+                      </div>
                   )}
 
-                  <Card className="shadow-lg border-primary/10">
+                  <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
                       <CardHeader>
                           <CardTitle className="text-lg">Manual Entry</CardTitle>
                           <CardDescription>If the QR code cannot be scanned.</CardDescription>
@@ -409,17 +408,17 @@ function ScannerContent() {
                               <Button type="submit" disabled={!manualId || (isProcessing && !isBulkMode)}>Submit</Button>
                           </form>
                       </CardContent>
-                  </Card>
+                      </div>
 
-                  <Card className="shadow-lg border-primary/10 flex-1">
-                      <CardHeader>
+                  <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard flex-1">
+                      <CardHeader className="border-b border-ink/10">
                           <CardTitle className="text-lg">Instructions</CardTitle>
                       </CardHeader>
-                      <CardContent className="text-sm text-muted-foreground space-y-2">
+                      <CardContent className="text-sm text-ink space-y-2 p-5 font-medium">
                           <p><strong>Bulk Mode:</strong> Enable to scan multiple people rapidly without pausing the camera.</p>
                           <p><strong>Offline Mode:</strong> If you lose connection, scans are saved to your device. Keep this page open. They will sync automatically when connection restores.</p>
                       </CardContent>
-                  </Card>
+                  </div>
               </div>
           </div>
       )}

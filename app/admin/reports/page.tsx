@@ -76,27 +76,29 @@ export default function AdminReportsPage() {
       filename: 'System_Activity_Report.pdf',
       headers,
       data: rows,
-      themeColor: [219, 39, 119] // Pink theme for Admin
+      themeColor: [188, 166, 255] // Lavender theme for Admin
     })
   }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight">System Reports & Logs</h1>
-            <p className="text-pink-100 mt-2 text-sm max-w-xl">
+      <div className="rounded-[32px] bg-[var(--color-orange)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between w-full md:items-end gap-4">
+          <div className="space-y-3">
+            <div className="inline-flex badge-flat bg-white text-ink border-ink transform rotate-2">
+              <Activity className="w-4 h-4 mr-2 text-ink" /> Logs
+            </div>
+            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">System Reports & Logs</h1>
+            <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
               Audit logs and comprehensive reporting across the entire platform.
             </p>
           </div>
           <div className="flex gap-2">
-             <Button onClick={handleExportCSV} variant="secondary" className="bg-white/20 hover:bg-white/30 border-0 shadow-sm backdrop-blur-md">
+             <Button onClick={handleExportCSV} className="bg-white text-ink border-ink shadow-hard-xs hover:bg-muted font-bold h-11 px-5 rounded-xl">
                <FileText className="w-4 h-4 mr-2" />
                Export CSV
              </Button>
-             <Button onClick={handleExportPDF} variant="secondary" className="bg-white/20 hover:bg-white/30 border-0 shadow-sm backdrop-blur-md">
+             <Button onClick={handleExportPDF} className="bg-white text-ink border-ink shadow-hard-xs hover:bg-muted font-bold h-11 px-5 rounded-xl">
                <Download className="w-4 h-4 mr-2" />
                Export PDF
              </Button>
@@ -104,10 +106,10 @@ export default function AdminReportsPage() {
         </div>
       </div>
 
-      <Card className="shadow-lg border-primary/10 overflow-hidden">
-        <CardHeader className="border-b border-primary/5 bg-muted/30">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Activity className="w-5 h-5 text-pink-500" />
+      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0">
+        <CardHeader className="bg-muted/20 border-b border-ink/10">
+          <CardTitle className="text-lg flex items-center gap-2 font-bold text-ink">
+            <Activity className="w-5 h-5 text-blue-500" />
             Global Activity Feed
           </CardTitle>
           <CardDescription>
@@ -117,21 +119,21 @@ export default function AdminReportsPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="p-6 space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
             </div>
           ) : activities.length === 0 ? (
             <div className="text-center py-16 px-4">
-              <div className="mx-auto w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center mb-4">
-                <Activity className="w-8 h-8 text-pink-500 opacity-80" />
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+                <Activity className="w-8 h-8 text-primary opacity-80" />
               </div>
               <h3 className="text-lg font-bold mb-1">No Activities Yet</h3>
-              <p className="text-muted-foreground text-sm">Action logs will appear here once users interact with the system.</p>
+              <p className="text-muted-foreground text-sm font-medium">Action logs will appear here once users interact with the system.</p>
             </div>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/40">
                 <TableRow>
                   <TableHead>Time</TableHead>
                   <TableHead>User</TableHead>
@@ -143,21 +145,21 @@ export default function AdminReportsPage() {
               <TableBody>
                 {activities.map((act, idx) => (
                   <TableRow key={idx}>
-                    <TableCell className="font-medium whitespace-nowrap">
+                    <TableCell className="font-medium whitespace-nowrap text-xs">
                       {new Date(act.created_at).toLocaleString()}
                     </TableCell>
-                    <TableCell>{act.user_name || 'System'}</TableCell>
+                    <TableCell className="font-bold">{act.user_name || 'System'}</TableCell>
                     <TableCell>
-                      <span className="px-2 py-1 rounded-full bg-muted text-xs font-semibold">
+                      <span className="px-3 py-1 rounded-full bg-ink/5 border border-ink/10 text-xs font-bold uppercase tracking-wider text-ink">
                         {act.role}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <span className="font-semibold text-pink-600 dark:text-pink-400">
+                      <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs">
                         {act.action_type}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm max-w-xs truncate">
+                    <TableCell className="text-muted-foreground text-xs font-medium max-w-xs truncate">
                       {act.target}
                     </TableCell>
                   </TableRow>
@@ -166,7 +168,7 @@ export default function AdminReportsPage() {
             </Table>
           )}
         </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }

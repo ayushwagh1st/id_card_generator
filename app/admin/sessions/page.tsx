@@ -12,6 +12,7 @@ import { Search, Plus, Edit, Trash2, FileText, Download, Database } from 'lucide
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { exportToPDF } from '@/lib/pdf'
+import Image from 'next/image'
 import { getSessionsAction, addSessionAction, updateSessionAction, deleteSessionAction } from '@/app/actions/sessions'
 import { getLecturersAction } from '@/app/actions/lecturers'
 import { formatLecturerLabel } from '@/lib/formatters'
@@ -173,15 +174,52 @@ export default function SessionsPage() {
     })
   }
 
+  const activeSessions = sessions.filter(s => s.status === 'Ongoing' || s.status === 'Scheduled').length
+  const completedSessions = sessions.filter(s => s.status === 'Completed').length
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-600 to-indigo-600 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight">Session Management</h1>
-          <p className="text-teal-100 mt-2 text-sm max-w-xl">
+      <div className="rounded-[32px] bg-[var(--color-peach)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex badge-flat bg-white text-ink border-ink transform rotate-2">
+            <Database className="w-4 h-4 mr-2" /> Sessions
+          </div>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Session Management</h1>
+          <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
             Create and manage training sessions or workshops.
           </p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-pink w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_database.png" alt="Sessions" width={56} height={56} className="object-cover" />
+          </div>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{sessions.length}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Total Sessions</div>
+          </div>
+        </div>
+
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-mint w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_clock.png" alt="Active" width={56} height={56} className="object-cover" />
+          </div>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{activeSessions}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Active / Scheduled</div>
+          </div>
+        </div>
+
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-blue w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_check.png" alt="Completed" width={56} height={56} className="object-cover" />
+          </div>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{completedSessions}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Completed Sessions</div>
+          </div>
         </div>
       </div>
 
@@ -191,22 +229,22 @@ export default function SessionsPage() {
           <Input
             type="search"
             placeholder="Search sessions..."
-            className="pl-9 bg-card border-primary/10 rounded-xl"
+            className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-          <Button onClick={handleExportCSV} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-emerald-600 border-emerald-500/20">
+          <Button onClick={handleExportCSV} variant="outline" className="w-full sm:w-auto">
             <FileText className="w-4 h-4" /> Export CSV
           </Button>
-          <Button onClick={handleExportPDF} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-indigo-600 border-indigo-500/20">
+          <Button onClick={handleExportPDF} variant="outline" className="w-full sm:w-auto">
             <Download className="w-4 h-4" /> Export PDF
           </Button>
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger render={
-              <Button onClick={resetForm} className="w-full sm:w-auto bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/95 text-white font-semibold rounded-xl px-5 gap-2">
+              <Button onClick={resetForm} className="w-full sm:w-auto text-white px-5 gap-2">
                 <Plus className="h-4 w-4" /> Create Session
               </Button>
             } />
@@ -389,8 +427,8 @@ export default function SessionsPage() {
         </DialogContent>
       </Dialog>
 
-      <Card className="shadow-lg border-primary/10 overflow-hidden backdrop-blur-md bg-card">
-        <CardContent className="p-0">
+      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+        <div className="p-0">
           {loading ? (
             <div className="p-4 space-y-4">
               <div className="rounded-md border">
@@ -480,8 +518,8 @@ export default function SessionsPage() {
             </TableBody>
           </Table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

@@ -74,35 +74,41 @@ export default function UpdatePasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-tr from-slate-950 via-zinc-900 to-emerald-950 p-4 sm:p-6 relative overflow-hidden select-none">
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl -z-10" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[#10B981]/10 blur-3xl -z-10" />
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 sm:p-6 relative overflow-hidden select-none">
+      {/* Ghost letter */}
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-display font-bold text-foreground select-none pointer-events-none"
+        style={{ fontSize: 'clamp(220px, 45vw, 480px)', opacity: 0.04, lineHeight: 1 }}
+        aria-hidden="true"
+      >
+        U
+      </div>
       
-      <Card className="w-full max-w-md backdrop-blur-md bg-white/5 border border-white/10 text-white shadow-2xl rounded-2xl p-2 sm:p-4 animate-in zoom-in-95 fade-in duration-500">
+      <Card className="w-full max-w-md animate-in zoom-in-95 fade-in duration-300">
         <CardHeader className="space-y-3 text-center pb-4">
-          <div className="mx-auto bg-emerald-500/20 p-4 rounded-2xl w-fit border border-emerald-500/30 shadow-inner">
-            {isSuccess ? <CheckCircle2 className="w-8 h-8 text-emerald-400" /> : <KeyRound className="w-8 h-8 text-emerald-500" />}
+          <div className="mx-auto icon-tile icon-tile-lavender w-14 h-14 shadow-hard-sm">
+            {isSuccess ? <CheckCircle2 className="w-7 h-7" /> : <Lock className="w-7 h-7" />}
           </div>
-          <CardTitle className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-zinc-300">
+          <CardTitle className="text-2xl sm:text-3xl font-bold font-display text-ink">
             {isSuccess ? 'Password Updated' : 'Set New Password'}
           </CardTitle>
-          <CardDescription className="text-zinc-400 text-xs sm:text-sm">
+          <CardDescription className="text-muted-foreground text-xs sm:text-sm font-sans">
             {isSuccess ? 'Your password has been successfully updated.' : 'Enter your new secure password below.'}
           </CardDescription>
         </CardHeader>
         
         {isSuccess ? (
           <CardContent className="space-y-4 text-center pb-6">
-            <p className="text-sm text-zinc-300">Redirecting to login securely...</p>
+            <p className="text-sm text-foreground/60 font-sans">Redirecting to login securely...</p>
             <AnimatedLoader className="w-6 h-6 mx-auto" />
           </CardContent>
         ) : (
           <form onSubmit={handleUpdatePassword}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">New Password</Label>
+                <Label className="font-display font-semibold text-sm text-foreground">New Password</Label>
                 <div className="relative group">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-foreground/40" />
                   <Input
                     type="password"
                     placeholder="Min. 6 characters"
@@ -110,15 +116,15 @@ export default function UpdatePasswordPage() {
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder-zinc-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50 rounded-xl transition-all duration-300"
+                    className="pl-10"
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Confirm Password</Label>
+                <Label className="font-display font-semibold text-sm text-foreground">Confirm Password</Label>
                 <div className="relative group">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-foreground/40" />
                   <Input
                     type="password"
                     placeholder="Repeat new password"
@@ -126,7 +132,7 @@ export default function UpdatePasswordPage() {
                     minLength={6}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder-zinc-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50 rounded-xl transition-all duration-300"
+                    className="pl-10"
                   />
                 </div>
               </div>
@@ -135,7 +141,7 @@ export default function UpdatePasswordPage() {
             <CardFooter className="pt-4 flex flex-col gap-3">
               <Button 
                 type="submit" 
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-11 rounded-xl shadow-md transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2" 
+                className="w-full flex items-center justify-center gap-2" 
                 disabled={loading}
               >
                 {loading ? (

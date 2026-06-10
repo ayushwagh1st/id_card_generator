@@ -1,118 +1,231 @@
 import Link from 'next/link'
-import { LogIn, UserPlus, ShieldCheck, Printer, ArrowRight, Tent, Sparkles, Star } from 'lucide-react'
+import { Sparkles, LogIn, UserPlus, ShieldCheck, Printer, ArrowRight, Users, FileCheck } from 'lucide-react'
 
 export default function Home() {
   const steps = [
     {
-      title: 'Step 1: Login',
-      desc: 'Use your Model Head credentials to securely access the portal.',
+      step: '01',
+      title: 'Login Securely',
+      desc: 'Use your Model Head credentials to securely access the central registration portal.',
       icon: LogIn,
-      color: 'bg-pink-100 text-pink-600',
+      variant: 'bento-white',
     },
     {
-      title: 'Step 2: Submit Details',
+      step: '02',
+      title: 'Submit Details',
       desc: 'Add volunteer information, upload their photo, and specify accommodation needs.',
       icon: UserPlus,
-      color: 'bg-yellow-100 text-yellow-600',
+      variant: 'bento-lime',
     },
     {
-      title: 'Step 3: Admin Approval',
-      desc: 'The Super Admin will review and verify your submitted volunteer profiles.',
+      step: '03',
+      title: 'Admin Approval',
+      desc: 'The Super Admin will review and verify your submitted volunteer profiles for accuracy.',
       icon: ShieldCheck,
-      color: 'bg-cyan-100 text-cyan-600',
+      variant: 'bento-lavender',
     },
     {
-      title: 'Step 4: Printing',
-      desc: 'Once approved, the admin generates and prints the official ID cards.',
+      step: '04',
+      title: 'ID Printing',
+      desc: 'Once approved, the admin generates and prints the official event badges.',
       icon: Printer,
-      color: 'bg-purple-100 text-purple-600',
-    }
+      variant: 'bento-pastel',
+    },
+  ]
+
+  const stats = [
+    { label: 'Volunteers', value: '5,000+', bg: 'bg-primary text-foreground' },
+    { label: 'Models', value: '50+', bg: 'bg-secondary text-ink' },
+    { label: 'Divisions', value: '10+', bg: 'bg-card text-ink' },
+    { label: 'Year', value: '2027', bg: 'bg-bg-pastel text-ink' },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-cyan-50 via-yellow-50 to-pink-50 text-slate-900 font-sans flex flex-col justify-between selection:bg-pink-500 selection:text-white overflow-hidden relative">
-      
-      {/* Decorative Vectors */}
-      <Tent className="absolute top-20 right-10 w-32 h-32 text-pink-400/20 -rotate-12 blur-[1px]" strokeWidth={1} />
-      <Star className="absolute bottom-40 left-10 w-24 h-24 text-yellow-500/20 animate-pulse blur-[1px]" strokeWidth={1.5} />
-      <Sparkles className="absolute top-1/2 left-1/4 w-16 h-16 text-cyan-400/20 animate-bounce blur-[1px]" strokeWidth={1} />
+    <div className="bg-background min-h-screen">
 
-      {/* Navbar */}
-      <header className="border-b border-white/40 bg-white/40 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 font-black text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-orange-400">
-            <div className="bg-gradient-to-tr from-pink-500 to-orange-400 p-1.5 rounded shadow-sm">
-              <Tent className="h-4 w-4 text-white" />
+      {/* ── Navbar ── */}
+      <nav className="sticky top-0 z-[100] bg-card border-ink border-b-[3px] px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="icon-tile icon-tile-lavender w-10 h-10">
+              <Sparkles className="w-5 h-5" />
             </div>
-            <span>Bal Pradarshani</span>
+            <span className="font-display font-bold text-xl text-foreground">Bal Pradarshani</span>
           </div>
-          <Link 
-            href="/login" 
-            className="inline-flex items-center justify-center bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white text-sm font-bold h-9 px-5 rounded-xl transition-all duration-200 hover:scale-[1.02] shadow-md"
-          >
+
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="/" className="font-display font-semibold text-foreground text-[15px] hover:text-primary transition-colors">Home</Link>
+            <Link href="#process" className="font-display font-semibold text-foreground text-[15px] hover:text-primary transition-colors">Process</Link>
+            <Link href="#" className="font-display font-semibold text-foreground text-[15px] hover:text-primary transition-colors">Support</Link>
+          </div>
+
+          <Link href="/login" className="btn-primary py-2.5 text-base">
             Sign In
           </Link>
         </div>
+      </nav>
+
+      {/* ── Hero ── */}
+      <header className="relative pt-20 pb-24 overflow-hidden">
+        {/* Ghost letter */}
+        <div
+          className="absolute left-[-0.1em] top-1/2 -translate-y-1/2 font-display font-bold text-foreground select-none pointer-events-none z-0"
+          style={{ fontSize: 'clamp(180px, 30vw, 380px)', opacity: 0.04, lineHeight: 1 }}
+          aria-hidden="true"
+        >
+          B
+        </div>
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-7">
+            <div className="flex items-center gap-4 mb-8">
+              <span className="badge-flat">60th Maharashtra Samagam 2027</span>
+            </div>
+
+            <h1
+              className="font-display font-bold text-foreground mb-8 leading-[0.95]"
+              style={{ fontSize: 'clamp(52px, 8vw, 88px)' }}
+            >
+              The Smart{' '}
+              <span className="text-primary underline decoration-3 decoration-ink decoration-skip-ink">ID Generation</span>{' '}
+              Portal
+            </h1>
+
+            <p className="text-xl text-foreground/70 mb-12 leading-relaxed max-w-2xl font-sans">
+              A streamlined 4-step workflow built for Model Heads to register volunteers and manage event badges with precision.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-5">
+              <Link href="/login" className="btn-primary text-center">
+                Get Started
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link href="#process" className="btn-secondary text-center">
+                See How It Works
+              </Link>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5 flex justify-center">
+            <div className="relative border-3 border-ink rounded-[24px] shadow-hard overflow-hidden bg-card aspect-square w-full max-w-[360px] animate-in zoom-in-95 duration-500">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/hero_illustration.png" alt="Portal Illustration" className="w-full h-full object-cover" />
+            </div>
+          </div>
+        </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20 w-full z-10">
-        
-        {/* Header Title */}
-        <div className="text-center space-y-6 mb-16">
-          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black bg-white shadow-sm text-pink-500 uppercase tracking-widest border border-pink-100">
-            60th Maharashtra Samagam 2027
-          </span>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-800 tracking-tight leading-tight">
-            How to Use the <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 drop-shadow-sm">
-              ID Generation Portal
-            </span>
-          </h1>
-          <p className="text-slate-600 text-lg sm:text-xl font-bold max-w-2xl mx-auto leading-relaxed">
-            A simple 4-step guide for Model Heads to register their volunteers and get official event badges!
-          </p>
+      {/* ── Stat Band ── */}
+      <section className="border-y-[4px] border-ink" aria-label="Key numbers">
+        <div className="grid grid-cols-2 md:grid-cols-4 bg-ink">
+          {stats.map((s, i) => (
+            <div
+              key={i}
+              className={`${s.bg} flex flex-col items-center justify-center py-10 px-6 text-center ${i < 3 ? 'border-r-[4px] border-ink' : ''}`}
+            >
+              <span className="font-display font-bold text-5xl leading-none">{s.value}</span>
+              <span className="eyebrow mt-2 !text-current opacity-70">{s.label}</span>
+            </div>
+          ))}
         </div>
+      </section>
 
-        {/* Steps Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-          {/* Connector Line (hidden on mobile) */}
-          <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-white/60 -translate-y-1/2 z-0 rounded-full shadow-inner" />
-          
-          {steps.map((step, idx) => {
-            const Icon = step.icon
-            return (
-              <div key={idx} className="bg-white/80 backdrop-blur-md border-2 border-white rounded-[2rem] p-6 shadow-xl relative z-10 hover:-translate-y-2 transition-transform duration-300 group">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${step.color} shadow-inner mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="w-7 h-7" />
+      {/* ── Process Bento ── */}
+      <section id="process" className="py-24 bg-background">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="mb-16">
+            <span className="eyebrow">The Process</span>
+            <h2 className="font-display font-bold text-5xl text-foreground mb-4">
+              How it Works
+            </h2>
+            <p className="text-lg text-foreground/70 max-w-xl">
+              From authentication to final printing, every step is optimized for documentation-first management.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {steps.map((step, idx) => {
+              const Icon = step.icon
+              return (
+                <div
+                  key={idx}
+                  className={`${step.variant} flex flex-col gap-5 shadow-hard-sm hover:-translate-y-1 transition-transform duration-150`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="icon-tile icon-tile-ink">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <span className="font-display font-bold text-4xl opacity-20 leading-none">{step.step}</span>
+                  </div>
+                  <h3 className="font-display font-bold text-2xl leading-tight">{step.title}</h3>
+                  <p className="text-base leading-relaxed opacity-80">{step.desc}</p>
                 </div>
-                <h3 className="font-black text-xl text-slate-800 mb-3">{step.title}</h3>
-                <p className="text-slate-600 font-semibold text-sm leading-relaxed">{step.desc}</p>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
+      </section>
 
-        {/* Action Button */}
-        <div className="mt-20 flex justify-center">
-          <Link 
-            href="/login" 
-            className="inline-flex items-center justify-center bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white font-black text-lg h-14 px-8 rounded-2xl shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl gap-3 group"
+      {/* ── CTA Band ── */}
+      <section className="bg-primary border-y-[3px] border-ink py-20">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <h2 className="font-display font-bold text-foreground mb-6" style={{ fontSize: 'clamp(36px,5vw,60px)' }}>
+            Ready to streamline volunteer management?
+          </h2>
+          <p className="text-foreground/80 text-lg mb-10 max-w-xl mx-auto">
+            Join organizers making the 60th Maharashtra Samagam a grand success.
+          </p>
+          <Link
+            href="/login"
+            className="btn-secondary inline-flex"
           >
-            Start the Process 
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            Start registering now
+            <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
-      </main>
+      </section>
 
-      {/* Footer */}
-      <footer className="bg-white/40 backdrop-blur-sm border-t border-white/40 py-6 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 text-xs font-bold text-slate-500">
-          <p>© 2027 Sant Nirankari Mandal. All Rights Reserved.</p>
-          <div className="flex gap-4 items-center">
-            <a href="https://nirankari.org" className="hover:text-pink-500 transition-colors">Official Website</a>
-            <span className="text-slate-300">|</span>
-            <span className="text-slate-400">Bal Pradarshani ID System</span>
+      {/* ── Footer ── */}
+      <footer className="bg-ink text-white py-16">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="icon-tile icon-tile-lavender w-10 h-10">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <span className="font-display font-bold text-xl">Bal Pradarshani</span>
+              </div>
+              <p className="text-white/60 max-w-xs leading-relaxed">
+                The modern standard for volunteer registration and ID management.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-display text-sm font-semibold uppercase tracking-widest text-white/40 mb-6">Product</h4>
+              <ul className="space-y-4">
+                <li><Link href="#" className="text-white/70 hover:text-primary transition-colors">Features</Link></li>
+                <li><Link href="#" className="text-white/70 hover:text-primary transition-colors">Docs</Link></li>
+                <li><Link href="#process" className="text-white/70 hover:text-primary transition-colors">Process</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-display text-sm font-semibold uppercase tracking-widest text-white/40 mb-6">Support</h4>
+              <ul className="space-y-4">
+                <li><Link href="#" className="text-white/70 hover:text-primary transition-colors">Help Center</Link></li>
+                <li><Link href="#" className="text-white/70 hover:text-primary transition-colors">Contact</Link></li>
+                <li><Link href="#" className="text-white/70 hover:text-primary transition-colors">Privacy</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/10 gap-4 text-sm text-white/40 font-display">
+            <p>© 2027 Sant Nirankari Mandal. All rights reserved.</p>
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-secondary"></div>
+              <span>All systems normal</span>
+            </div>
           </div>
         </div>
       </footer>

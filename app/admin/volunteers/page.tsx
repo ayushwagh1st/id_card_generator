@@ -313,11 +313,13 @@ export default function VolunteersPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-600 to-indigo-600 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight">Volunteer Registry</h1>
-          <p className="text-teal-100 mt-2 text-sm max-w-xl">
+      <div className="rounded-[32px] bg-[var(--color-yellow)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-grid relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
+            <Users className="w-4 h-4 mr-2" /> Directory
+          </div>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Volunteer Directory</h1>
+          <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
             Approve, manage, and print ID cards for all active volunteers. Import datasets via CSV securely.
           </p>
         </div>
@@ -337,7 +339,7 @@ export default function VolunteersPage() {
                 <Input
                   type="search"
                   placeholder="Search name, SNK ID, mobile..."
-                  className="pl-9 bg-card border-primary/10 rounded-xl"
+                  className="pl-9"
                   value={searchTerm}
                   onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                 />
@@ -372,16 +374,16 @@ export default function VolunteersPage() {
             <div className="flex flex-wrap items-center gap-2">
               {selectedIds.length > 0 && (
                 <div className="flex items-center gap-1.5 bg-muted p-1 rounded-xl">
-                  <Button variant="outline" size="sm" onClick={handlePrintSelected} className="gap-1.5 text-primary border-primary/20 bg-card rounded-lg px-3">
+                  <Button variant="outline" size="sm" onClick={handlePrintSelected} className="gap-1.5 text-primary bg-card px-3">
                     <Printer className="h-3.5 w-3.5" />
                     Print Selected ({selectedIds.length})
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handleBulkApprove} className="gap-1.5 text-emerald-600 border-emerald-500/20 bg-card rounded-lg px-3">
+                  <Button variant="outline" size="sm" onClick={handleBulkApprove} className="gap-1.5 bg-card px-3">
                     <CheckCircle className="h-3.5 w-3.5" />
                     Approve
                   </Button>
                   <AlertDialog>
-                    <AlertDialogTrigger render={<Button variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/20 bg-card rounded-lg px-3" />}>
+                    <AlertDialogTrigger render={<Button variant="outline" size="sm" className="gap-1.5 text-destructive bg-card px-3" />}>
                       <Trash2 className="h-3.5 w-3.5" />
                       Delete
                     </AlertDialogTrigger>
@@ -405,7 +407,7 @@ export default function VolunteersPage() {
 
               <Button
                 variant="outline"
-                className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-emerald-600 border-emerald-500/20"
+                className="w-full sm:w-auto"
                 onClick={() => {
                   window.open(`/api/export?type=volunteers&status=${filterStatus}&model=${filterModel}&search=${searchTerm}`, '_blank')
                 }}
@@ -416,7 +418,7 @@ export default function VolunteersPage() {
 
               <Button
                 variant="outline"
-                className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-indigo-600 border-indigo-500/20"
+                className="w-full sm:w-auto"
                 onClick={handleExportPDF}
               >
                 <Download className="w-4 h-4" />
@@ -424,7 +426,7 @@ export default function VolunteersPage() {
               </Button>
 
               <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                <DialogTrigger render={<Button className="w-full sm:w-auto bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/95 text-white font-semibold rounded-xl px-5 gap-2" />}>
+                <DialogTrigger render={<Button className="w-full sm:w-auto px-5 gap-2" />}>
                   <Plus className="h-4 w-4" />
                   Add Volunteer
                 </DialogTrigger>
@@ -645,8 +647,8 @@ export default function VolunteersPage() {
             </DialogContent>
           </Dialog>
 
-          <Card className="shadow-lg border-primary/10 overflow-hidden backdrop-blur-md bg-card">
-            <CardContent className="p-0">
+          <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+            <div className="p-0">
               {loading ? (
                 <div className="p-4 space-y-4">
                   <div className="flex items-center justify-between">
@@ -801,42 +803,28 @@ export default function VolunteersPage() {
                   </div>
                   {/* Pagination Footer */}
                   {totalCount > 0 && (
-                    <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/10">
-                      <div className="text-xs font-semibold text-muted-foreground">
-                        Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalCount)} of {totalCount} records
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          disabled={page === 1}
-                          onClick={() => setPage(p => Math.max(1, p - 1))}
-                          className="h-8 rounded-lg"
-                        >
-                          <ChevronLeft className="w-4 h-4 mr-1" /> Previous
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          disabled={page >= totalPages}
-                          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                          className="h-8 rounded-lg"
-                        >
-                          Next <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      </div>
+                  <div className="border-t border-ink/10 p-4 flex items-center justify-between bg-muted/20">
+                    <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="font-bold border-ink shadow-hard-xs hover:-translate-y-0.5 transition-transform">
+                      <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                    </Button>
+                    <div className="text-sm font-semibold text-muted-foreground bg-white px-3 py-1 rounded-full border border-ink shadow-hard-xs">
+                      Page {page} of {Math.max(1, totalPages)}
                     </div>
+                    <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages} className="font-bold border-ink shadow-hard-xs hover:-translate-y-0.5 transition-transform">
+                      Next <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
                   )}
                 </>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="import">
           <div className="grid gap-6 md:grid-cols-2">
             <CSVUpload onUploadSuccess={handleCSVUploadSuccess} />
-            <Card className="shadow-lg border-primary/10">
+            <Card className="">
               <CardHeader>
                 <CardTitle className="text-lg font-bold">Import CSV Guidelines</CardTitle>
                 <CardDescription>Follow these validation checks to avoid parse compilation errors.</CardDescription>

@@ -158,17 +158,19 @@ export default function SessionEnrollmentPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-600 to-indigo-600 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight">Session Enrollment</h1>
-          <p className="text-teal-100 mt-2 text-sm max-w-xl">
+      <div className="rounded-[32px] bg-[var(--color-pink)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex badge-flat bg-white text-ink border-ink transform rotate-2">
+            <Users className="w-4 h-4 mr-2" /> Enrollment
+          </div>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Session Enrollment</h1>
+          <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
             Assign volunteers to sessions to enable attendance tracking.
           </p>
         </div>
       </div>
 
-      <div className="bg-card p-4 rounded-xl border border-primary/10 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
+      <div className="bento-white flex flex-col sm:flex-row gap-4 items-center">
         <Label className="font-bold whitespace-nowrap">Select Session:</Label>
         <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
           <SelectTrigger className="w-full sm:w-[400px]">
@@ -190,8 +192,8 @@ export default function SessionEnrollmentPage() {
       {selectedSessionId !== 'none' && (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               <div className="md:col-span-5 space-y-4">
-                  <Card className="shadow-lg border-primary/10 flex flex-col h-[700px]">
-                      <CardHeader className="pb-3 border-b">
+                  <div className="bento-white flex flex-col h-[700px] !p-0">
+                      <CardHeader className="pb-3 border-b border-ink/10 bg-muted/20">
                           <CardTitle className="text-lg flex justify-between items-center">
                             <span>Add Volunteers</span>
                             {selectedVolunteers.length > 0 && (
@@ -281,7 +283,7 @@ export default function SessionEnrollmentPage() {
                               </div>
                           )}
                       </CardContent>
-                      <CardFooter className="border-t p-3 flex justify-between items-center bg-muted/20">
+                      <div className="p-3 flex justify-between items-center bg-muted/20 border-t border-ink/10">
                           <Button 
                             variant="outline" 
                             size="sm" 
@@ -301,13 +303,13 @@ export default function SessionEnrollmentPage() {
                           >
                             <ChevronRight className="w-4 h-4" />
                           </Button>
-                      </CardFooter>
-                  </Card>
+                      </div>
+                  </div>
               </div>
 
               <div className="md:col-span-7">
-                  <Card className="shadow-lg border-primary/10 h-[700px] flex flex-col">
-                      <CardHeader className="flex flex-row items-center justify-between pb-4 border-b shrink-0">
+                  <div className="bento-white h-[700px] flex flex-col !p-0">
+                      <CardHeader className="flex flex-row items-center justify-between pb-4 shrink-0 border-b border-ink/10 bg-muted/20">
                           <div>
                               <CardTitle className="text-lg">Enrolled Volunteers</CardTitle>
                               <CardDescription>Total: {enrollments.length}</CardDescription>
@@ -376,7 +378,7 @@ export default function SessionEnrollmentPage() {
                         </Table>
                         )}
                       </CardContent>
-                  </Card>
+                  </div>
               </div>
           </div>
       )}

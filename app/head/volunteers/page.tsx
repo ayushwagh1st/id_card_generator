@@ -356,18 +356,20 @@ export default function HeadVolunteersPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-orange-500 via-pink-600 to-indigo-600 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight">Supervised Volunteers</h1>
-          <p className="text-orange-100 mt-2 text-sm max-w-xl">
+      <div className="rounded-[32px] bg-[var(--color-pink)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
+            <Users className="w-4 h-4 mr-2" /> Volunteers
+          </div>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Supervised Volunteers</h1>
+          <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
             Register and manage volunteers allocated to your supervised Samagam models. Add photo assets and submit for approval.
           </p>
         </div>
       </div>
 
       {myModels.length === 0 ? (
-        <Card className="shadow-lg border-primary/10 bg-card p-12 text-center">
+        <Card className="bg-card p-12 text-center">
           <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-primary">
             <Users className="w-6 h-6" />
           </div>
@@ -384,15 +386,15 @@ export default function HeadVolunteersPage() {
           </TabsList>
 
           <TabsContent value="list" className="space-y-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               {/* Search & Filters */}
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="relative w-full sm:w-60">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="search"
                     placeholder="Search name, ID, phone..."
-                    className="pl-9 bg-card border-primary/10 rounded-xl"
+                    className="pl-9"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -426,10 +428,10 @@ export default function HeadVolunteersPage() {
                 </Select>
               </div>
 
-              <div className="flex gap-2 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button 
                   variant="outline"
-                  className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-emerald-600 border-emerald-500/20"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     window.location.href = `/api/export?status=${filterStatus}&model=${filterModel}&search=${searchTerm}`
                   }}
@@ -439,154 +441,159 @@ export default function HeadVolunteersPage() {
                 </Button>
                 <Button 
                   variant="outline"
-                  className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-orange-600 border-orange-500/20"
+                  className="w-full sm:w-auto"
                   onClick={handleExportPDF}
                 >
                   <Download className="h-4 w-4" />
                   Export PDF
                 </Button>
+
+                {/* Add Trigger */}
+                <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                  <DialogTrigger render={
+                    <Button 
+                      className="w-full sm:w-auto px-5 gap-2"
+                      onClick={() => {
+                        setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer'); setAccommodation(false);
+                        if (myModels.length > 0) setModelId(myModels[0].id);
+                      }}
+                    />
+                  }>
+                    <Plus className="h-4 w-4" />
+                    Add Volunteer
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-xl rounded-xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-bold">Register New Volunteer</DialogTitle>
+                      <DialogDescription>Input profile details. Approved cards will be generated by the Super Admin.</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleCreateVolunteer} className="space-y-4 py-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name</Label>
+                          <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
+                          <Input value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender</Label>
+                          <Select value={gender} onValueChange={(val) => setGender(val || 'Male')}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Male">Male</SelectItem>
+                              <SelectItem value="Female">Female</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age</Label>
+                          <Input type="number" value={age} onChange={e => setAge(e.target.value)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Designation/Role</Label>
+                          <Input value={role} onChange={e => setRole(e.target.value)} />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
+                          <Input value={branch} onChange={e => setBranch(e.target.value)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
+                          <Select value={modelId} onValueChange={(val) => setModelId(val || '')}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Choose Division">
+                                {myModels.find(m => m.id === modelId) ? formatModelLabel(myModels.find(m => m.id === modelId)) : "Choose Division"}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {myModels.map(m => (
+                                <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
+                          <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} required />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
+                          <Input value={address} onChange={e => setAddress(e.target.value)} />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div className="space-y-1 md:col-span-4">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Requirements</Label>
+                          <div className="flex items-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm w-full">
+                            <Checkbox id="add-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} />
+                            <Label htmlFor="add-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
+                          </div>
+                        </div>
+                        <div className="space-y-1 md:col-span-8">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
+                          <Input value={remarks} onChange={e => setRemarks(e.target.value)} />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo</Label>
+                        <div className="flex items-center gap-4 mt-2">
+                          {photoUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={photoUrl} alt="Preview" className="w-16 h-20 object-cover rounded-md border" />
+                          )}
+                          <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
+                          {uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
+                        </div>
+                      </div>
+
+                      <DialogFooter className="pt-2">
+                        <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
+                        <Button type="submit">Submit Volunteer</Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               </div>
-
-              {/* Add Trigger */}
-              <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                <DialogTrigger render={
-                  <Button 
-                    className="w-full sm:w-auto bg-gradient-to-r from-primary to-orange-600 hover:from-primary/95 text-white font-semibold rounded-xl px-5 gap-2"
-                    onClick={() => {
-                      setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer'); setAccommodation(false);
-                      if (myModels.length > 0) setModelId(myModels[0].id);
-                    }}
-                  />
-                }>
-                  <Plus className="h-4 w-4" />
-                  Add Volunteer
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-lg rounded-xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl font-bold">Register New Volunteer</DialogTitle>
-                    <DialogDescription>Input profile details. Approved cards will be generated by the Super Admin.</DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateVolunteer} className="space-y-4 py-2">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name</Label>
-                        <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
-                        <Input value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-4">
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender</Label>
-                        <Select value={gender} onValueChange={(val) => setGender(val || 'Male')}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age</Label>
-                        <Input type="number" value={age} onChange={e => setAge(e.target.value)} />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Role/Duty</Label>
-                        <Input value={role} onChange={e => setRole(e.target.value)} />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-4 items-end">
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
-                        <Input value={branch} onChange={e => setBranch(e.target.value)} />
-                      </div>
-                      <div className="space-y-1 col-span-2">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
-                        <Select value={modelId} onValueChange={(val) => setModelId(val || '')}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose Division">
-                              {myModels.find(m => m.id === modelId) ? formatModelLabel(myModels.find(m => m.id === modelId)) : "Choose Division"}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {myModels.map(m => (
-                              <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex items-center justify-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm">
-                        <Checkbox id="add-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} />
-                        <Label htmlFor="add-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 items-end">
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
-                        <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} required />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
-                        <Input value={address} onChange={e => setAddress(e.target.value)} />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
-                      <Input value={remarks} onChange={e => setRemarks(e.target.value)} />
-                    </div>
-
-                    <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo</Label>
-                      <div className="flex items-center gap-4 mt-2">
-                        {photoUrl && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={photoUrl} alt="Preview" className="w-16 h-20 object-cover rounded-md border" />
-                        )}
-                        <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
-                        {uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
-                      </div>
-                    </div>
-
-                    <DialogFooter className="pt-2">
-                      <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-                      <Button type="submit">Submit Volunteer</Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
             </div>
 
             {/* Edit Volunteer Dialog */}
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-              <DialogContent className="sm:max-w-lg rounded-xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="sm:max-w-xl rounded-xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold">Edit Volunteer Details</DialogTitle>
                   <DialogDescription>Modify fields and save changes. Cards already approved are locked from head edits.</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleUpdateVolunteer} className="space-y-4 py-2">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name</Label>
                       <Input value={fullName} onChange={e => setFullName(e.target.value)} required disabled={currentVolunteer?.status === 'Approved'} />
                     </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
-                        <Input value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} required />
-                      </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
+                      <Input value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} required />
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender</Label>
                       <Select value={gender} onValueChange={(val) => setGender(val || 'Male')} disabled={currentVolunteer?.status === 'Approved'}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger disabled={currentVolunteer?.status === 'Approved'}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Male">Male</SelectItem>
                           <SelectItem value="Female">Female</SelectItem>
@@ -602,19 +609,15 @@ export default function HeadVolunteersPage() {
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Role/Duty</Label>
                       <Input value={role} onChange={e => setRole(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
                       <Input value={branch} onChange={e => setBranch(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 items-end">
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
-                      <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} required />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Assigned Model</Label>
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
                       <Select value={modelId} onValueChange={(val) => setModelId(val || '')} disabled={currentVolunteer?.status === 'Approved'}>
                         <SelectTrigger disabled={currentVolunteer?.status === 'Approved'}>
                           <SelectValue placeholder="Choose Division">
@@ -630,15 +633,28 @@ export default function HeadVolunteersPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 items-end">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
+                      <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} required />
+                    </div>
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
                       <Input value={address} onChange={e => setAddress(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
                     </div>
+                  </div>
 
-                    <div className="flex items-center justify-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm">
-                      <Checkbox id="edit-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} disabled={currentVolunteer?.status === 'Approved'} />
-                      <Label htmlFor="edit-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div className="space-y-1 md:col-span-4">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Requirements</Label>
+                      <div className="flex items-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm w-full">
+                        <Checkbox id="edit-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} disabled={currentVolunteer?.status === 'Approved'} />
+                        <Label htmlFor="edit-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
+                      </div>
+                    </div>
+                    <div className="space-y-1 md:col-span-8">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
+                      <Input value={remarks} onChange={e => setRemarks(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
                     </div>
                   </div>
 
@@ -669,8 +685,8 @@ export default function HeadVolunteersPage() {
             </Dialog>
 
             {/* List */}
-            <Card className="shadow-lg border-primary/10 overflow-hidden backdrop-blur-md bg-card">
-              <CardContent className="p-0">
+            <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+              <div className="p-0">
                 {loading ? (
                   <div className="p-4 space-y-4">
                     <div className="flex items-center justify-between">
@@ -780,14 +796,14 @@ export default function HeadVolunteersPage() {
                     </TableBody>
                   </Table>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="import">
             <div className="grid gap-6 md:grid-cols-2">
               <CSVUpload onUploadSuccess={handleCSVUploadSuccess} />
-              <Card className="shadow-lg border-primary/10">
+              <Card className="">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold">CSV Import Rules for Heads</CardTitle>
                   <CardDescription>System access validation parameters.</CardDescription>

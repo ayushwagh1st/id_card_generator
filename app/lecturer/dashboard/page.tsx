@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Calendar, Users, Activity, Loader2 } from 'lucide-react'
+import { Calendar, Activity } from 'lucide-react'
 import { getLecturerStatsAction } from '@/app/actions/attendance'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import Image from 'next/image'
 
 export default function LecturerDashboard() {
   const [loading, setLoading] = useState(true)
@@ -32,55 +32,63 @@ export default function LecturerDashboard() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-32 w-full rounded-2xl" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2].map((i) => (
-            <Skeleton key={i} className="h-28 w-full rounded-xl" />
-          ))}
+        <div className="grid gap-4 md:grid-cols-2">
+          {[1, 2].map((i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
         </div>
       </div>
     )
   }
 
+  const statItems = [
+    { title: 'Total Assigned Sessions', value: stats.totalAssigned, iconSrc: '/images/icons/icon_database.png', tileClass: 'icon-tile-peach' },
+    { title: "Today's Sessions", value: stats.todaySessions, iconSrc: '/images/icons/icon_clock.png', tileClass: 'icon-tile-pink' },
+  ]
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight">Lecturer Dashboard</h1>
-          <p className="text-blue-100 mt-2 text-sm max-w-xl">
+
+      {/* Banner */}
+      <div className="rounded-[32px] bg-[var(--color-blue)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden group flex flex-col md:flex-row items-center justify-between gap-8">
+        
+        <div className="relative z-10 space-y-4 max-w-xl">
+          <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
+            <Activity className="w-4 h-4 mr-2" /> Lecturer Mode
+          </div>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">
+            Lecturer <span className="text-white" style={{ textShadow: '2px 2px 0 #111111' }}>Dashboard</span>
+          </h1>
+          <p className="font-sans font-medium text-ink/80 text-lg">
             Welcome back! Here is an overview of your assigned sessions and today's schedule.
           </p>
         </div>
+
+        <div className="hidden md:block relative z-10 w-full max-w-[280px] aspect-square transform transition-transform duration-500 group-hover:scale-105 group-hover:-rotate-3">
+          <Image 
+            src="/images/lecturer_dashboard_illustration.png" 
+            alt="Lecturer Dashboard" 
+            fill
+            className="object-contain drop-shadow-[8px_8px_0_rgba(17,17,17,1)]"
+            sizes="(max-width: 768px) 100vw, 280px"
+          />
+        </div>
       </div>
 
+      {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="shadow-md border-primary/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-              Total Assigned Sessions
-            </CardTitle>
-            <div className="p-2 rounded-xl bg-blue-50 text-blue-500">
-              <Calendar className="h-4 w-4" />
+        {statItems.map((stat, i) => (
+          <div
+            key={i}
+            className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl"
+          >
+            <div className={`icon-tile ${stat.tileClass} w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white`}>
+              <Image src={stat.iconSrc} alt={stat.title} width={56} height={56} className="object-cover" />
             </div>
-          </CardHeader>
-          <CardContent className="pt-2">
-            <div className="text-3xl font-black text-foreground">{stats.totalAssigned}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-md border-primary/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-              Today's Sessions
-            </CardTitle>
-            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-500">
-              <Activity className="h-4 w-4" />
+            <div className="mt-2">
+              <div className="font-display font-bold text-3xl text-ink leading-none">{stat.value}</div>
+              <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">{stat.title}</div>
             </div>
-          </CardHeader>
-          <CardContent className="pt-2">
-            <div className="text-3xl font-black text-foreground">{stats.todaySessions}</div>
-          </CardContent>
-        </Card>
+          </div>
+        ))}
       </div>
     </div>
   )

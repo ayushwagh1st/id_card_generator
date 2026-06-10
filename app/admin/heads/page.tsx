@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { createModelHeadAction, updateModelHeadAction, resetModelHeadPasswordAction, deleteModelHeadAction } from '../models/actions'
+import Image from 'next/image'
 
 export default function HeadsPage() {
   const [heads, setHeads] = useState<any[]>([])
@@ -229,11 +230,13 @@ export default function HeadsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Dynamic Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-600 to-indigo-600 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight">Model Heads Directory</h1>
-          <p className="text-teal-100 mt-2 text-sm max-w-xl">
+      <div className="rounded-[32px] bg-[var(--color-mint)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex badge-flat bg-white text-ink border-ink transform rotate-2">
+            <Users className="w-4 h-4 mr-2" /> Model Heads
+          </div>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Supervisor Directory</h1>
+          <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
             Register and manage accounts for exhibition supervisors. Assign them to specific models to grant access.
           </p>
         </div>
@@ -241,44 +244,35 @@ export default function HeadsPage() {
 
       {/* Analytics Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-primary/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
-          <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 text-primary/5 group-hover:scale-110 transition-transform duration-300">
-            <Users className="w-24 h-24" />
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-pink w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_users.png" alt="Users" width={56} height={56} className="object-cover" />
           </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Model Heads</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-primary">{totalHeadsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Supervisor accounts registered</p>
-          </CardContent>
-        </Card>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{totalHeadsCount}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Total Model Heads</div>
+          </div>
+        </div>
 
-        <Card className="border-emerald-500/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
-          <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 text-emerald-500/5 group-hover:scale-110 transition-transform duration-300">
-            <Shield className="w-24 h-24" />
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-yellow w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_check.png" alt="Active" width={56} height={56} className="object-cover" />
           </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Active Assignments</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-emerald-600">{assignedHeadsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Heads currently managing divisions</p>
-          </CardContent>
-        </Card>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{assignedHeadsCount}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Active Assignments</div>
+          </div>
+        </div>
 
-        <Card className="border-amber-500/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
-          <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 text-amber-500/5 group-hover:scale-110 transition-transform duration-300">
-            <Database className="w-24 h-24" />
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-peach w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_clock.png" alt="Unassigned" width={56} height={56} className="object-cover" />
           </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Unassigned Heads</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-amber-600">{unassignedHeadsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Waiting for division assignment</p>
-          </CardContent>
-        </Card>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{unassignedHeadsCount}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Unassigned Heads</div>
+          </div>
+        </div>
       </div>
 
       {/* Actions & Filters */}
@@ -288,7 +282,7 @@ export default function HeadsPage() {
           <Input
             type="search"
             placeholder="Search name, email, model..."
-            className="pl-9 bg-card shadow-sm border-primary/10 rounded-xl"
+            className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -299,14 +293,14 @@ export default function HeadsPage() {
             variant="outline" 
             onClick={handleExportHeads} 
             disabled={heads.length === 0} 
-            className="w-full sm:w-auto gap-2 border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4"
+            className="w-full sm:w-auto gap-2"
           >
             <Download className="h-4 w-4" />
             Export Credentials
           </Button>
 
           <Dialog open={isAddHeadOpen} onOpenChange={setIsAddHeadOpen}>
-            <DialogTrigger render={<Button className="w-full sm:w-auto bg-gradient-to-r from-teal-500 to-indigo-600 hover:from-teal-550 hover:to-indigo-650 text-white shadow-md font-semibold rounded-xl px-5 gap-2" />}>
+            <DialogTrigger render={<Button className="w-full sm:w-auto" />}>
               <Plus className="h-4 w-4" />
               Create Model Head
             </DialogTrigger>
@@ -411,8 +405,8 @@ export default function HeadsPage() {
       </div>
 
       {/* Directory Table */}
-      <Card className="shadow-lg border-primary/10 overflow-hidden backdrop-blur-md bg-card">
-        <CardContent className="p-0">
+      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+        <div className="p-0">
           {loading ? (
             <div className="p-4 space-y-4">
               <div className="rounded-md border">
@@ -508,8 +502,8 @@ export default function HeadsPage() {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

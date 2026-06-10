@@ -48,10 +48,10 @@ export function QRScannerDialog({ open, onOpenChange }: QRScannerDialogProps) {
           </DialogDescription>
         </DialogHeader>
         
-        <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-black flex flex-col items-center justify-center border-4 border-slate-100 shadow-inner">
+        <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-black flex flex-col items-center justify-center border-3 border-ink shadow-hard-sm">
           {isProcessing ? (
             <div className="flex flex-col items-center justify-center space-y-4 text-white z-10">
-              <Loader2 className="w-10 h-10 animate-spin text-pink-500" />
+              <Loader2 className="w-10 h-10 animate-spin text-primary" />
               <p className="font-semibold text-lg">Loading Profile...</p>
             </div>
           ) : (

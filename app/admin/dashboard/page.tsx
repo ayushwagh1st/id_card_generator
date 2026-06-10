@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Users, Database, CheckCircle, Clock, Loader2, BarChart2, TrendingUp, Activity, ScanLine } from 'lucide-react'
+import { Users, Database, CheckCircle, Clock, BarChart2, Activity, TrendingUp, ScanLine } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
 import { getDashboardStatsAction } from '@/app/actions/dashboard'
 import { QRScannerDialog } from '@/components/QRScannerDialog'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import Image from 'next/image'
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
@@ -45,28 +45,23 @@ export default function AdminDashboard() {
   }, [])
 
   const statItems = [
-    { title: 'Total Volunteers', value: stats.totalVolunteers.toLocaleString(), icon: Users, color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' },
-    { title: 'Exhibition Models', value: stats.totalModels.toString(), icon: Database, color: 'text-purple-500 bg-purple-50 dark:bg-purple-950/20' },
-    { title: 'Total Sessions', value: stats.totalSessions.toString(), icon: CheckCircle, color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20' },
-    { title: 'Today\'s Sessions', value: stats.todaySessions.toString(), icon: Clock, color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/20' },
-    { title: 'Total Lecturers', value: stats.totalLecturers.toLocaleString(), icon: Users, color: 'text-blue-500 bg-blue-50 dark:bg-blue-950/20' },
-    { title: 'Attendance %', value: `${stats.attendancePercentage}%`, icon: BarChart2, color: 'text-pink-500 bg-pink-50 dark:bg-pink-950/20' },
+    { title: 'Total Volunteers', value: stats.totalVolunteers.toLocaleString(), iconSrc: '/images/icons/icon_users.png', tileClass: 'icon-tile-lime' },
+    { title: 'Exhibition Models', value: stats.totalModels.toString(), iconSrc: '/images/icons/icon_database.png', tileClass: 'icon-tile-lavender' },
+    { title: 'Total Sessions', value: stats.totalSessions.toString(), iconSrc: '/images/icons/icon_check.png', tileClass: 'icon-tile-ink' },
+    { title: "Today's Sessions", value: stats.todaySessions.toString(), iconSrc: '/images/icons/icon_clock.png', tileClass: 'icon-tile-lime' },
+    { title: 'Total Lecturers', value: stats.totalLecturers.toLocaleString(), iconSrc: '/images/icons/icon_users.png', tileClass: 'icon-tile-lavender' },
+    { title: 'Attendance %', value: `${stats.attendancePercentage}%`, iconSrc: '/images/icons/icon_chart.png', tileClass: 'icon-tile-ink' },
   ]
 
   if (loading) {
     return (
       <div className="space-y-6">
-        {/* Banner Skeleton */}
         <Skeleton className="h-32 w-full rounded-2xl" />
-        
-        {/* Grid Statistics Skeleton */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Skeleton key={i} className="h-28 w-full rounded-xl" />
           ))}
         </div>
-
-        {/* Chart and Activities Skeleton */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
           <Skeleton className="col-span-4 h-[400px] rounded-xl" />
           <Skeleton className="col-span-3 h-[400px] rounded-xl" />
@@ -77,124 +72,137 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight">Super Admin Hub</h1>
-            <p className="text-indigo-100 mt-2 text-sm max-w-xl">
-              Live overview of volunteer networks, approval statistics, and division allocations.
-            </p>
+
+      {/* Banner */}
+      <div className="rounded-[32px] bg-[var(--color-pink)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden group flex flex-col md:flex-row items-center justify-between gap-8">
+        
+        <div className="relative z-10 space-y-4 max-w-xl">
+          <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
+            <CheckCircle className="w-4 h-4 mr-2" /> System Online
           </div>
-          <Button 
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">
+            Super Admin <span className="text-white" style={{ textShadow: '2px 2px 0 #111111' }}>Hub</span>
+          </h1>
+          <p className="font-sans font-medium text-ink/80 text-lg">
+            Live overview of volunteer networks, approval statistics, and division allocations.
+          </p>
+          <button
             onClick={() => setScannerOpen(true)}
-            variant="secondary" 
-            className="w-full md:w-auto bg-white/20 hover:bg-white/30 text-white border-0 shadow-sm backdrop-blur-md font-bold"
+            className="btn-primary bg-[var(--color-yellow)] text-ink border-ink shadow-hard hover:bg-[var(--color-mint)] mt-4 w-full sm:w-auto"
           >
-            <ScanLine className="w-4 h-4 mr-2" />
-            Scan ID Card
-          </Button>
+            <ScanLine className="w-5 h-5" />
+            Quick Scan ID
+          </button>
+        </div>
+
+        <div className="hidden md:block relative z-10 w-full max-w-[300px] aspect-square transform transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3">
+          <Image 
+            src="/images/admin_dashboard_illustration.png" 
+            alt="Control Center" 
+            fill
+            className="object-contain drop-shadow-[8px_8px_0_rgba(17,17,17,1)]"
+            sizes="(max-width: 768px) 100vw, 300px"
+          />
         </div>
       </div>
 
-      {/* Grid Statistics */}
+      {/* Stat Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statItems.map((item, i) => (
-          <Card key={i} className="shadow-md hover:shadow-lg transition-all duration-300 border-primary/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                {item.title}
-              </CardTitle>
-              <div className={`p-2 rounded-xl ${item.color}`}>
-                <item.icon className="h-4 w-4" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="text-3xl font-black text-foreground tracking-tight">{item.value}</div>
-            </CardContent>
-          </Card>
+          <div
+            key={i}
+            className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl"
+          >
+            <div className={`icon-tile ${item.tileClass} w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white`}>
+              <Image src={item.iconSrc} alt={item.title} width={56} height={56} className="object-cover" />
+            </div>
+            <div className="mt-2">
+              <div className="font-display font-bold text-3xl text-ink leading-none">{item.value}</div>
+              <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">{item.title}</div>
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Chart and Activities */}
+      {/* Chart + Activity */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        {/* Recharts chart */}
-        <Card className="col-span-4 shadow-lg border-primary/10 bg-card overflow-hidden">
-          <CardHeader className="border-b border-primary/5 pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold">Volunteers per Model</CardTitle>
-                <CardDescription className="text-xs">Live volunteer count per exhibition model</CardDescription>
-              </div>
-              <BarChart2 className="w-5 h-5 text-indigo-500" />
+        {/* Bar Chart */}
+        <div
+          className="col-span-4 bg-card rounded-2xl overflow-hidden"
+          style={{ border: '3px solid #111111', boxShadow: '8px 8px 0 #111111' }}
+        >
+          <div className="flex items-center justify-between p-5" style={{ borderBottom: '3px solid #111111' }}>
+            <div>
+              <div className="font-display font-bold text-lg text-foreground">Volunteers per Model</div>
+              <div className="font-display text-xs text-foreground/50 mt-0.5">Live volunteer count per exhibition model</div>
             </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="h-[300px] w-full mt-2">
+            <div className="icon-tile icon-tile-lime w-10 h-10">
+              <BarChart2 className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="p-5">
+            <div className="h-[280px] w-full">
               {chartData.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                  No records to display. Allocate volunteers to see statistics.
+                <div className="flex items-center justify-center h-full text-sm text-foreground/40 font-display">
+                  No records yet. Allocate volunteers to see statistics.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
-                    <defs>
-                      <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="oklch(0.56 0.21 260)" stopOpacity={1}/>
-                        <stop offset="100%" stopColor="oklch(0.68 0.18 250)" stopOpacity={0.8}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.92 0.01 240 / 40%)" />
-                    <XAxis dataKey="name" stroke="#888888" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#888888" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-                    <Tooltip cursor={{ fill: 'rgba(0, 0, 0, 0.02)' }} />
-                    <Bar dataKey="volunteers" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#11111115" />
+                    <XAxis dataKey="name" stroke="#111111" fontSize={11} tickLine={false} axisLine={false} fontFamily="Fredoka" />
+                    <YAxis stroke="#111111" fontSize={11} tickLine={false} axisLine={false} fontFamily="Fredoka" />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(188,166,255,0.15)' }}
+                      contentStyle={{ border: '2px solid #111111', borderRadius: 10, fontFamily: 'Fredoka' }}
+                    />
+                    <Bar dataKey="volunteers" fill="#BCA6FF" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Recent activities */}
-        <Card className="col-span-3 shadow-lg border-primary/10 bg-card overflow-hidden">
-          <CardHeader className="border-b border-primary/5 pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold">System Activity Feed</CardTitle>
-                <CardDescription className="text-xs">Latest database actions and scans tracked</CardDescription>
-              </div>
-              <Activity className="w-5 h-5 text-pink-500" />
+        {/* Activity Feed */}
+        <div
+          className="col-span-3 bg-card rounded-2xl overflow-hidden"
+          style={{ border: '3px solid #111111', boxShadow: '8px 8px 0 #111111' }}
+        >
+          <div className="flex items-center justify-between p-5" style={{ borderBottom: '3px solid #111111' }}>
+            <div>
+              <div className="font-display font-bold text-lg text-foreground">Activity Feed</div>
+              <div className="font-display text-xs text-foreground/50 mt-0.5">Latest database actions</div>
             </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="space-y-6">
+            <div className="icon-tile icon-tile-lavender w-10 h-10">
+              <Activity className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="p-5">
+            <div className="space-y-5">
               {activities.length === 0 ? (
-                <div className="text-center text-sm py-12 text-muted-foreground">
+                <div className="text-center text-sm py-12 text-foreground/40 font-display">
                   No recent activities logged.
                 </div>
               ) : (
                 activities.map((activity, i) => (
-                  <div key={i} className="flex items-start gap-4">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-pink-50 text-pink-600 dark:bg-pink-950/20 dark:text-pink-400 mt-0.5">
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="icon-tile icon-tile-lime w-9 h-9 shrink-0">
                       <TrendingUp className="h-4 w-4" />
                     </div>
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-bold leading-none text-foreground">{activity.action}</p>
-                      <p className="text-xs text-muted-foreground font-semibold">
-                        {activity.user}
-                      </p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-display font-bold text-sm text-foreground leading-snug truncate">{activity.action}</p>
+                      <p className="font-display text-xs text-foreground/50 mt-0.5">{activity.user}</p>
                     </div>
-                    <div className="text-[10px] font-bold text-muted-foreground whitespace-nowrap">
+                    <div className="font-display text-[11px] font-semibold text-foreground/40 whitespace-nowrap shrink-0">
                       {activity.time}
                     </div>
                   </div>
                 ))
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       <QRScannerDialog open={scannerOpen} onOpenChange={setScannerOpen} />

@@ -72,11 +72,13 @@ export default function LecturerSessionsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight">My Sessions</h1>
-          <p className="text-blue-100 mt-2 text-sm max-w-xl">
+      <div className="rounded-[32px] bg-[var(--color-peach)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex badge-flat bg-white text-ink border-ink transform rotate-2">
+            <ScanLine className="w-4 h-4 mr-2" /> Scanner
+          </div>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">My Sessions</h1>
+          <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
             View your assigned sessions and scan QR codes for attendance.
           </p>
         </div>
@@ -88,15 +90,15 @@ export default function LecturerSessionsPage() {
           <Input
             type="search"
             placeholder="Search sessions..."
-            className="pl-9 bg-card border-primary/10 rounded-xl"
+            className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <Card className="shadow-lg border-primary/10 overflow-hidden backdrop-blur-md bg-card">
-        <CardContent className="p-0">
+      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0">
+        <div className="p-0">
           {loading ? (
             <div className="p-4 space-y-4">
               <div className="rounded-md border">
@@ -159,7 +161,7 @@ export default function LecturerSessionsPage() {
                         <Button variant="outline" size="sm" onClick={() => openEnrollments(sess)}>
                             <Users className="w-4 h-4 mr-1" /> Volunteers
                         </Button>
-                        <Button size="sm" onClick={() => navigateToScanner(sess.id)} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                        <Button size="sm" onClick={() => navigateToScanner(sess.id)}>
                             <ScanLine className="w-4 h-4 mr-1" /> Scan QR
                         </Button>
                     </div>
@@ -174,8 +176,8 @@ export default function LecturerSessionsPage() {
             </TableBody>
           </Table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Dialog open={viewEnrollmentsOpen} onOpenChange={setViewEnrollmentsOpen}>
           <DialogContent className="sm:max-w-2xl rounded-xl max-h-[90vh] overflow-y-auto">

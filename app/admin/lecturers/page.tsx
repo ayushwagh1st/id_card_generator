@@ -13,6 +13,8 @@ import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { exportToPDF } from '@/lib/pdf'
 import { getLecturersAction, addLecturerAction, updateLecturerAction, deleteLecturerAction, resetLecturerPasswordAction } from '@/app/actions/lecturers'
+import Image from 'next/image'
+import { Users } from 'lucide-react'
 
 export default function LecturersPage() {
   const [lecturers, setLecturers] = useState<any[]>([])
@@ -171,15 +173,52 @@ export default function LecturersPage() {
     })
   }
 
+  const activeLecturers = lecturers.filter(l => l.status === 'Active').length
+  const inactiveLecturers = lecturers.filter(l => l.status === 'Inactive').length
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight">Lecturer Management</h1>
-          <p className="text-blue-100 mt-2 text-sm max-w-xl">
+      <div className="rounded-[32px] bg-[var(--color-blue)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
+            <Users className="w-4 h-4 mr-2" /> Lecturers
+          </div>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Lecturer Management</h1>
+          <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
             Manage lecturers who will conduct sessions and mark attendance.
           </p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-pink w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_users.png" alt="Users" width={56} height={56} className="object-cover" />
+          </div>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{lecturers.length}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Total Lecturers</div>
+          </div>
+        </div>
+
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-mint w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_check.png" alt="Active" width={56} height={56} className="object-cover" />
+          </div>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{activeLecturers}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Active Lecturers</div>
+          </div>
+        </div>
+
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-peach w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_clock.png" alt="Inactive" width={56} height={56} className="object-cover" />
+          </div>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{inactiveLecturers}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Inactive Lecturers</div>
+          </div>
         </div>
       </div>
 
@@ -189,22 +228,22 @@ export default function LecturersPage() {
           <Input
             type="search"
             placeholder="Search name, email..."
-            className="pl-9 bg-card border-primary/10 rounded-xl"
+            className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-          <Button onClick={handleExportCredentials} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-emerald-600 border-emerald-500/20">
+          <Button onClick={handleExportCredentials} variant="outline" className="w-full sm:w-auto">
             <Download className="w-4 h-4" /> Export CSV
           </Button>
-          <Button onClick={handleExportPDF} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-blue-600 border-blue-500/20">
+          <Button onClick={handleExportPDF} variant="outline" className="w-full sm:w-auto">
             <Download className="w-4 h-4" /> Export PDF
           </Button>
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger render={
-              <Button className="w-full sm:w-auto bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/95 text-white font-semibold rounded-xl px-5 gap-2">
+              <Button className="w-full sm:w-auto px-5 gap-2">
                 <Plus className="h-4 w-4" /> Add Lecturer
               </Button>
             } />
@@ -305,8 +344,8 @@ export default function LecturersPage() {
         </DialogContent>
       </Dialog>
 
-      <Card className="shadow-lg border-primary/10 overflow-hidden backdrop-blur-md bg-card">
-        <CardContent className="p-0">
+      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+        <div className="p-0">
           {loading ? (
             <div className="p-4 space-y-4">
               <div className="rounded-md border">
@@ -388,8 +427,8 @@ export default function LecturersPage() {
             </TableBody>
           </Table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

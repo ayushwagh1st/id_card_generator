@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Tent, Mail, Lock, Rocket, Palette, Sparkles, Smile, Star } from 'lucide-react'
+import { Mail, Lock, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
@@ -66,90 +67,119 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-tr from-cyan-400 via-yellow-300 to-pink-400 p-4 sm:p-6 relative overflow-hidden select-none font-sans">
-      {/* Decorative Vector Art (Floating Icons) */}
-      <Rocket className="absolute top-10 left-10 w-24 h-24 text-pink-500/80 animate-bounce -rotate-12 drop-shadow-xl" strokeWidth={1.5} />
-      <Palette className="absolute bottom-20 left-20 w-32 h-32 text-purple-500/80 animate-pulse drop-shadow-xl rotate-12" strokeWidth={1.5} />
-      <Sparkles className="absolute top-20 right-20 w-20 h-20 text-yellow-600/90 drop-shadow-lg" strokeWidth={1.5} />
-      <Star className="absolute bottom-32 right-32 w-16 h-16 text-cyan-600/70 animate-bounce drop-shadow-xl" strokeWidth={2} />
-      <Smile className="absolute top-1/2 left-1/4 w-12 h-12 text-orange-500/80 -rotate-12 drop-shadow-md" strokeWidth={2} />
-
-      {/* Background Blurs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-white/40 blur-3xl -z-10" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-pink-400/30 blur-3xl -z-10" />
-      
-      <Card className="w-full max-w-md bg-white/90 backdrop-blur-xl border-4 border-white shadow-2xl rounded-[2.5rem] p-4 sm:p-6 animate-in zoom-in-95 fade-in duration-500 relative z-10">
-        <CardHeader className="space-y-4 text-center pb-6">
-          <div className="mx-auto bg-gradient-to-tr from-pink-500 to-orange-400 p-5 rounded-[2rem] w-fit shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
-            <Tent className="w-10 h-10 text-white drop-shadow-md" />
-          </div>
-          <div className="space-y-1">
-            <CardTitle className="text-3xl sm:text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 drop-shadow-sm">
-              Bal Pradarshani
-            </CardTitle>
-            <p className="text-sm font-bold text-gray-500 tracking-wide uppercase">ID Generation Portal</p>
-          </div>
-          <CardDescription className="text-gray-500 text-sm font-medium">
-            Welcome to the magical exhibition! Please login to issue volunteer passes.
-          </CardDescription>
-        </CardHeader>
+    <div className="flex min-h-screen bg-background relative overflow-hidden select-none p-4 sm:p-8">
+      {/* Container */}
+      <div className="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         
-        <form onSubmit={handleLogin}>
-          <CardContent className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs font-black text-gray-700 uppercase tracking-wider pl-1">Email ID</Label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-pink-500 transition-colors" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@exhibition.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-12 bg-white border-2 border-gray-200 text-gray-800 placeholder-gray-400 focus-visible:ring-pink-500/50 focus-visible:border-pink-500 rounded-2xl transition-all duration-300 shadow-sm font-medium text-lg"
-                />
-              </div>
+        {/* Left Side: Illustration / Brand */}
+        <div className="hidden lg:flex flex-col justify-center items-center h-[90vh] bento-pink pattern-dots relative overflow-hidden group border-ink shadow-hard rounded-[32px]">
+          <div className="absolute top-8 left-8 badge-flat bg-white text-ink border-ink transform -rotate-3 z-20">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Portal Access
+          </div>
+          
+          <div className="relative z-10 transform transition-transform duration-500 group-hover:scale-105 group-hover:rotate-2 w-full max-w-[80%] aspect-square flex items-center justify-center">
+            <Image 
+              src="/images/login_illustration.png" 
+              alt="Magical ID Portal" 
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-contain drop-shadow-[12px_12px_0_rgba(17,17,17,1)]"
+              priority
+            />
+          </div>
+          
+          <div className="absolute bottom-8 right-8 bento-yellow p-4 shadow-hard flex items-center gap-3 transform rotate-3 z-20">
+             <ShieldCheck className="w-6 h-6 text-ink" />
+             <span className="font-display font-bold text-ink">Secure & Fast</span>
+          </div>
+        </div>
+
+        {/* Right Side: Form */}
+        <div className="flex justify-center items-center h-full w-full">
+          <div className="w-full max-w-md card-flat p-8 sm:p-10 bg-white shadow-hard relative">
+            <div className="absolute -top-6 -right-6 icon-tile icon-tile-mint w-14 h-14 shadow-hard transform rotate-6 z-10">
+              <Lock className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-4 pb-8">
+              <span className="eyebrow text-ink/70">Welcome Back</span>
+              <h1 className="text-4xl font-bold font-display text-ink leading-tight">
+                Enter the <br/> <span className="text-[var(--color-pink)]" style={{ textShadow: '2px 2px 0 #111111, -1px -1px 0 #111111, 1px -1px 0 #111111, -1px 1px 0 #111111, 1px 1px 0 #111111' }}>Portal</span>
+              </h1>
+              <p className="text-muted-foreground text-sm font-sans font-medium leading-relaxed">
+                Enter your credentials to access the magical ID portal system. Let's make some magic!
+              </p>
             </div>
             
-            <div className="space-y-2">
-              <div className="flex items-center justify-between pl-1">
-                <Label htmlFor="password" className="text-xs font-black text-gray-700 uppercase tracking-wider">Password</Label>
-                <Link href="/forgot-password" className="text-[11px] font-bold text-cyan-600 hover:text-cyan-500 hover:underline transition-all uppercase tracking-wide">
-                  Forgot?
-                </Link>
+            <form onSubmit={handleLogin} className="space-y-6">
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="font-display font-bold text-sm text-ink">
+                  Email Address
+                </Label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink/50 group-focus-within:text-ink transition-colors" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@company.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-12 h-14 border-ink-2 shadow-hard-xs rounded-xl font-medium text-lg focus-visible:ring-0 focus-visible:shadow-hard transition-shadow"
+                  />
+                </div>
               </div>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-pink-500 transition-colors" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 h-12 bg-white border-2 border-gray-200 text-gray-800 placeholder-gray-400 focus-visible:ring-pink-500/50 focus-visible:border-pink-500 rounded-2xl transition-all duration-300 shadow-sm font-medium text-lg"
-                />
+
+              {/* Password */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="font-display font-bold text-sm text-ink">
+                    Password
+                  </Label>
+                  <Link href="/forgot-password" className="font-display text-sm font-bold text-[var(--color-blue)] hover:text-ink transition-colors underline decoration-2 underline-offset-4">
+                    Forgot?
+                  </Link>
+                </div>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink/50 group-focus-within:text-ink transition-colors" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-12 h-14 border-ink-2 shadow-hard-xs rounded-xl font-medium text-lg focus-visible:ring-0 focus-visible:shadow-hard transition-shadow"
+                  />
+                </div>
               </div>
-            </div>
-          </CardContent>
-          
-          <CardFooter className="pt-6 flex flex-col gap-3">
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white font-black text-lg h-14 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2" 
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <AnimatedLoader className="w-5 h-5" />
-                  Entering...
-                </>
-              ) : 'Hop In! 🚀'}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+
+              <div className="pt-6">
+                <button
+                  type="submit"
+                  className="btn-primary w-full h-14 bg-[var(--color-yellow)] text-ink border-ink shadow-hard hover:bg-[var(--color-lime)] flex items-center justify-center gap-2"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <AnimatedLoader className="w-5 h-5 text-ink" />
+                      <span>Signing in...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Let's Go!</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>
     </div>
   )
 }

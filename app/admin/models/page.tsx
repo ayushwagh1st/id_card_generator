@@ -21,11 +21,11 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Plus, Search, Edit, Trash2, Database, Shield, Layers, HelpCircle, Loader2, FileText, Download } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { exportToPDF } from '@/lib/pdf'
 import { formatHeadLabel } from '@/lib/formatters'
-
+import Image from 'next/image'
+import { createClient } from '@/lib/supabase/client'
 export default function ModelsPage() {
   const [models, setModels] = useState<any[]>([])
   const [heads, setHeads] = useState<any[]>([])
@@ -226,11 +226,13 @@ export default function ModelsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Redesigned Colorful Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 p-6 text-white shadow-lg">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight">Models & Exhibition Heads</h1>
-          <p className="text-purple-100 mt-2 text-sm max-w-xl">
+      <div className="rounded-[32px] bg-[var(--color-peach)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
+            <Database className="w-4 h-4 mr-2" /> Divisions
+          </div>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Models & Heads</h1>
+          <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
             Configure various samagam models, assign supervisors, and manage active exhibition categories.
           </p>
         </div>
@@ -238,44 +240,35 @@ export default function ModelsPage() {
 
       {/* Modern Analytics Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-primary/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
-          <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 text-primary/5 group-hover:scale-110 transition-transform duration-300">
-            <Layers className="w-24 h-24" />
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-yellow w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_database.png" alt="Models" width={56} height={56} className="object-cover" />
           </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Models</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-primary">{models.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Exhibition divisions configured</p>
-          </CardContent>
-        </Card>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{models.length}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Total Models</div>
+          </div>
+        </div>
 
-        <Card className="border-emerald-500/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
-          <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 text-emerald-500/5 group-hover:scale-110 transition-transform duration-300">
-            <Database className="w-24 h-24" />
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-mint w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_check.png" alt="Active" width={56} height={56} className="object-cover" />
           </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Active Divisions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-emerald-600">{activeModelsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Operational right now</p>
-          </CardContent>
-        </Card>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{activeModelsCount}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Active Divisions</div>
+          </div>
+        </div>
 
-        <Card className="border-purple-500/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
-          <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 text-purple-500/5 group-hover:scale-110 transition-transform duration-300">
-            <Shield className="w-24 h-24" />
+        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
+          <div className="icon-tile icon-tile-pink w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
+            <Image src="/images/icons/icon_users.png" alt="Heads" width={56} height={56} className="object-cover" />
           </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Assigned Heads</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-purple-600">{assignedHeadsCount} / {heads.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Supervisors linked to models</p>
-          </CardContent>
-        </Card>
+          <div className="mt-2">
+            <div className="font-display font-bold text-3xl text-ink leading-none">{assignedHeadsCount} / {heads.length}</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Assigned Heads</div>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -285,7 +278,7 @@ export default function ModelsPage() {
           <Input
             type="search"
             placeholder="Search models, categories, heads..."
-            className="pl-9 bg-card shadow-sm border-primary/10 rounded-xl"
+            className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -293,16 +286,16 @@ export default function ModelsPage() {
 
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
 
-          <Button onClick={handleExportCSV} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-emerald-600 border-emerald-500/20">
+          <Button onClick={handleExportCSV} variant="outline" className="w-full sm:w-auto">
             <FileText className="w-4 h-4" /> Export CSV
           </Button>
-          <Button onClick={handleExportPDF} variant="outline" className="w-full sm:w-auto border-primary/20 hover:bg-primary/5 rounded-xl font-semibold px-4 gap-2 text-purple-600 border-purple-500/20">
+          <Button onClick={handleExportPDF} variant="outline" className="w-full sm:w-auto">
             <Download className="w-4 h-4" /> Export PDF
           </Button>
 
           {/* Add Model Dialog */}
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger render={<Button className="w-full sm:w-auto bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-white shadow-md font-semibold rounded-xl px-5 gap-2" />}>
+            <DialogTrigger render={<Button className="w-full sm:w-auto" />}>
               <Plus className="h-4 w-4" />
               Add Exhibition Model
             </DialogTrigger>
@@ -419,8 +412,8 @@ export default function ModelsPage() {
       </Dialog>
 
       {/* Models Glassmorphism Table */}
-      <Card className="shadow-lg border-primary/10 overflow-hidden backdrop-blur-md bg-card">
-        <CardContent className="p-0">
+      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+        <div className="p-0">
           {loading ? (
             <div className="p-4 space-y-4">
               <div className="rounded-md border">
@@ -489,7 +482,7 @@ export default function ModelsPage() {
                           <Edit className="h-4 w-4" />
                         </Button>
                         <AlertDialog>
-                          <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 rounded-xl" />}>
+                          <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" />}>
                             <Trash2 className="h-4 w-4" />
                           </AlertDialogTrigger>
                           <AlertDialogContent className="rounded-xl">
@@ -529,8 +522,8 @@ export default function ModelsPage() {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

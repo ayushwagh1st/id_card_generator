@@ -205,12 +205,12 @@ export default function PrintCenter() {
           )}
 
           {isFiltered && (
-            <Button variant="outline" onClick={clearSelectionFilter} className="gap-2 rounded-xl border-dashed">
+            <Button variant="outline" onClick={clearSelectionFilter} className="gap-2">
               <RefreshCw className="h-4 w-4" />
               Load All
             </Button>
           )}
-          <Button onClick={handlePrint} disabled={loading || volunteers.length === 0} className="gap-2 bg-black hover:bg-zinc-800 text-white font-semibold rounded-xl px-5 shadow-md">
+          <Button onClick={handlePrint} disabled={loading || volunteers.length === 0} className="gap-2 bg-black hover:bg-zinc-800 text-white px-5">
             <Printer className="h-4 w-4" />
             Print Batch {totalBatches > 1 ? safeCurrentBatch : ''}
           </Button>
@@ -221,12 +221,12 @@ export default function PrintCenter() {
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         
         {/* Controls */}
-        <Card className="xl:col-span-1 shadow-sm border-primary/10 h-fit relative xl:sticky xl:top-6 z-10 mb-6 xl:mb-0">
-          <CardHeader className="pb-4">
+        <div className="xl:col-span-1 h-fit relative xl:sticky xl:top-6 z-10 mb-6 xl:mb-0 bento-white border-ink shadow-hard !p-0">
+          <CardHeader className="pb-4 bg-muted/20 border-b border-ink/10">
             <CardTitle className="text-lg">Print Settings</CardTitle>
             <CardDescription>Configure output dimensions and paper rules.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-5 p-5">
             
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-muted-foreground">Card Size</Label>
@@ -287,22 +287,22 @@ export default function PrintCenter() {
             </div>
 
           </CardContent>
-        </Card>
+        </div>
 
         {/* Preview Area */}
-        <Card className="xl:col-span-3 shadow-sm border-primary/10 overflow-hidden bg-zinc-900 flex flex-col">
-          <CardHeader className="bg-zinc-950 border-b border-zinc-800 flex flex-row items-center justify-between">
+        <div className="xl:col-span-3 overflow-hidden bg-ink border-2 border-ink shadow-hard rounded-[32px] flex flex-col">
+          <CardHeader className="bg-ink border-b border-white/10 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-sm font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
+              <CardTitle className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <Layers className="w-4 h-4" />
                 Print Preview Sheet
               </CardTitle>
             </div>
-            <div className="text-xs font-mono text-zinc-500 bg-zinc-900 px-3 py-1 rounded border border-zinc-800">
+            <div className="text-xs font-mono text-white/50 bg-white/5 px-3 py-1 rounded border border-white/10">
               {volunteers.length} Cards • {printSheets.length} Sheets Total
             </div>
           </CardHeader>
-          <CardContent className="overflow-x-auto p-4 sm:p-8 flex justify-start md:justify-center min-h-[600px] relative w-full">
+          <CardContent className="overflow-x-auto p-4 sm:p-8 flex justify-start md:justify-center min-h-[600px] relative w-full bg-ink">
             
             {loading ? (
               <div className="flex flex-col items-center justify-center gap-6 mt-10 w-full max-w-2xl">
@@ -350,7 +350,7 @@ export default function PrintCenter() {
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center print:hidden z-50">
                                   <Button 
                                     size="sm" 
-                                    className="bg-primary text-white hover:bg-primary/90 font-bold text-[10px] py-1.5 px-3 rounded-lg shadow-md flex items-center gap-1.5"
+                                    className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-[10px] py-1.5 px-3 flex items-center gap-1.5"
                                     onClick={() => handlePrintSingleCard(vol)}
                                   >
                                     <Printer className="w-3.5 h-3.5" />
@@ -399,7 +399,7 @@ export default function PrintCenter() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </div>
       </div>
     </div>
   )

@@ -39,7 +39,7 @@ export default function GlobalError({
             Try Again
           </Button>
           <Link href="/">
-            <Button variant="outline" className="border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 w-full sm:w-auto font-bold rounded-xl h-11">
+            <Button variant="outline" className="bg-zinc-900 text-zinc-300 hover:bg-zinc-800 w-full sm:w-auto font-bold h-11">
               <Home className="w-4 h-4 mr-2" />
               Return Home
             </Button>

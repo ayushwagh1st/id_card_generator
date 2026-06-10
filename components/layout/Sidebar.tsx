@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Tent, Users, Database, FileText, BarChart, LogOut, Printer, Shield, X, Activity } from 'lucide-react'
+import { Sparkles, Users, Database, FileText, BarChart, LogOut, Printer, Shield, X, Activity } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -61,26 +61,29 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
   }
 
   return (
-    <div className="flex h-screen w-full flex-col border-r bg-card shadow-sm">
-      <div className="flex h-16 items-center justify-between border-b px-6">
-        <div className="flex items-center gap-2 font-black text-[17px] tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-orange-400">
-          <div className="bg-gradient-to-tr from-pink-500 to-orange-400 p-1.5 rounded shadow-sm">
-            <Tent className="h-4 w-4 text-white" />
+    <div className="flex h-screen w-full flex-col bg-card" style={{ borderRight: '3px solid #111111' }}>
+      {/* Logo */}
+      <div className="flex h-16 items-center justify-between px-5" style={{ borderBottom: '3px solid #111111' }}>
+        <div className="flex items-center gap-3">
+          <div className="icon-tile icon-tile-lavender w-9 h-9">
+            <Sparkles className="w-4 h-4" />
           </div>
-          <span>Bal Pradarshani</span>
+          <span className="font-display font-bold text-lg text-foreground">Bal Pradarshani</span>
         </div>
         {closeMobileMenu && (
-          <button 
+          <button
             onClick={closeMobileMenu}
-            className="md:hidden text-muted-foreground p-1.5 hover:bg-muted hover:text-foreground rounded-lg transition-colors"
+            className="md:hidden p-1.5 rounded-lg text-foreground/50 hover:text-foreground hover:bg-muted transition-colors"
             aria-label="Close menu"
           >
             <X className="w-5 h-5" />
           </button>
         )}
       </div>
-      <div className="flex-1 overflow-y-auto py-6">
-        <nav className="space-y-1.5 px-4">
+
+      {/* Nav links */}
+      <div className="flex-1 overflow-y-auto py-5">
+        <nav className="space-y-1 px-3">
           {links.map((link) => {
             const Icon = link.icon
             const isActive = pathname.startsWith(link.href)
@@ -90,26 +93,28 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
                 href={link.href}
                 onClick={closeMobileMenu}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:scale-[1.01]",
+                  'flex items-center gap-3 rounded-xl px-3 py-2.5 font-display font-semibold text-sm transition-all duration-150',
                   isActive
-                    ? "bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-md font-bold"
-                    : "text-muted-foreground hover:bg-pink-50 hover:text-pink-600"
+                    ? 'bg-[var(--color-yellow)] text-ink border-2 border-ink shadow-hard-xs transform -translate-y-0.5'
+                    : 'text-foreground/70 hover:bg-muted hover:text-ink hover:border-2 border-transparent hover:border-ink/20'
                 )}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-ink' : 'text-foreground/50')} />
                 {link.name}
               </Link>
             )
           })}
         </nav>
       </div>
-      <div className="border-t p-4">
+
+      {/* Logout */}
+      <div className="p-3" style={{ borderTop: '3px solid #111111' }}>
         <button
           onClick={() => {
             handleLogout()
             if (closeMobileMenu) closeMobileMenu()
           }}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+          className="flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 font-display font-semibold text-sm text-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors duration-150"
         >
           <LogOut className="h-4 w-4" />
           Sign Out
