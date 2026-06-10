@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Sparkles, LogIn, UserPlus, ShieldCheck, Printer, ArrowRight, Users, FileCheck } from 'lucide-react'
+import GalleryImage from '@/components/GalleryImage'
 
 export default function Home() {
   const steps = [
@@ -34,9 +35,9 @@ export default function Home() {
   ]
 
   const stats = [
-    { label: 'Volunteers', value: '5,000+', bg: 'bg-primary text-foreground' },
-    { label: 'Models', value: '50+', bg: 'bg-secondary text-ink' },
-    { label: 'Divisions', value: '10+', bg: 'bg-card text-ink' },
+    { label: 'Volunteers', value: '300+', bg: 'bg-primary text-foreground' },
+    { label: 'Models', value: '30+', bg: 'bg-secondary text-ink' },
+    { label: 'Divisions', value: '3+', bg: 'bg-card text-ink' },
     { label: 'Year', value: '2027', bg: 'bg-bg-pastel text-ink' },
   ]
 
@@ -47,16 +48,16 @@ export default function Home() {
       <nav className="sticky top-0 z-[100] bg-card border-ink border-b-[3px] px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="icon-tile icon-tile-lavender w-10 h-10">
-              <Sparkles className="w-5 h-5" />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Bal Pradarshani Logo" className="w-10 h-10 rounded-lg border-2 border-ink object-cover bg-white" />
             <span className="font-display font-bold text-xl text-foreground">Bal Pradarshani</span>
           </div>
 
           <div className="hidden md:flex items-center gap-8">
             <Link href="/" className="font-display font-semibold text-foreground text-[15px] hover:text-primary transition-colors">Home</Link>
             <Link href="#process" className="font-display font-semibold text-foreground text-[15px] hover:text-primary transition-colors">Process</Link>
-            <Link href="#" className="font-display font-semibold text-foreground text-[15px] hover:text-primary transition-colors">Support</Link>
+            <Link href="#gallery" className="font-display font-semibold text-foreground text-[15px] hover:text-primary transition-colors">Gallery</Link>
+            <Link href="/support" className="font-display font-semibold text-foreground text-[15px] hover:text-primary transition-colors">Support</Link>
           </div>
 
           <Link href="/login" className="btn-primary py-2.5 text-base">
@@ -78,8 +79,15 @@ export default function Home() {
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7">
-            <div className="flex items-center gap-4 mb-8">
-              <span className="badge-flat">60th Maharashtra Samagam 2027</span>
+            <div className="flex flex-wrap items-center gap-4 mb-8">
+              <span className="badge-flat whitespace-nowrap">60th Nirankari Sant Samagam Maharashtra 2027</span>
+              <div className="relative group cursor-default inline-flex">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-500"></div>
+                <span className="relative flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-amber-200/50 text-[#1e3a5f] font-display font-bold text-[15px] shadow-sm hover:scale-105 transition-transform duration-300">
+                  <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span className="whitespace-nowrap">Theme: जागृति - The Awakening</span>
+                </span>
+              </div>
             </div>
 
             <h1
@@ -166,6 +174,36 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Gallery ── */}
+      <section id="gallery" className="py-24 bg-ink text-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="mb-12">
+            <span className="eyebrow !text-primary">Memories</span>
+            <h2 className="font-display font-bold text-5xl mb-4">
+              Glimpses of Samagam
+            </h2>
+            <p className="text-lg text-white/70 max-w-xl">
+              A look back at the beautiful moments captured during previous events.
+            </p>
+          </div>
+
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
+            {[
+              "IMG_6584.JPG", "IMG_6602.JPG", "IMG_6627.JPG",
+              "IMG_6694.JPG", "IMG_6724.JPG", "IMG_6808.JPG",
+              "IMG_6840.JPG", "IMG_6899.JPG", "IMG_6975.JPG",
+              "IMG_6980.JPG", "IMG_7052.JPG", "IMG_7125.JPG",
+              "IMG_7192.JPG", "IMG_7280.JPG", "IMG_7295.JPG"
+            ].map((img, idx) => (
+              <div key={idx} className="break-inside-avoid relative rounded-[20px] overflow-hidden border-2 border-white/10 group shadow-hard-sm">
+                <div className="absolute inset-0 bg-ink/10 group-hover:bg-transparent transition-colors duration-300 z-10 pointer-events-none" />
+                <GalleryImage src={`/gallary/${img}`} alt={`Gallery image ${idx + 1}`} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA Band ── */}
       <section className="bg-primary border-y-[3px] border-ink py-20">
         <div className="max-w-6xl mx-auto px-6 text-center">
@@ -173,7 +211,7 @@ export default function Home() {
             Ready to streamline volunteer management?
           </h2>
           <p className="text-foreground/80 text-lg mb-10 max-w-xl mx-auto">
-            Join organizers making the 60th Maharashtra Samagam a grand success.
+            Join organizers making the 60th Nirankari Sant Samagam Maharashtra a grand success.
           </p>
           <Link
             href="/login"
@@ -191,9 +229,8 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center gap-3 mb-6">
-                <div className="icon-tile icon-tile-lavender w-10 h-10">
-                  <Sparkles className="w-5 h-5" />
-                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="Bal Pradarshani Logo" className="w-10 h-10 rounded-lg border-2 border-ink object-cover bg-white" />
                 <span className="font-display font-bold text-xl">Bal Pradarshani</span>
               </div>
               <p className="text-white/60 max-w-xs leading-relaxed">
@@ -202,26 +239,15 @@ export default function Home() {
             </div>
 
             <div>
-              <h4 className="font-display text-sm font-semibold uppercase tracking-widest text-white/40 mb-6">Product</h4>
-              <ul className="space-y-4">
-                <li><Link href="#" className="text-white/70 hover:text-primary transition-colors">Features</Link></li>
-                <li><Link href="#" className="text-white/70 hover:text-primary transition-colors">Docs</Link></li>
-                <li><Link href="#process" className="text-white/70 hover:text-primary transition-colors">Process</Link></li>
-              </ul>
-            </div>
-
-            <div>
               <h4 className="font-display text-sm font-semibold uppercase tracking-widest text-white/40 mb-6">Support</h4>
               <ul className="space-y-4">
-                <li><Link href="#" className="text-white/70 hover:text-primary transition-colors">Help Center</Link></li>
-                <li><Link href="#" className="text-white/70 hover:text-primary transition-colors">Contact</Link></li>
-                <li><Link href="#" className="text-white/70 hover:text-primary transition-colors">Privacy</Link></li>
+                <li><Link href="/support" className="text-white/70 hover:text-primary transition-colors">Help Center</Link></li>
               </ul>
             </div>
           </div>
 
           <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/10 gap-4 text-sm text-white/40 font-display">
-            <p>© 2027 Sant Nirankari Mandal. All rights reserved.</p>
+            <p>© 2027 <a href="https://www.nirankari.org/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:underline">Sant Nirankari Mandal</a>. All rights reserved.</p>
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-secondary"></div>
               <span>All systems normal</span>

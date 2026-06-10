@@ -49,7 +49,7 @@ export default function AdminDashboard() {
     { title: 'Exhibition Models', value: stats.totalModels.toString(), iconSrc: '/images/icons/icon_database.png', tileClass: 'icon-tile-lavender' },
     { title: 'Total Sessions', value: stats.totalSessions.toString(), iconSrc: '/images/icons/icon_check.png', tileClass: 'icon-tile-ink' },
     { title: "Today's Sessions", value: stats.todaySessions.toString(), iconSrc: '/images/icons/icon_clock.png', tileClass: 'icon-tile-lime' },
-    { title: 'Total Lecturers', value: stats.totalLecturers.toLocaleString(), iconSrc: '/images/icons/icon_users.png', tileClass: 'icon-tile-lavender' },
+    { title: 'Total Security Personnel', value: stats.totalLecturers.toLocaleString(), iconSrc: '/images/icons/icon_users.png', tileClass: 'icon-tile-lavender' },
     { title: 'Attendance %', value: `${stats.attendancePercentage}%`, iconSrc: '/images/icons/icon_chart.png', tileClass: 'icon-tile-ink' },
   ]
 
@@ -100,6 +100,7 @@ export default function AdminDashboard() {
             src="/images/admin_dashboard_illustration.png" 
             alt="Control Center" 
             fill
+            priority
             className="object-contain drop-shadow-[8px_8px_0_rgba(17,17,17,1)]"
             sizes="(max-width: 768px) 100vw, 300px"
           />
@@ -147,7 +148,7 @@ export default function AdminDashboard() {
                   No records yet. Allocate volunteers to see statistics.
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#11111115" />
                     <XAxis dataKey="name" stroke="#111111" fontSize={11} tickLine={false} axisLine={false} fontFamily="Fredoka" />

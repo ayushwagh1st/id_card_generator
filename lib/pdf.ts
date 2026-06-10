@@ -1,6 +1,11 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
+export interface PDFSummaryStat {
+  label: string
+  value: string | number
+}
+
 interface PDFOptions {
   title: string
   subtitle?: string
@@ -8,6 +13,7 @@ interface PDFOptions {
   headers: string[]
   data: (string | number)[][]
   themeColor?: [number, number, number] // RGB
+  summaryStats?: PDFSummaryStat[]
 }
 
 export function exportToPDF({
@@ -16,7 +22,8 @@ export function exportToPDF({
   filename,
   headers,
   data,
-  themeColor = [99, 102, 241] // Default Indigo
+  themeColor = [99, 102, 241], // Default Indigo
+  summaryStats
 }: PDFOptions) {
   const doc = new jsPDF({
     orientation: 'landscape',
@@ -52,11 +59,46 @@ export function exportToPDF({
   doc.setFontSize(9)
   doc.text(`Generated on: ${dateStr}`, 283, 20, { align: 'right' })
 
+  let currentY = 45;
+
+  // Draw Summary Stats
+  if (summaryStats && summaryStats.length > 0) {
+    const marginX = 14;
+    const boxWidth = 50;
+    const boxHeight = 22;
+    const gap = 5;
+
+    summaryStats.forEach((stat, i) => {
+      // If we run out of horizontal space, could wrap, but typically max 5-6 stats
+      const x = marginX + (boxWidth + gap) * i;
+      
+      // Draw background box
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(x, currentY, boxWidth, boxHeight, 2, 2, 'FD');
+
+      // Draw value
+      doc.setTextColor(themeColor[0], themeColor[1], themeColor[2]);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text(stat.value.toString(), x + boxWidth / 2, currentY + 10, { align: 'center' });
+
+      // Draw label
+      doc.setTextColor(100, 116, 139);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.text(stat.label.toUpperCase(), x + boxWidth / 2, currentY + 17, { align: 'center' });
+    });
+
+    currentY += boxHeight + 8;
+  }
+
   // AutoTable
   autoTable(doc, {
     head: [headers],
     body: data,
-    startY: 45,
+    startY: currentY,
     theme: 'grid',
     headStyles: {
       fillColor: themeColor,

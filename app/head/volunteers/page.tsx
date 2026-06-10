@@ -17,6 +17,7 @@ import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, Upload
 import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { compressImage } from '@/lib/image'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
+import ImageCropperDialog from '@/components/volunteers/ImageCropperDialog'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { exportToPDF } from '@/lib/pdf'
@@ -26,7 +27,7 @@ export default function HeadVolunteersPage() {
   const [myModels, setMyModels] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
-  
+
   // Filters
   const [filterModel, setFilterModel] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -35,7 +36,7 @@ export default function HeadVolunteersPage() {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [currentVolunteer, setCurrentVolunteer] = useState<any>(null)
-  
+
   const [fullName, setFullName] = useState('')
   const [mobileNumber, setMobileNumber] = useState('')
   const [gender, setGender] = useState('Male')
@@ -49,6 +50,9 @@ export default function HeadVolunteersPage() {
   const [photoUrl, setPhotoUrl] = useState('')
   const [accommodation, setAccommodation] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [cropDialogOpen, setCropDialogOpen] = useState(false)
+  const [cropImageSrc, setCropImageSrc] = useState('')
+  const [cropOriginalFile, setCropOriginalFile] = useState<File | null>(null)
 
   const supabase = createClient()
 
@@ -58,7 +62,7 @@ export default function HeadVolunteersPage() {
     try {
       // 1. Get logged in user from supabase auth or cookie
       let profileId = ''
-      
+
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         profileId = user.id
@@ -67,7 +71,7 @@ export default function HeadVolunteersPage() {
           .split('; ')
           .find(row => row.startsWith('mock-user='))
           ?.split('=')[1]
-        
+
         if (sessionUserStr) {
           const sessionUser = JSON.parse(decodeURIComponent(sessionUserStr))
           // Look up profile ID by email
@@ -92,13 +96,13 @@ export default function HeadVolunteersPage() {
         .from('models')
         .select('id, name')
         .eq('head_id', profileId)
-      
+
       if (modelsErr) throw modelsErr
       setMyModels(modelsData || [])
 
       if (modelsData && modelsData.length > 0) {
         const modelIds = modelsData.map(m => m.id)
-        
+
         // 3. Fetch volunteers in these models
         const { data: volData, error: volErr } = await supabase
           .from('volunteers')
@@ -110,7 +114,7 @@ export default function HeadVolunteersPage() {
           `)
           .in('model_id', modelIds)
           .order('created_at', { ascending: false })
-        
+
         if (volErr) throw volErr
         setVolunteers(volData || [])
 
@@ -138,6 +142,7 @@ export default function HeadVolunteersPage() {
     if (!fullName.trim()) return toast.error('Full Name is required')
     if (!mobileNumber.trim()) return toast.error('Mobile Number is required')
     if (!modelId) return toast.error('Please assign to a model')
+    if (!photoUrl) return toast.error('Photo is required')
 
     try {
       const payload: any = {
@@ -162,7 +167,7 @@ export default function HeadVolunteersPage() {
       setIsAddOpen(false)
       // Reset
       setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer'); setAccommodation(false);
-      
+
       fetchData()
     } catch (err: any) {
       toast.error(err.message || 'Could not add volunteer')
@@ -196,6 +201,7 @@ export default function HeadVolunteersPage() {
     if (currentVolunteer.status === 'Approved') {
       return toast.error('Approved volunteer details are locked and cannot be edited by Model Heads.')
     }
+    if (!photoUrl) return toast.error('Photo is required')
 
     try {
       const payload = {
@@ -235,13 +241,13 @@ export default function HeadVolunteersPage() {
 
     const headers = ['SNK ID', 'Name', 'Mobile', 'Gender', 'Role', 'Status', 'Model']
     const rows = volunteers.map(v => [
-        v.snk_id || 'Pending',
-        v.full_name || 'N/A',
-        v.mobile_number || 'N/A',
-        v.gender || 'N/A',
-        v.role || 'Volunteer',
-        v.status || 'Pending',
-        v.models?.name || 'N/A'
+      v.snk_id || 'Pending',
+      v.full_name || 'N/A',
+      v.mobile_number || 'N/A',
+      v.gender || 'N/A',
+      v.role || 'Volunteer',
+      v.status || 'Pending',
+      v.models?.name || 'N/A'
     ])
 
     exportToPDF({
@@ -258,30 +264,42 @@ export default function HeadVolunteersPage() {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const originalFile = e.target.files[0]
-      setUploadingPhoto(true)
-      try {
-        const file = await compressImage(originalFile, 800, 0.7) // Compress before upload
-        const fileExt = file.name.split('.').pop()
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
-        const filePath = `${fileName}`
+      setCropOriginalFile(originalFile)
+      const reader = new FileReader()
+      reader.addEventListener('load', () => {
+        setCropImageSrc(reader.result?.toString() || '')
+        setCropDialogOpen(true)
+      })
+      reader.readAsDataURL(originalFile)
+      e.target.value = '' // clear input
+    }
+  }
 
-        const { data, error: uploadError } = await supabase.storage
-          .from('volunteer-photos')
-          .upload(filePath, file)
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setCropDialogOpen(false)
+    setUploadingPhoto(true)
+    try {
+      const file = await compressImage(new File([croppedBlob], cropOriginalFile?.name || 'photo.jpg', { type: 'image/jpeg' }), 800, 0.7) // Compress before upload
+      const fileExt = 'jpg'
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `${fileName}`
 
-        if (uploadError) throw uploadError
+      const { data, error: uploadError } = await supabase.storage
+        .from('volunteer-photos')
+        .upload(filePath, file)
 
-        const { data: urlData } = supabase.storage
-          .from('volunteer-photos')
-          .getPublicUrl(filePath)
+      if (uploadError) throw uploadError
 
-        setPhotoUrl(urlData.publicUrl)
-        toast.success('Photo uploaded successfully')
-      } catch (err: any) {
-        toast.error(err.message || 'Photo upload failed')
-      } finally {
-        setUploadingPhoto(false)
-      }
+      const { data: urlData } = supabase.storage
+        .from('volunteer-photos')
+        .getPublicUrl(filePath)
+
+      setPhotoUrl(urlData.publicUrl)
+      toast.success('Photo uploaded successfully')
+    } catch (err: any) {
+      toast.error(err.message || 'Photo upload failed')
+    } finally {
+      setUploadingPhoto(false)
     }
   }
 
@@ -346,7 +364,7 @@ export default function HeadVolunteersPage() {
     const matchesSearch = v.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       v.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       v.mobile_number.includes(searchTerm)
-    
+
     const matchesModel = filterModel === 'all' || v.model_id === filterModel
     const matchesStatus = filterStatus === 'all' || v.status === filterStatus
 
@@ -355,8 +373,14 @@ export default function HeadVolunteersPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      <ImageCropperDialog
+        open={cropDialogOpen}
+        onOpenChange={setCropDialogOpen}
+        imageSrc={cropImageSrc}
+        onCropComplete={handleCropComplete}
+      />
       {/* Header */}
-      <div className="rounded-[32px] bg-[var(--color-pink)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+      <div className="rounded-[32px] bg-secondary p-6 md:p-10 text-secondary-foreground border-ink shadow-hard pattern-boxes relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="relative z-10 space-y-3">
           <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
             <Users className="w-4 h-4 mr-2" /> Volunteers
@@ -429,7 +453,7 @@ export default function HeadVolunteersPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <Button 
+                <Button
                   variant="outline"
                   className="w-full sm:w-auto"
                   onClick={() => {
@@ -439,7 +463,7 @@ export default function HeadVolunteersPage() {
                   <Download className="h-4 w-4" />
                   Export CSV
                 </Button>
-                <Button 
+                <Button
                   variant="outline"
                   className="w-full sm:w-auto"
                   onClick={handleExportPDF}
@@ -451,7 +475,7 @@ export default function HeadVolunteersPage() {
                 {/* Add Trigger */}
                 <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                   <DialogTrigger render={
-                    <Button 
+                    <Button
                       className="w-full sm:w-auto px-5 gap-2"
                       onClick={() => {
                         setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer'); setAccommodation(false);
@@ -470,7 +494,7 @@ export default function HeadVolunteersPage() {
                     <form onSubmit={handleCreateVolunteer} className="space-y-4 py-2">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name</Label>
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
                           <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
                         </div>
                         <div className="space-y-1">
@@ -481,8 +505,8 @@ export default function HeadVolunteersPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender</Label>
-                          <Select value={gender} onValueChange={(val) => setGender(val || 'Male')}>
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender *</Label>
+                          <Select value={gender} onValueChange={(val) => setGender(val || 'Male')} required>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Male">Male</SelectItem>
@@ -492,12 +516,19 @@ export default function HeadVolunteersPage() {
                           </Select>
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age</Label>
-                          <Input type="number" value={age} onChange={e => setAge(e.target.value)} />
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age *</Label>
+                          <Input type="number" value={age} onChange={e => setAge(e.target.value)} required />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Designation/Role</Label>
-                          <Input value={role} onChange={e => setRole(e.target.value)} />
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Seva/Role</Label>
+                          <Select value={role} onValueChange={(val) => setRole(val || 'Volunteer')}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Volunteer">Volunteer</SelectItem>
+                              <SelectItem value="Model Incharge">Model Incharge</SelectItem>
+                              <SelectItem value="Co-ordinator">Co-ordinator</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
 
@@ -549,7 +580,7 @@ export default function HeadVolunteersPage() {
                       </div>
 
                       <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo</Label>
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo *</Label>
                         <div className="flex items-center gap-4 mt-2">
                           {photoUrl && (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -580,7 +611,7 @@ export default function HeadVolunteersPage() {
                 <form onSubmit={handleUpdateVolunteer} className="space-y-4 py-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name</Label>
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
                       <Input value={fullName} onChange={e => setFullName(e.target.value)} required disabled={currentVolunteer?.status === 'Approved'} />
                     </div>
                     <div className="space-y-1">
@@ -591,8 +622,8 @@ export default function HeadVolunteersPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender</Label>
-                      <Select value={gender} onValueChange={(val) => setGender(val || 'Male')} disabled={currentVolunteer?.status === 'Approved'}>
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender *</Label>
+                      <Select value={gender} onValueChange={(val) => setGender(val || 'Male')} disabled={currentVolunteer?.status === 'Approved'} required>
                         <SelectTrigger disabled={currentVolunteer?.status === 'Approved'}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Male">Male</SelectItem>
@@ -602,12 +633,19 @@ export default function HeadVolunteersPage() {
                       </Select>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age</Label>
-                      <Input type="number" value={age} onChange={e => setAge(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age *</Label>
+                      <Input type="number" value={age} onChange={e => setAge(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} required />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Role/Duty</Label>
-                      <Input value={role} onChange={e => setRole(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Seva/Role</Label>
+                      <Select value={role} onValueChange={(val) => setRole(val || 'Volunteer')} disabled={currentVolunteer?.status === 'Approved'}>
+                        <SelectTrigger disabled={currentVolunteer?.status === 'Approved'}><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Volunteer">Volunteer</SelectItem>
+                          <SelectItem value="Model Incharge">Model Incharge</SelectItem>
+                          <SelectItem value="Co-ordinator">Co-ordinator</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
@@ -659,7 +697,7 @@ export default function HeadVolunteersPage() {
                   </div>
 
                   <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
-                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo</Label>
+                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo *</Label>
                     <div className="flex items-center gap-4 mt-2">
                       {photoUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -759,13 +797,12 @@ export default function HeadVolunteersPage() {
                           <TableCell className="text-sm font-medium text-muted-foreground">{vol.mobile_number}</TableCell>
                           <TableCell className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{vol.models?.name}</TableCell>
                           <TableCell>
-                            <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full border ${
-                              vol.status === 'Approved' 
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                                : vol.status === 'Rejected' 
-                                  ? 'bg-rose-50 text-rose-700 border-rose-200' 
+                            <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full border ${vol.status === 'Approved'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : vol.status === 'Rejected'
+                                  ? 'bg-rose-50 text-rose-700 border-rose-200'
                                   : 'bg-amber-50 text-amber-700 border-amber-200'
-                            }`}>
+                              }`}>
                               {vol.status}
                             </span>
                           </TableCell>
@@ -785,8 +822,8 @@ export default function HeadVolunteersPage() {
                               </div>
                               <p className="text-muted-foreground font-semibold">No volunteers found</p>
                               <p className="text-xs text-muted-foreground/70 max-w-sm mx-auto">
-                                {searchTerm || filterStatus !== 'all' || filterModel !== 'all' 
-                                  ? "Try adjusting your search or filters to find what you're looking for." 
+                                {searchTerm || filterStatus !== 'all' || filterModel !== 'all'
+                                  ? "Try adjusting your search or filters to find what you're looking for."
                                   : "There are no volunteers in the system yet."}
                               </p>
                             </div>

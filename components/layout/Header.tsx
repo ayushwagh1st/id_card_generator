@@ -72,7 +72,8 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
 
   const roleLabel =
     roleName === 'SUPER_ADMIN' ? 'Super Admin' :
-    roleName === 'MODEL_HEAD' ? 'Model Head' : 'Lecturer'
+    roleName === 'MODEL_HEAD' ? 'Model Head' : 
+    roleName === 'SECURITY' ? 'Security' : 'Lecturer'
 
   return (
     <header

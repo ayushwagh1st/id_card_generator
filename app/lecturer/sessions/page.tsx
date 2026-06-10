@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Search, Users, ScanLine } from 'lucide-react'
+import { Search, Users, ScanLine, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getSessionsAction, getSessionEnrollmentsAction } from '@/app/actions/sessions'
+import { bulkCheckoutAllAction } from '@/app/actions/attendance'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -33,7 +34,7 @@ export default function LecturerSessionsPage() {
       if (!user) return
 
       const role = user.user_metadata?.role
-      const lecturerFilter = role === 'LECTURER' ? user.id : 'all'
+      const lecturerFilter = 'all' // Security needs to see all sessions
 
       const res = await getSessionsAction(1, 100, searchTerm, 'all', lecturerFilter)
       setSessions(res.data || [])
@@ -70,6 +71,22 @@ export default function LecturerSessionsPage() {
       router.push(`/lecturer/scanner?session=${sessionId}`)
   }
 
+  const handleBulkCheckout = async (sessionId: string) => {
+      if (!confirm('Are you sure you want to check out everyone who has checked in for this session?')) return;
+      
+      const loadingToast = toast.loading('Processing bulk checkout...')
+      try {
+          const res = await bulkCheckoutAllAction(sessionId)
+          if (res?.error) {
+              toast.error(res.error, { id: loadingToast })
+          } else {
+              toast.success(res.message, { id: loadingToast })
+          }
+      } catch (err: any) {
+          toast.error('Failed to perform bulk checkout.', { id: loadingToast })
+      }
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="rounded-[32px] bg-[var(--color-peach)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
@@ -77,7 +94,7 @@ export default function LecturerSessionsPage() {
           <div className="inline-flex badge-flat bg-white text-ink border-ink transform rotate-2">
             <ScanLine className="w-4 h-4 mr-2" /> Scanner
           </div>
-          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">My Sessions</h1>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">All Sessions</h1>
           <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
             View your assigned sessions and scan QR codes for attendance.
           </p>
@@ -128,6 +145,7 @@ export default function LecturerSessionsPage() {
             <TableHeader className="bg-muted/40">
               <TableRow>
                 <TableHead>Session Name</TableHead>
+                <TableHead>Lecturer Name</TableHead>
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Venue</TableHead>
                 <TableHead>Status</TableHead>
@@ -141,6 +159,7 @@ export default function LecturerSessionsPage() {
                     <div className="font-semibold">{sess.name}</div>
                     <div className="text-xs text-muted-foreground">{sess.category}</div>
                   </TableCell>
+                  <TableCell>{sess.lecturer_name || 'Unassigned'}</TableCell>
                   <TableCell>
                     <div className="text-sm">{sess.date}</div>
                     <div className="text-xs text-muted-foreground">{sess.start_time} - {sess.end_time}</div>
@@ -161,6 +180,9 @@ export default function LecturerSessionsPage() {
                         <Button variant="outline" size="sm" onClick={() => openEnrollments(sess)}>
                             <Users className="w-4 h-4 mr-1" /> Volunteers
                         </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleBulkCheckout(sess.id)} className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200">
+                            <LogOut className="w-4 h-4 mr-1" /> Bulk Check-out
+                        </Button>
                         <Button size="sm" onClick={() => navigateToScanner(sess.id)}>
                             <ScanLine className="w-4 h-4 mr-1" /> Scan QR
                         </Button>
@@ -170,7 +192,7 @@ export default function LecturerSessionsPage() {
               ))}
               {!loading && sessions.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No sessions found.</TableCell>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No sessions found.</TableCell>
                 </TableRow>
               )}
             </TableBody>

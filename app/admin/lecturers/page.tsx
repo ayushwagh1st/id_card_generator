@@ -148,7 +148,7 @@ export default function LecturersPage() {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      toast.success('Lecturers credentials exported successfully!')
+      toast.success('Security credentials exported successfully!')
     } catch (err: any) {
       toast.error('Failed to export credentials')
     }
@@ -164,9 +164,9 @@ export default function LecturersPage() {
         l.status || 'Active'
     ])
     exportToPDF({
-      title: 'Lecturers Directory',
-      subtitle: 'Complete list of all registered lecturers',
-      filename: 'Lecturers_Directory.pdf',
+      title: 'Security Directory',
+      subtitle: 'Complete list of all registered security personnel',
+      filename: 'Security_Directory.pdf',
       headers,
       data: rows,
       themeColor: [59, 130, 246] // Blue
@@ -181,11 +181,11 @@ export default function LecturersPage() {
       <div className="rounded-[32px] bg-[var(--color-blue)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="relative z-10 space-y-3">
           <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
-            <Users className="w-4 h-4 mr-2" /> Lecturers
+            <Users className="w-4 h-4 mr-2" /> Security
           </div>
-          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Lecturer Management</h1>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Security Management</h1>
           <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
-            Manage lecturers who will conduct sessions and mark attendance.
+            Manage security personnel who will conduct sessions and mark attendance.
           </p>
         </div>
       </div>
@@ -197,7 +197,7 @@ export default function LecturersPage() {
           </div>
           <div className="mt-2">
             <div className="font-display font-bold text-3xl text-ink leading-none">{lecturers.length}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Total Lecturers</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Total Security</div>
           </div>
         </div>
 
@@ -207,7 +207,7 @@ export default function LecturersPage() {
           </div>
           <div className="mt-2">
             <div className="font-display font-bold text-3xl text-ink leading-none">{activeLecturers}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Active Lecturers</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Active Security</div>
           </div>
         </div>
 
@@ -217,7 +217,7 @@ export default function LecturersPage() {
           </div>
           <div className="mt-2">
             <div className="font-display font-bold text-3xl text-ink leading-none">{inactiveLecturers}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Inactive Lecturers</div>
+            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Inactive Security</div>
           </div>
         </div>
       </div>
@@ -244,13 +244,13 @@ export default function LecturersPage() {
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger render={
               <Button className="w-full sm:w-auto px-5 gap-2">
-                <Plus className="h-4 w-4" /> Add Lecturer
+                <Plus className="h-4 w-4" /> Add Security
               </Button>
             } />
           <DialogContent className="sm:max-w-md rounded-xl">
             <DialogHeader>
-              <DialogTitle>Add Lecturer</DialogTitle>
-              <DialogDescription>Create a new lecturer profile.</DialogDescription>
+              <DialogTitle>Add Security</DialogTitle>
+              <DialogDescription>Create a new security profile.</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="space-y-2">
@@ -292,7 +292,7 @@ export default function LecturersPage() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-md rounded-xl">
           <DialogHeader>
-            <DialogTitle>Edit Lecturer</DialogTitle>
+            <DialogTitle>Edit Security</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleUpdate} className="space-y-4">
             <div className="space-y-2">
@@ -407,7 +407,7 @@ export default function LecturersPage() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(lect)} title="Edit Lecturer">
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(lect)} title="Edit Security">
                       <Edit className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => openResetPass(lect)} title="Reset Password" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50">
@@ -421,7 +421,7 @@ export default function LecturersPage() {
               ))}
               {!loading && lecturers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No lecturers found.</TableCell>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No security personnel found.</TableCell>
                 </TableRow>
               )}
             </TableBody>

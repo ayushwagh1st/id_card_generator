@@ -61,7 +61,7 @@ function ScannerContent() {
           if (!user) return
           try {
             const role = user.user_metadata?.role
-            const lecturerFilter = role === 'LECTURER' ? user.id : 'all'
+            const lecturerFilter = 'all' // Security needs to see all sessions
             const res = await getSessionsAction(1, 100, '', 'all', lecturerFilter)
             setSessions(res.data || [])
             // Save sessions locally for offline use

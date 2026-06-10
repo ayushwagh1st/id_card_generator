@@ -188,8 +188,8 @@ export async function getLecturerStatsAction() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Unauthorized')
 
-    // Get assigned sessions
-    const { data: sessions } = await supabase.from('sessions').select('id, name, date, start_time').eq('lecturer_id', user.id)
+    // Get all sessions (Security sees all)
+    const { data: sessions } = await supabase.from('sessions').select('id, name, date, start_time')
     
     const todayStr = new Date().toISOString().split('T')[0]
     let todaySessions = 0
@@ -203,6 +203,34 @@ export async function getLecturerStatsAction() {
         totalAssigned,
         todaySessions
     }
+}
+
+export async function bulkCheckoutAllAction(sessionId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
+        return { error: 'Unauthorized.' }
+    }
+
+    const now = new Date().toISOString()
+
+    // Update all attendance records for this session where check_out_time is null
+    const { error: updateError } = await supabase
+        .from('attendance')
+        .update({ check_out_time: now })
+        .eq('session_id', sessionId)
+        .is('check_out_time', null)
+
+    if (updateError) {
+        console.error('Error in bulk checkout:', updateError)
+        return { error: 'Failed to perform bulk checkout.' }
+    }
+
+    const { data: session } = await supabase.from('sessions').select('name').eq('id', sessionId).single()
+    await logActivityAction('BULK_CHECKOUT_ALL', `Bulk checkout for session: ${session?.name || sessionId}`)
+
+    revalidatePath('/lecturer/sessions')
+    return { success: true, message: 'All checked-in volunteers have been checked out.' }
 }
 
 export async function bulkSyncAttendanceAction(scans: any[]) {

@@ -14,11 +14,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { exportToPDF } from '@/lib/pdf'
 import Image from 'next/image'
 import { getSessionsAction, addSessionAction, updateSessionAction, deleteSessionAction } from '@/app/actions/sessions'
-import { getLecturersAction } from '@/app/actions/lecturers'
-import { formatLecturerLabel } from '@/lib/formatters'
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<any[]>([])
-  const [lecturers, setLecturers] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   
@@ -29,7 +26,7 @@ export default function SessionsPage() {
   const [name, setName] = useState('')
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
-  const [lecturerId, setLecturerId] = useState('none')
+  const [lecturerName, setLecturerName] = useState('')
   const [venue, setVenue] = useState('')
   const [date, setDate] = useState('')
   const [startTime, setStartTime] = useState('')
@@ -40,12 +37,8 @@ export default function SessionsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [sessionsRes, lecturersRes] = await Promise.all([
-        getSessionsAction(1, 100, searchTerm, 'all', 'all'),
-        getLecturersAction(1, 100, '', 'Active')
-      ])
+      const sessionsRes = await getSessionsAction(1, 100, searchTerm, 'all', 'all')
       setSessions(sessionsRes.data || [])
-      setLecturers(lecturersRes.data || [])
     } catch (err: any) {
       toast.error('Error loading data')
     } finally {
@@ -65,7 +58,7 @@ export default function SessionsPage() {
     try {
       const payload = {
           name, category, description, venue, date, start_time: startTime, end_time: endTime, status,
-          lecturer_id: lecturerId === 'none' ? null : lecturerId,
+          lecturer_name: lecturerName,
           capacity: capacity ? parseInt(capacity) : null
       }
       const res = await addSessionAction(payload)
@@ -84,7 +77,7 @@ export default function SessionsPage() {
     setName(sess.name)
     setCategory(sess.category || '')
     setDescription(sess.description || '')
-    setLecturerId(sess.lecturer_id || 'none')
+    setLecturerName(sess.lecturer_name || '')
     setVenue(sess.venue || '')
     setDate(sess.date)
     setStartTime(sess.start_time)
@@ -100,7 +93,7 @@ export default function SessionsPage() {
     try {
         const payload = {
             name, category, description, venue, date, start_time: startTime, end_time: endTime, status,
-            lecturer_id: lecturerId === 'none' ? null : lecturerId,
+            lecturer_name: lecturerName,
             capacity: capacity ? parseInt(capacity) : null
         }
       const res = await updateSessionAction(currentSession.id, payload)
@@ -126,17 +119,17 @@ export default function SessionsPage() {
   }
 
   const resetForm = () => {
-      setName(''); setCategory(''); setDescription(''); setLecturerId('none');
+      setName(''); setCategory(''); setDescription(''); setLecturerName('');
       setVenue(''); setDate(''); setStartTime(''); setEndTime(''); setCapacity(''); setStatus('Scheduled');
   }
 
   const handleExportCSV = () => {
     if (sessions.length === 0) return
-    const headers = ['Session Name', 'Category', 'Lecturer', 'Venue', 'Date', 'Time', 'Status']
+    const headers = ['Session Name', 'Category', 'Lecturer Name', 'Venue', 'Date', 'Time', 'Status']
     const rows = sessions.map(s => [
         s.name,
         s.category || '',
-        s.lecturer?.name || 'Unassigned',
+        s.lecturer_name || 'Unassigned',
         s.venue || '',
         s.date || '',
         `${s.start_time} - ${s.end_time}`,
@@ -154,11 +147,11 @@ export default function SessionsPage() {
 
   const handleExportPDF = () => {
     if (sessions.length === 0) return
-    const headers = ['Session Name', 'Category', 'Lecturer', 'Venue', 'Date', 'Time', 'Status']
+    const headers = ['Session Name', 'Category', 'Lecturer Name', 'Venue', 'Date', 'Time', 'Status']
     const rows = sessions.map(s => [
         s.name,
         s.category || '',
-        s.lecturer?.name || 'Unassigned',
+        s.lecturer_name || 'Unassigned',
         s.venue || '',
         s.date || '',
         `${s.start_time} - ${s.end_time}`,
@@ -266,22 +259,8 @@ export default function SessionsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Lecturer / Trainer</Label>
-                  <Select value={lecturerId} onValueChange={(val: any) => setLecturerId(val)}>
-                    <SelectTrigger>
-                      <span data-slot="select-value" className="flex flex-1 text-left truncate">
-                        {lecturerId !== 'none' && lecturers.length > 0
-                          ? formatLecturerLabel(lecturers.find(l => l.id === lecturerId))
-                          : "Assign Lecturer"}
-                      </span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Unassigned</SelectItem>
-                      {lecturers.map(l => (
-                          <SelectItem key={l.id} value={l.id} label={formatLecturerLabel(l)}>{formatLecturerLabel(l)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Lecturer Name</Label>
+                  <Input value={lecturerName} onChange={e => setLecturerName(e.target.value)} placeholder="Name of lecturer" />
                 </div>
                 <div className="space-y-2">
                   <Label>Venue</Label>
@@ -357,22 +336,8 @@ export default function SessionsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Lecturer / Trainer</Label>
-                  <Select value={lecturerId} onValueChange={(val: any) => setLecturerId(val)}>
-                    <SelectTrigger>
-                      <span data-slot="select-value" className="flex flex-1 text-left truncate">
-                        {lecturerId !== 'none' && lecturers.length > 0
-                          ? formatLecturerLabel(lecturers.find(l => l.id === lecturerId))
-                          : "Assign Lecturer"}
-                      </span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Unassigned</SelectItem>
-                      {lecturers.map(l => (
-                          <SelectItem key={l.id} value={l.id} label={formatLecturerLabel(l)}>{formatLecturerLabel(l)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Lecturer Name</Label>
+                  <Input value={lecturerName} onChange={e => setLecturerName(e.target.value)} placeholder="Name of lecturer" />
                 </div>
                 <div className="space-y-2">
                   <Label>Venue</Label>
@@ -460,7 +425,7 @@ export default function SessionsPage() {
             <TableHeader className="bg-muted/40">
               <TableRow>
                 <TableHead>Session</TableHead>
-                <TableHead>Lecturer</TableHead>
+                <TableHead>Lecturer Name</TableHead>
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Venue</TableHead>
                 <TableHead>Status</TableHead>
@@ -474,7 +439,7 @@ export default function SessionsPage() {
                     <div className="font-semibold">{sess.name}</div>
                     <div className="text-xs text-muted-foreground">{sess.category}</div>
                   </TableCell>
-                  <TableCell>{sess.lecturer?.name || 'Unassigned'}</TableCell>
+                  <TableCell>{sess.lecturer_name || 'Unassigned'}</TableCell>
                   <TableCell>
                     <div className="text-sm">{sess.date}</div>
                     <div className="text-xs text-muted-foreground">{sess.start_time} - {sess.end_time}</div>

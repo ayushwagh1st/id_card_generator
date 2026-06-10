@@ -39,8 +39,8 @@ export default function LecturerLayout({
       {/* Main */}
       <div className="flex-1 flex flex-col md:pl-64 overflow-hidden">
         <Header
-          roleName="LECTURER"
-          userName="Lecturer"
+          roleName="SECURITY"
+          userName="Security"
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">

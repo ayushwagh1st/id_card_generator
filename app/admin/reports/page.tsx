@@ -4,15 +4,18 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { FileText, Download, Activity, CheckCircle, Clock } from 'lucide-react'
+import { FileText, Download, Activity, Users, Database, Shield, LayoutGrid, Loader2 } from 'lucide-react'
 import { getActivitiesAction } from '@/app/actions/activity'
+import { getVolunteerReportData, getSessionReportData, getModelReportData, getSecurityReportData } from '@/app/actions/reports'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
-import { exportToPDF } from '@/lib/pdf'
+import { exportToPDF, PDFSummaryStat } from '@/lib/pdf'
+import Image from 'next/image'
 
 export default function AdminReportsPage() {
   const [activities, setActivities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState<string | null>(null)
 
   const fetchActivities = async () => {
     setLoading(true)
@@ -34,79 +37,237 @@ export default function AdminReportsPage() {
     fetchActivities()
   }, [])
 
-  const handleExportCSV = () => {
-    if (activities.length === 0) return
-    
-    const headers = ['Date', 'User', 'Role', 'Action', 'Target']
-    const rows = activities.map(a => [
-        new Date(a.created_at).toLocaleString(),
-        a.user_name || 'System',
-        a.role,
-        a.action_type,
-        a.target || ''
-    ])
+  const handleGenerateReport = async (type: string) => {
+    setGenerating(type)
+    try {
+      if (type === 'volunteers') {
+        const res = await getVolunteerReportData()
+        if (res.error) throw new Error(res.error)
+        
+        const headers = ['SNK ID', 'Name', 'Mobile', 'Age', 'Gender', 'Department', 'Assigned Model']
+        const rows = res.data!.map(v => [
+          v.snk_id || 'N/A',
+          v.full_name,
+          v.mobile_number,
+          v.age || 'N/A',
+          v.gender || 'N/A',
+          (v as any).department || 'N/A',
+          (Array.isArray(v.models) ? v.models[0]?.name : (v.models as any)?.name) || 'Unassigned'
+        ])
 
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(','), ...rows.map(e => `"${e.join('","')}"`)].join("\n")
+        exportToPDF({
+          title: 'Volunteer Analytics & Directory',
+          subtitle: 'Comprehensive list of all registered volunteers',
+          filename: 'Volunteer_Analytics_Report.pdf',
+          headers,
+          data: rows,
+          themeColor: [244, 63, 94], // Rose/Pink
+          summaryStats: res.stats as PDFSummaryStat[]
+        })
+        toast.success('Volunteer Report generated!')
+      }
 
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement("a")
-    link.setAttribute("href", encodedUri)
-    link.setAttribute("download", `System_Activity_Report.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+      else if (type === 'sessions') {
+        const res = await getSessionReportData()
+        if (res.error) throw new Error(res.error)
+        
+        const headers = ['Session Name', 'Category', 'Date', 'Time', 'Venue', 'Lecturer', 'Status', 'Enrollments']
+        const rows = res.data!.map(s => {
+          const countArr = s.volunteer_sessions as any;
+          const enrolls = Array.isArray(countArr) ? countArr[0]?.count || countArr.length : 0;
+          return [
+            s.name,
+            s.category || 'N/A',
+            s.date,
+            `${s.start_time} - ${s.end_time}`,
+            s.venue || 'N/A',
+            s.lecturer_name || 'Unassigned',
+            s.status,
+            `${enrolls} / ${s.capacity || '∞'}`
+          ]
+        })
+
+        exportToPDF({
+          title: 'Session & Attendance Analytics',
+          subtitle: 'Overview of all scheduled training sessions and enrollments',
+          filename: 'Session_Analytics_Report.pdf',
+          headers,
+          data: rows,
+          themeColor: [16, 185, 129], // Emerald
+          summaryStats: res.stats as PDFSummaryStat[]
+        })
+        toast.success('Session Report generated!')
+      }
+
+      else if (type === 'models') {
+        const res = await getModelReportData()
+        if (res.error) throw new Error(res.error)
+        
+        const headers = ['Model Name', 'Head Name', 'Status', 'Assigned Vols']
+        const rows = res.data!.map(m => {
+          const countArr = m.volunteers as any;
+          const assigned = Array.isArray(countArr) ? countArr[0]?.count || countArr.length : 0;
+          return [
+            m.name,
+            (Array.isArray(m.profiles) ? m.profiles[0]?.full_name : (m.profiles as any)?.full_name) || 'N/A',
+            m.status,
+            assigned
+          ]
+        })
+
+        exportToPDF({
+          title: 'Exhibition Models Allocation',
+          subtitle: 'Directory of exhibition models and volunteer distribution',
+          filename: 'Models_Allocation_Report.pdf',
+          headers,
+          data: rows,
+          themeColor: [59, 130, 246], // Blue
+          summaryStats: res.stats as PDFSummaryStat[]
+        })
+        toast.success('Models Report generated!')
+      }
+
+      else if (type === 'security') {
+        const res = await getSecurityReportData()
+        if (res.error) throw new Error(res.error)
+        
+        const headers = ['Name', 'Email / Login', 'Mobile', 'Status']
+        const rows = res.data!.map(s => [
+          s.name,
+          s.email,
+          s.mobile || 'N/A',
+          s.status
+        ])
+
+        exportToPDF({
+          title: 'Security Personnel Roster',
+          subtitle: 'Active and inactive security staff',
+          filename: 'Security_Roster_Report.pdf',
+          headers,
+          data: rows,
+          themeColor: [139, 92, 246], // Violet
+          summaryStats: res.stats as PDFSummaryStat[]
+        })
+        toast.success('Security Report generated!')
+      }
+
+      else if (type === 'activity') {
+        if (activities.length === 0) return toast.info('No activities to export.')
+        const headers = ['Date', 'User', 'Role', 'Action', 'Target']
+        const rows = activities.map(a => [
+            new Date(a.created_at).toLocaleString(),
+            a.user_name || 'System',
+            a.role,
+            a.action_type,
+            a.target || ''
+        ])
+
+        exportToPDF({
+          title: 'System Activity Audit Log',
+          subtitle: 'Latest 100 system actions',
+          filename: 'System_Activity_Audit.pdf',
+          headers,
+          data: rows,
+          themeColor: [249, 115, 22] // Orange
+        })
+        toast.success('Activity Log generated!')
+      }
+
+    } catch (err: any) {
+      toast.error(err.message || 'Error generating report')
+    } finally {
+      setGenerating(null)
+    }
   }
 
-  const handleExportPDF = () => {
-    if (activities.length === 0) return
-
-    const headers = ['Date', 'User', 'Role', 'Action', 'Target']
-    const rows = activities.map(a => [
-        new Date(a.created_at).toLocaleString(),
-        a.user_name || 'System',
-        a.role,
-        a.action_type,
-        a.target || ''
-    ])
-
-    exportToPDF({
-      title: 'System Activity Report',
-      subtitle: 'Comprehensive audit log of all system actions',
-      filename: 'System_Activity_Report.pdf',
-      headers,
-      data: rows,
-      themeColor: [188, 166, 255] // Lavender theme for Admin
-    })
-  }
+  const reports = [
+    {
+      id: 'volunteers',
+      title: 'Volunteer Analytics',
+      description: 'Demographics, department breakdowns, and assigned models.',
+      icon: Users,
+      color: 'pink'
+    },
+    {
+      id: 'sessions',
+      title: 'Session Analytics',
+      description: 'Attendance rates, session capacities, and checkouts.',
+      icon: LayoutGrid,
+      color: 'mint'
+    },
+    {
+      id: 'models',
+      title: 'Models Overview',
+      description: 'Allocation of volunteers across exhibition models.',
+      icon: Database,
+      color: 'blue'
+    },
+    {
+      id: 'security',
+      title: 'Security Roster',
+      description: 'List of all active security personnel and staff.',
+      icon: Shield,
+      color: 'lavender'
+    },
+    {
+      id: 'activity',
+      title: 'System Audit Log',
+      description: 'Export the recent global activity feed.',
+      icon: Activity,
+      color: 'orange'
+    }
+  ]
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="rounded-[32px] bg-[var(--color-orange)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="relative z-10 flex flex-col md:flex-row justify-between w-full md:items-end gap-4">
-          <div className="space-y-3">
-            <div className="inline-flex badge-flat bg-white text-ink border-ink transform rotate-2">
-              <Activity className="w-4 h-4 mr-2 text-ink" /> Logs
-            </div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">System Reports & Logs</h1>
-            <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
-              Audit logs and comprehensive reporting across the entire platform.
-            </p>
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex badge-flat bg-white text-ink border-ink transform rotate-2">
+            <FileText className="w-4 h-4 mr-2" /> Hub
           </div>
-          <div className="flex gap-2">
-             <Button onClick={handleExportCSV} className="bg-white text-ink border-ink shadow-hard-xs hover:bg-muted font-bold h-11 px-5 rounded-xl">
-               <FileText className="w-4 h-4 mr-2" />
-               Export CSV
-             </Button>
-             <Button onClick={handleExportPDF} className="bg-white text-ink border-ink shadow-hard-xs hover:bg-muted font-bold h-11 px-5 rounded-xl">
-               <Download className="w-4 h-4 mr-2" />
-               Export PDF
-             </Button>
-          </div>
+          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Report Hub</h1>
+          <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
+            Generate beautiful PDF analytics and comprehensive data exports across all system modules.
+          </p>
         </div>
       </div>
 
-      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {reports.map(report => {
+          const Icon = report.icon
+          const isGenerating = generating === report.id
+          
+          return (
+            <div key={report.id} className="bento-white flex flex-col justify-between gap-4 shadow-hard-sm !p-6 !rounded-[24px]">
+              <div className="space-y-3">
+                <div className={`icon-tile icon-tile-${report.color} w-12 h-12 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-xl text-ink">{report.title}</h3>
+                  <p className="font-sans text-sm text-muted-foreground mt-1">{report.description}</p>
+                </div>
+              </div>
+              <Button 
+                onClick={() => handleGenerateReport(report.id)} 
+                disabled={isGenerating}
+                className={`w-full font-bold shadow-hard-xs hover:translate-y-[1px] hover:shadow-none transition-all ${
+                  isGenerating ? 'opacity-70' : ''
+                }`}
+                variant="outline"
+              >
+                {isGenerating ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+                ) : (
+                  <><Download className="w-4 h-4 mr-2" /> Generate PDF</>
+                )}
+              </Button>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0 mt-8">
         <CardHeader className="bg-muted/20 border-b border-ink/10">
           <CardTitle className="text-lg flex items-center gap-2 font-bold text-ink">
             <Activity className="w-5 h-5 text-blue-500" />

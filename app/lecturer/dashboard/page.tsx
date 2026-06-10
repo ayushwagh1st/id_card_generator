@@ -40,7 +40,7 @@ export default function LecturerDashboard() {
   }
 
   const statItems = [
-    { title: 'Total Assigned Sessions', value: stats.totalAssigned, iconSrc: '/images/icons/icon_database.png', tileClass: 'icon-tile-peach' },
+    { title: 'Total Scheduled Sessions', value: stats.totalAssigned, iconSrc: '/images/icons/icon_database.png', tileClass: 'icon-tile-peach' },
     { title: "Today's Sessions", value: stats.todaySessions, iconSrc: '/images/icons/icon_clock.png', tileClass: 'icon-tile-pink' },
   ]
 
@@ -52,13 +52,13 @@ export default function LecturerDashboard() {
         
         <div className="relative z-10 space-y-4 max-w-xl">
           <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
-            <Activity className="w-4 h-4 mr-2" /> Lecturer Mode
+            <Activity className="w-4 h-4 mr-2" /> Security Mode
           </div>
           <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">
-            Lecturer <span className="text-white" style={{ textShadow: '2px 2px 0 #111111' }}>Dashboard</span>
+            Security <span className="text-white" style={{ textShadow: '2px 2px 0 #111111' }}>Dashboard</span>
           </h1>
           <p className="font-sans font-medium text-ink/80 text-lg">
-            Welcome back! Here is an overview of your assigned sessions and today's schedule.
+            Welcome back! Here is an overview of all scheduled sessions and today's schedule.
           </p>
         </div>
 

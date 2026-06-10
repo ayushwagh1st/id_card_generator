@@ -21,7 +21,7 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
     { name: 'Dashboard', href: '/admin/dashboard', icon: BarChart },
     { name: 'Models', href: '/admin/models', icon: Database },
     { name: 'Model Heads', href: '/admin/heads', icon: Shield },
-    { name: 'Lecturers', href: '/admin/lecturers', icon: Users },
+    { name: 'Security', href: '/admin/lecturers', icon: Users },
     { name: 'Sessions', href: '/admin/sessions', icon: Database },
     { name: 'Enrollment', href: '/admin/session-enrollment', icon: Users },
     { name: 'Live Tracking', href: '/admin/live-attendance', icon: Activity },
@@ -38,7 +38,7 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
 
   const lecturerLinks = [
     { name: 'Dashboard', href: '/lecturer/dashboard', icon: BarChart },
-    { name: 'My Sessions', href: '/lecturer/sessions', icon: Database },
+    { name: 'All Sessions', href: '/lecturer/sessions', icon: Database },
     { name: 'QR Scanner', href: '/lecturer/scanner', icon: Shield },
     { name: 'Reports', href: '/lecturer/reports', icon: FileText },
   ]

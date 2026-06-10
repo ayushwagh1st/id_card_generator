@@ -27,6 +27,7 @@ import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, Upload
 import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { compressImage } from '@/lib/image'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
+import ImageCropperDialog from '@/components/volunteers/ImageCropperDialog'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { exportToPDF } from '@/lib/pdf'
@@ -39,7 +40,7 @@ export default function VolunteersPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
-  
+
   // Pagination
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
@@ -53,7 +54,7 @@ export default function VolunteersPage() {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [currentVolunteer, setCurrentVolunteer] = useState<any>(null)
-  
+
   const [fullName, setFullName] = useState('')
   const [mobileNumber, setMobileNumber] = useState('')
   const [gender, setGender] = useState('Male')
@@ -67,6 +68,9 @@ export default function VolunteersPage() {
   const [photoUrl, setPhotoUrl] = useState('')
   const [accommodation, setAccommodation] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [cropDialogOpen, setCropDialogOpen] = useState(false)
+  const [cropImageSrc, setCropImageSrc] = useState('')
+  const [cropOriginalFile, setCropOriginalFile] = useState<File | null>(null)
 
   const supabase = createClient()
   const router = useRouter()
@@ -106,6 +110,7 @@ export default function VolunteersPage() {
     e.preventDefault()
     if (!fullName.trim()) return toast.error('Full Name is required')
     if (!mobileNumber.trim()) return toast.error('Mobile Number is required')
+    if (!photoUrl) return toast.error('Photo is required')
 
     try {
       const payload: any = {
@@ -132,7 +137,7 @@ export default function VolunteersPage() {
       setIsAddOpen(false)
       // Reset
       setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer'); setAccommodation(false);
-      
+
       fetchVolunteers()
     } catch (err: any) {
       toast.error(err.message || 'Could not add volunteer')
@@ -159,6 +164,7 @@ export default function VolunteersPage() {
   const handleUpdateVolunteer = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!currentVolunteer) return
+    if (!photoUrl) return toast.error('Photo is required')
 
     try {
       const payload = {
@@ -233,13 +239,13 @@ export default function VolunteersPage() {
 
     const headers = ['SNK ID', 'Name', 'Mobile', 'Gender', 'Role', 'Status', 'Model']
     const rows = volunteers.map(v => [
-        v.snk_id || 'Pending',
-        v.full_name || 'N/A',
-        v.mobile_number || 'N/A',
-        v.gender || 'N/A',
-        v.role || 'Volunteer',
-        v.status || 'Pending',
-        v.models?.name || 'N/A'
+      v.snk_id || 'Pending',
+      v.full_name || 'N/A',
+      v.mobile_number || 'N/A',
+      v.gender || 'N/A',
+      v.role || 'Volunteer',
+      v.status || 'Pending',
+      v.models?.name || 'N/A'
     ])
 
     exportToPDF({
@@ -255,31 +261,43 @@ export default function VolunteersPage() {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const originalFile = e.target.files[0]
-      setUploadingPhoto(true)
-      try {
-        let file = await compressImage(originalFile, 800, 0.7)
+      setCropOriginalFile(originalFile)
+      const reader = new FileReader()
+      reader.addEventListener('load', () => {
+        setCropImageSrc(reader.result?.toString() || '')
+        setCropDialogOpen(true)
+      })
+      reader.readAsDataURL(originalFile)
+      e.target.value = '' // clear input
+    }
+  }
 
-        const fileExt = file.name.split('.').pop() || 'jpg'
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
-        const filePath = `${fileName}`
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setCropDialogOpen(false)
+    setUploadingPhoto(true)
+    try {
+      let file = await compressImage(new File([croppedBlob], cropOriginalFile?.name || 'photo.jpg', { type: 'image/jpeg' }), 800, 0.7)
 
-        const { data, error: uploadError } = await supabase.storage
-          .from('volunteer-photos')
-          .upload(filePath, file)
+      const fileExt = 'jpg'
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `${fileName}`
 
-        if (uploadError) throw uploadError
+      const { data, error: uploadError } = await supabase.storage
+        .from('volunteer-photos')
+        .upload(filePath, file)
 
-        const { data: urlData } = supabase.storage
-          .from('volunteer-photos')
-          .getPublicUrl(filePath)
+      if (uploadError) throw uploadError
 
-        setPhotoUrl(urlData.publicUrl)
-        toast.success('Photo uploaded successfully')
-      } catch (err: any) {
-        toast.error(err.message || 'Photo upload failed')
-      } finally {
-        setUploadingPhoto(false)
-      }
+      const { data: urlData } = supabase.storage
+        .from('volunteer-photos')
+        .getPublicUrl(filePath)
+
+      setPhotoUrl(urlData.publicUrl)
+      toast.success('Photo uploaded successfully')
+    } catch (err: any) {
+      toast.error(err.message || 'Photo upload failed')
+    } finally {
+      setUploadingPhoto(false)
     }
   }
 
@@ -313,6 +331,12 @@ export default function VolunteersPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      <ImageCropperDialog
+        open={cropDialogOpen}
+        onOpenChange={setCropDialogOpen}
+        imageSrc={cropImageSrc}
+        onCropComplete={handleCropComplete}
+      />
       <div className="rounded-[32px] bg-[var(--color-yellow)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-grid relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="relative z-10 space-y-3">
           <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
@@ -438,7 +462,7 @@ export default function VolunteersPage() {
                   <form onSubmit={handleCreateVolunteer} className="space-y-4 py-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name</Label>
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
                         <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
                       </div>
                       <div className="space-y-1">
@@ -449,8 +473,8 @@ export default function VolunteersPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender</Label>
-                        <Select value={gender} onValueChange={(val) => setGender(val || 'Male')}>
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender *</Label>
+                        <Select value={gender} onValueChange={(val) => setGender(val || 'Male')} required>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Male">Male</SelectItem>
@@ -460,12 +484,19 @@ export default function VolunteersPage() {
                         </Select>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age</Label>
-                        <Input type="number" value={age} onChange={e => setAge(e.target.value)} />
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age *</Label>
+                        <Input type="number" value={age} onChange={e => setAge(e.target.value)} required />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Designation/Role</Label>
-                        <Input value={role} onChange={e => setRole(e.target.value)} />
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Seva/Role</Label>
+                        <Select value={role} onValueChange={(val) => setRole(val || 'Volunteer')}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Volunteer">Volunteer</SelectItem>
+                            <SelectItem value="Model Incharge">Model Incharge</SelectItem>
+                            <SelectItem value="Co-ordinator">Co-ordinator</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -518,7 +549,7 @@ export default function VolunteersPage() {
                     </div>
 
                     <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo</Label>
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo *</Label>
                       <div className="flex items-center gap-4 mt-2">
                         {photoUrl && (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -548,7 +579,7 @@ export default function VolunteersPage() {
               <form onSubmit={handleUpdateVolunteer} className="space-y-4 py-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name</Label>
+                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
                     <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
                   </div>
                   <div className="space-y-1">
@@ -559,8 +590,8 @@ export default function VolunteersPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender</Label>
-                    <Select value={gender} onValueChange={(val) => setGender(val || 'Male')}>
+                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender *</Label>
+                    <Select value={gender} onValueChange={(val) => setGender(val || 'Male')} required>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Male">Male</SelectItem>
@@ -570,12 +601,19 @@ export default function VolunteersPage() {
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age</Label>
-                    <Input type="number" value={age} onChange={e => setAge(e.target.value)} />
+                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age *</Label>
+                    <Input type="number" value={age} onChange={e => setAge(e.target.value)} required />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Designation/Role</Label>
-                    <Input value={role} onChange={e => setRole(e.target.value)} />
+                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Seva/Role</Label>
+                    <Select value={role} onValueChange={(val) => setRole(val || 'Volunteer')}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Volunteer">Volunteer</SelectItem>
+                        <SelectItem value="Model Incharge">Model Incharge</SelectItem>
+                        <SelectItem value="Co-ordinator">Co-ordinator</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -628,7 +666,7 @@ export default function VolunteersPage() {
                 </div>
 
                 <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
-                  <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo</Label>
+                  <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo *</Label>
                   <div className="flex items-center gap-4 mt-2">
                     {photoUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -689,8 +727,8 @@ export default function VolunteersPage() {
                       <TableHeader className="bg-muted/40">
                         <TableRow>
                           <TableHead className="w-12 py-4 px-4">
-                            <input 
-                              type="checkbox" 
+                            <input
+                              type="checkbox"
                               className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
                               checked={selectedIds.length === volunteers.length && volunteers.length > 0}
                               onChange={toggleSelectAll}
@@ -709,8 +747,8 @@ export default function VolunteersPage() {
                         {volunteers.map((vol) => (
                           <TableRow key={vol.id} className="hover:bg-muted/20 transition-colors duration-200">
                             <TableCell className="py-4 px-4">
-                              <input 
-                                type="checkbox" 
+                              <input
+                                type="checkbox"
                                 className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
                                 checked={selectedIds.includes(vol.id)}
                                 onChange={() => toggleSelect(vol.id)}
@@ -740,17 +778,16 @@ export default function VolunteersPage() {
                               {vol.models ? vol.models.name : <span className="text-xs font-medium text-zinc-400">None Assigned</span>}
                             </TableCell>
                             <TableCell>
-                              <Select 
-                                value={vol.status} 
+                              <Select
+                                value={vol.status}
                                 onValueChange={(val) => handleStatusChange(vol.id, val)}
                               >
-                                <SelectTrigger className={`h-8 w-32 border-none font-bold text-xs rounded-full px-3 py-1 ${
-                                  vol.status === 'Approved' 
-                                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400' 
-                                    : vol.status === 'Rejected' 
-                                      ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400' 
+                                <SelectTrigger className={`h-8 w-32 border-none font-bold text-xs rounded-full px-3 py-1 ${vol.status === 'Approved'
+                                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400'
+                                    : vol.status === 'Rejected'
+                                      ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400'
                                       : 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400'
-                                }`}>
+                                  }`}>
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-xl">
@@ -765,13 +802,13 @@ export default function VolunteersPage() {
                                 <Button variant="ghost" size="icon" onClick={() => openEditDialog(vol)} className="hover:bg-primary/10 rounded-xl">
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
                                   onClick={() => {
                                     localStorage.setItem('print-volunteer-ids', JSON.stringify([vol.id]))
                                     router.push('/admin/print')
-                                  }} 
+                                  }}
                                   className="hover:bg-primary/10 text-primary rounded-xl"
                                   title="Print Single Card"
                                 >
@@ -790,8 +827,8 @@ export default function VolunteersPage() {
                                 </div>
                                 <p className="text-muted-foreground font-semibold">No volunteers found</p>
                                 <p className="text-xs text-muted-foreground/70 max-w-sm mx-auto">
-                                  {searchTerm || filterStatus !== 'all' || filterModel !== 'all' 
-                                    ? "Try adjusting your search or filters to find what you're looking for." 
+                                  {searchTerm || filterStatus !== 'all' || filterModel !== 'all'
+                                    ? "Try adjusting your search or filters to find what you're looking for."
                                     : "There are no volunteers in the system yet."}
                                 </p>
                               </div>
@@ -803,17 +840,17 @@ export default function VolunteersPage() {
                   </div>
                   {/* Pagination Footer */}
                   {totalCount > 0 && (
-                  <div className="border-t border-ink/10 p-4 flex items-center justify-between bg-muted/20">
-                    <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="font-bold border-ink shadow-hard-xs hover:-translate-y-0.5 transition-transform">
-                      <ChevronLeft className="w-4 h-4 mr-1" /> Previous
-                    </Button>
-                    <div className="text-sm font-semibold text-muted-foreground bg-white px-3 py-1 rounded-full border border-ink shadow-hard-xs">
-                      Page {page} of {Math.max(1, totalPages)}
+                    <div className="border-t border-ink/10 p-4 flex items-center justify-between bg-muted/20">
+                      <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="font-bold border-ink shadow-hard-xs hover:-translate-y-0.5 transition-transform">
+                        <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                      </Button>
+                      <div className="text-sm font-semibold text-muted-foreground bg-white px-3 py-1 rounded-full border border-ink shadow-hard-xs">
+                        Page {page} of {Math.max(1, totalPages)}
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages} className="font-bold border-ink shadow-hard-xs hover:-translate-y-0.5 transition-transform">
+                        Next <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages} className="font-bold border-ink shadow-hard-xs hover:-translate-y-0.5 transition-transform">
-                      Next <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
-                  </div>
                   )}
                 </>
               )}
@@ -831,7 +868,7 @@ export default function VolunteersPage() {
               </CardHeader>
               <CardContent className="space-y-4 text-sm text-muted-foreground">
                 <p>The import engine maps headers dynamically. Download the template below for perfect mapping.</p>
-                
+
                 <div className="grid grid-cols-2 gap-2 bg-muted/40 p-3 rounded-lg border border-primary/5 text-xs text-foreground font-semibold">
                   <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500" />Full Name</div>
                   <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500" />Mobile Number</div>

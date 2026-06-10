@@ -35,7 +35,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
             <h1 className="text-2xl font-bold font-display text-ink">Invalid ID Card</h1>
             <p className="text-muted-foreground">This QR code does not match any registered volunteer in our system. It may be forged or deleted.</p>
             <div className="mt-4 p-3 bg-destructive/10 text-destructive text-xs rounded-[10px] border-3 border-ink shadow-hard-xs break-all w-full text-left font-semibold">
-              <strong>ID Scanned:</strong> {error ? "Invalid Code" : resolvedParams.id.substring(0,8) + '...'}
+              <strong>ID Scanned:</strong> {error ? "Invalid Code" : resolvedParams.id.substring(0, 8) + '...'}
             </div>
           </CardContent>
         </Card>
@@ -54,7 +54,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
           {isPending && <AlertTriangle className="w-16 h-16 text-white" />}
           {!isApproved && !isPending && <XCircle className="w-16 h-16 text-white" />}
         </div>
-        
+
         <CardHeader className="text-center -mt-10 pb-2 relative z-10">
           <div className="w-20 h-24 mx-auto rounded-[10px] overflow-hidden border-3 border-ink shadow-hard-xs bg-card flex items-center justify-center">
             {volunteer.photo_url ? (
@@ -66,19 +66,18 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
           </div>
           <CardTitle className="mt-4 text-2xl font-bold font-display text-ink">{volunteer.full_name}</CardTitle>
           <div className="inline-block px-3 py-1 mt-2 rounded-full text-sm font-bold tracking-wider uppercase bg-secondary text-secondary-foreground border-2 border-ink shadow-hard-xs">
-            {volunteer.snk_id || volunteer.id.substring(0,8).toUpperCase()}
+            {volunteer.snk_id || volunteer.id.substring(0, 8).toUpperCase()}
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6 pt-4">
-          <div className={`p-4 rounded-xl border-3 border-ink shadow-hard-xs flex flex-col items-center justify-center text-center ${
-            isApproved ? 'bg-emerald-50 text-emerald-800' : 
-            isPending ? 'bg-amber-50 text-amber-800' : 
-            'bg-rose-50 text-rose-800'
-          }`}>
+          <div className={`p-4 rounded-xl border-3 border-ink shadow-hard-xs flex flex-col items-center justify-center text-center ${isApproved ? 'bg-emerald-50 text-emerald-800' :
+              isPending ? 'bg-amber-50 text-amber-800' :
+                'bg-rose-50 text-rose-800'
+            }`}>
             <span className="text-xs font-bold uppercase opacity-70 mb-1">Current Status</span>
             <span className="text-lg font-black uppercase tracking-widest">{volunteer.status}</span>
-            {isApproved && <span className="text-xs mt-1 font-semibold">Valid for 60th Maharashtra Samagam 2027</span>}
+            {isApproved && <span className="text-xs mt-1 font-semibold">Valid for 60th Nirankari Sant Samagam Maharashtra 2027</span>}
             {isPending && <span className="text-xs mt-1 font-semibold">Card is currently pending approval.</span>}
             {!isApproved && !isPending && <span className="text-xs mt-1 font-semibold">This card has been rejected or disabled.</span>}
           </div>
