@@ -35,11 +35,11 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: var(--radius);
+  --radius-sm: var(--radius);
 
-  --font-sans: var(--font-nunito);
-  --font-display: var(--font-fredoka);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-space-grotesk);
   --font-mono: var(--font-mono);
 
   /* Playful-Flat Brand Tokens */
@@ -83,7 +83,7 @@
   --ink: #111111;
 
   /* Border radius */
-  --radius: 1rem;
+  --radius: 0;
 
   /* Sidebar — white sidebar */
   --sidebar: #FFFFFF;
@@ -103,11 +103,11 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: var(--font-sans), 'Nunito Sans', sans-serif;
+    font-family: var(--font-sans), 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display), 'Fredoka', sans-serif;
+    font-family: var(--font-display), 'Space Grotesk', sans-serif;
     font-weight: 700;
     color: var(--foreground);
   }
@@ -130,11 +130,11 @@
 }
 
 @utility shadow-hard-sm {
-  box-shadow: 4px 4px 0px 0px #111111;
+  box-shadow: 5px 5px 0px 0px #111111;
 }
 
 @utility shadow-hard-xs {
-  box-shadow: 2px 2px 0px 0px #111111;
+  box-shadow: 3px 3px 0px 0px #111111;
 }
 
 @utility border-ink {
@@ -146,14 +146,14 @@
 }
 
 @utility font-display {
-  font-family: var(--font-display), 'Fredoka', sans-serif;
+  font-family: var(--font-display), 'Space Grotesk', sans-serif;
 }
 
 /* ─── Global Component Classes ───────────────────────────────────────────── */
 
 @layer components {
   /* Primary orange button — tactile press-down */
-  /* Primary orange button — tactile press-down */
+  /* Primary button — tactile press-down */
   .btn-primary {
     display: inline-flex;
     align-items: center;
@@ -161,23 +161,23 @@
     gap: 0.5rem;
     background-color: var(--primary);
     color: var(--primary-foreground);
-    font-family: var(--font-display), 'Fredoka', sans-serif;
+    font-family: var(--font-display), 'Space Grotesk', sans-serif;
     font-size: 1.125rem;
     font-weight: 700;
     padding: 0.625rem 1.5rem;
-    border-radius: 10px;
+    border-radius: 0;
     border: 3px solid #111111;
-    box-shadow: 4px 4px 0px 0px #111111;
+    box-shadow: 5px 5px 0px 0px #111111;
     cursor: pointer;
     text-decoration: none;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
   .btn-primary:hover {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px 0px #111111;
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0px 0px #111111;
   }
   .btn-primary:active {
-    transform: translate(4px, 4px);
+    transform: translate(3px, 3px);
     box-shadow: 0px 0px 0px 0px #111111;
   }
 
@@ -189,23 +189,23 @@
     gap: 0.5rem;
     background-color: #FFFFFF;
     color: #111111;
-    font-family: var(--font-display), 'Fredoka', sans-serif;
+    font-family: var(--font-display), 'Space Grotesk', sans-serif;
     font-size: 1.125rem;
     font-weight: 700;
     padding: 0.625rem 1.5rem;
-    border-radius: 10px;
+    border-radius: 0;
     border: 3px solid #111111;
-    box-shadow: 4px 4px 0px 0px #111111;
+    box-shadow: 5px 5px 0px 0px #111111;
     cursor: pointer;
     text-decoration: none;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
   .btn-secondary:hover {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px 0px #111111;
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0px 0px #111111;
   }
   .btn-secondary:active {
-    transform: translate(4px, 4px);
+    transform: translate(3px, 3px);
     box-shadow: 0px 0px 0px 0px #111111;
   }
 
@@ -213,82 +213,82 @@
   .card-flat {
     background-color: #FFFFFF;
     border: 3px solid #111111;
-    border-radius: 16px;
-    box-shadow: 8px 8px 0px 0px #111111;
+    border-radius: 0;
+    box-shadow: 5px 5px 0px 0px #111111;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
   .card-flat:hover {
-    transform: translateY(-4px);
-    box-shadow: 8px 12px 0px 0px #111111;
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0px 0px #111111;
   }
 
   /* Bento cells */
   .bento-white {
     background-color: #FFFFFF;
     border: 3px solid #111111;
-    border-radius: 20px;
+    border-radius: 0;
     padding: 2rem;
   }
   .bento-lavender {
     background-color: var(--color-lavender);
     color: #111111;
     border: 3px solid #111111;
-    border-radius: 20px;
+    border-radius: 0;
     padding: 2rem;
   }
   .bento-lime {
     background-color: var(--color-lime);
     color: #111111;
     border: 3px solid #111111;
-    border-radius: 20px;
+    border-radius: 0;
     padding: 2rem;
   }
   .bento-pink {
     background-color: var(--color-pink);
     color: #111111;
     border: 3px solid #111111;
-    border-radius: 20px;
+    border-radius: 0;
     padding: 2rem;
   }
   .bento-mint {
     background-color: var(--color-mint);
     color: #111111;
     border: 3px solid #111111;
-    border-radius: 20px;
+    border-radius: 0;
     padding: 2rem;
   }
   .bento-peach {
     background-color: var(--color-peach);
     color: #111111;
     border: 3px solid #111111;
-    border-radius: 20px;
+    border-radius: 0;
     padding: 2rem;
   }
   .bento-yellow {
     background-color: var(--color-yellow);
     color: #111111;
     border: 3px solid #111111;
-    border-radius: 20px;
+    border-radius: 0;
     padding: 2rem;
   }
   .bento-blue {
     background-color: var(--color-blue);
     color: #111111;
     border: 3px solid #111111;
-    border-radius: 20px;
+    border-radius: 0;
     padding: 2rem;
   }
   .bento-pastel {
     background-color: var(--background);
     border: 3px dashed #111111;
-    border-radius: 20px;
+    border-radius: 0;
     padding: 2rem;
   }
 
   /* Eyebrow / label */
   .eyebrow {
     display: block;
-    font-family: var(--font-display), 'Fredoka', sans-serif;
+    font-family: var(--font-display), 'Space Grotesk', sans-serif;
     font-size: 0.875rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -303,13 +303,13 @@
     align-items: center;
     background-color: var(--secondary);
     color: var(--secondary-foreground);
-    font-family: var(--font-display), 'Fredoka', sans-serif;
+    font-family: var(--font-display), 'Space Grotesk', sans-serif;
     font-size: 0.875rem;
     font-weight: 600;
     padding: 0.25rem 0.875rem;
-    border-radius: 9999px;
+    border-radius: 0;
     border: 2px solid #111111;
-    box-shadow: 4px 4px 0px 0px #111111;
+    box-shadow: 3px 3px 0px 0px #111111;
   }
 
   /* Icon tile */
@@ -319,7 +319,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
+    border-radius: 0;
     border: 3px solid #111111;
     flex-shrink: 0;
   }

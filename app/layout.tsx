@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
-import { Fredoka, Nunito_Sans, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
-const fredoka = Fredoka({
-  variable: "--font-fredoka",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
 });
 
-const nunitoSans = Nunito_Sans({
-  variable: "--font-nunito",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
 });
 
 const geistMono = Geist_Mono({
@@ -33,7 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fredoka.variable} ${nunitoSans.variable} ${geistMono.variable} h-full`}
+      className={`${spaceGrotesk.variable} ${inter.variable} ${geistMono.variable} h-full`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
