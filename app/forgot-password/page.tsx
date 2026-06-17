@@ -10,15 +10,14 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Mail, KeyRound, ArrowLeft, Send } from 'lucide-react'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+
+import { sendPasswordResetEmailAction } from '@/app/actions/auth'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [isSent, setIsSent] = useState(false)
-
-  const supabase = createClient()
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,12 +30,10 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
-      })
+      const response = await sendPasswordResetEmailAction(email)
 
-      if (error) {
-        toast.error(error.message)
+      if (response.error) {
+        toast.error(response.error)
         return
       }
 
