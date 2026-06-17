@@ -109,7 +109,7 @@ export async function addLecturerAction(formData: any) {
     email: parsed.data.email,
     name: parsed.data.name,
     loginId: parsed.data.email,
-    loginPass: parsed.data.password,
+    loginPass: parsed.data.password || '',
     role: 'Security Personnel'
   })
 
