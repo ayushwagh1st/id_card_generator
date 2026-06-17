@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
+import { sendRegistrationEmail } from '@/lib/email'
 
 export async function createModelHeadAction(formData: FormData) {
   const email = formData.get('email') as string
@@ -59,6 +60,15 @@ export async function createModelHeadAction(formData: FormData) {
       console.warn('Profile insertion error:', profileError)
     }
   }
+
+  // 3. Send Email via Resend
+  await sendRegistrationEmail({
+    email,
+    name: fullName,
+    loginId: email,
+    loginPass: password,
+    role: 'Model Head'
+  })
 
   return { success: true }
 }

@@ -3,6 +3,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
+import { lecturerSchema } from '@/lib/validations'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { sendRegistrationEmail } from '@/lib/email'
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -43,6 +47,13 @@ export async function getLecturersAction(
 }
 
 export async function addLecturerAction(formData: any) {
+  const ip = (await headers()).get('x-forwarded-for') || 'unknown'
+  const rateLimit = await checkRateLimit(`add_lecturer_${ip}`, 5, 60000)
+  if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
+
+  const parsed = lecturerSchema.safeParse(formData)
+  if (!parsed.success) return { error: 'Invalid input data', details: parsed.error.flatten().fieldErrors }
+
   const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') ||
     !process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -77,11 +88,11 @@ export async function addLecturerAction(formData: any) {
   // Insert into lecturers table using Admin client to bypass RLS
   const { data, error } = await supabaseAdmin.from('lecturers').insert([{
     id: userId,
-    name: formData.name,
-    email: formData.email,
-    mobile: formData.mobile,
-    password: formData.password,
-    status: formData.status || 'Active'
+    name: parsed.data.name,
+    email: parsed.data.email,
+    mobile: parsed.data.mobile,
+    password: parsed.data.password,
+    status: parsed.data.status || 'Active'
   }]).select().single()
 
   if (error) {
@@ -93,11 +104,27 @@ export async function addLecturerAction(formData: any) {
     return { error: 'Failed to create lecturer profile.' }
   }
 
+  // Send email to the security personnel
+  await sendRegistrationEmail({
+    email: parsed.data.email,
+    name: parsed.data.name,
+    loginId: parsed.data.email,
+    loginPass: parsed.data.password,
+    role: 'Security Personnel'
+  })
+
   revalidatePath('/admin/lecturers')
   return { success: true, data }
 }
 
 export async function updateLecturerAction(id: string, formData: any) {
+  const ip = (await headers()).get('x-forwarded-for') || 'unknown'
+  const rateLimit = await checkRateLimit(`update_lecturer_${ip}`, 10, 60000)
+  if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
+
+  const parsed = lecturerSchema.partial().safeParse(formData)
+  if (!parsed.success) return { error: 'Invalid input data', details: parsed.error.flatten().fieldErrors }
+
   const supabase = await createClient()
 
   const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
@@ -105,9 +132,9 @@ export async function updateLecturerAction(id: string, formData: any) {
     !process.env.SUPABASE_SERVICE_ROLE_KEY
 
   // If password is changed, update auth user
-  if (formData.password && !isMockMode) {
+  if (parsed.data.password && !isMockMode) {
       const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, {
-          password: formData.password
+          password: parsed.data.password
       })
       if (authError) {
           console.error('Error updating lecturer auth password:', authError)
@@ -122,11 +149,11 @@ export async function updateLecturerAction(id: string, formData: any) {
   }
 
   const { error } = await supabaseAdmin.from('lecturers').update({
-      name: formData.name,
-      email: formData.email,
-      mobile: formData.mobile,
-      password: formData.password,
-      status: formData.status
+      name: parsed.data.name,
+      email: parsed.data.email,
+      mobile: parsed.data.mobile,
+      password: parsed.data.password,
+      status: parsed.data.status
   }).eq('id', id)
 
   if (error) {

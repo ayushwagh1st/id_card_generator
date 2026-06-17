@@ -3,6 +3,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logActivityAction } from './activity'
+import { headers } from 'next/headers'
+import { sessionSchema } from '@/lib/validations'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 // Session CRUD
 export async function getSessionsAction(
@@ -46,9 +49,16 @@ export async function getSessionsAction(
 }
 
 export async function addSessionAction(formData: any) {
+  const ip = (await headers()).get('x-forwarded-for') || 'unknown'
+  const rateLimit = await checkRateLimit(`add_session_${ip}`, 10, 60000)
+  if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
+
+  const parsed = sessionSchema.safeParse(formData)
+  if (!parsed.success) return { error: 'Invalid input data', details: parsed.error.flatten().fieldErrors }
+
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from('sessions').insert([formData]).select().single()
+  const { data, error } = await supabase.from('sessions').insert([parsed.data]).select().single()
 
   if (error) {
     console.error('Error creating session:', error)
@@ -63,9 +73,16 @@ export async function addSessionAction(formData: any) {
 }
 
 export async function updateSessionAction(id: string, formData: any) {
+  const ip = (await headers()).get('x-forwarded-for') || 'unknown'
+  const rateLimit = await checkRateLimit(`update_session_${ip}`, 20, 60000)
+  if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
+
+  const parsed = sessionSchema.partial().safeParse(formData)
+  if (!parsed.success) return { error: 'Invalid input data', details: parsed.error.flatten().fieldErrors }
+
   const supabase = await createClient()
 
-  const { error } = await supabase.from('sessions').update(formData).eq('id', id)
+  const { error } = await supabase.from('sessions').update(parsed.data).eq('id', id)
 
   if (error) {
     console.error('Error updating session:', error)

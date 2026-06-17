@@ -31,7 +31,7 @@ export function IDCard({ volunteer, size = 'standard', side = 'front' }: IDCardP
 
   // Verification URL for back QR
   // Always use the live domain so cards printed from localhost still scan correctly!
-  const baseUrl = 'https://balpradershaniidportal.vercel.app'
+  const baseUrl = 'https://keidportal.qzz.io'
   const verifyUrl = `${baseUrl}/verify/${volunteer.id}`
 
   const dims = size === 'standard' 

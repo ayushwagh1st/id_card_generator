@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [isSent, setIsSent] = useState(false)
-  
+
   const supabase = createClient()
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -53,18 +53,18 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen bg-background relative overflow-hidden select-none p-4 sm:p-8">
       {/* Container */}
       <div className="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-        
+
         {/* Left Side: Illustration / Brand */}
         <div className="hidden lg:flex flex-col justify-center items-center h-[90vh] bento-blue pattern-grid relative overflow-hidden group border-ink shadow-hard rounded-[32px]">
           <div className="absolute top-8 left-8 badge-flat bg-white text-ink border-ink transform rotate-2 z-20">
             <KeyRound className="w-4 h-4 mr-2" />
             Recovery Mode
           </div>
-          
+
           <div className="relative z-10 transform transition-transform duration-500 group-hover:scale-105 group-hover:-rotate-2 w-full max-w-[80%] aspect-square flex items-center justify-center">
-            <Image 
-              src="/images/forgot_pwd_illustration.png" 
-              alt="Password Recovery" 
+            <Image
+              src="/images/forgot_pwd_illustration.png"
+              alt="Password Recovery"
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-contain drop-shadow-[12px_12px_0_rgba(17,17,17,1)]"
@@ -83,13 +83,13 @@ export default function ForgotPasswordPage() {
             <div className="space-y-4 pb-8 text-right">
               <span className="eyebrow text-ink/70">Reset Password</span>
               <h1 className="text-4xl font-bold font-display text-ink leading-tight">
-                Lost the <br/> <span className="text-[var(--color-blue)]" style={{ textShadow: '2px 2px 0 #111111, -1px -1px 0 #111111, 1px -1px 0 #111111, -1px 1px 0 #111111, 1px 1px 0 #111111' }}>Key?</span>
+                Lost the <br /> <span className="text-[var(--color-blue)]" style={{ textShadow: '2px 2px 0 #111111, -1px -1px 0 #111111, 1px -1px 0 #111111, -1px 1px 0 #111111, 1px 1px 0 #111111' }}>Key?</span>
               </h1>
               <p className="text-muted-foreground text-sm font-sans font-medium leading-relaxed">
                 Enter your email address and we'll send you a magical link to reset your password.
               </p>
             </div>
-            
+
             {isSent ? (
               <div className="space-y-6 text-center animate-in slide-in-from-bottom-4">
                 <div className="bento-mint p-6 shadow-hard-xs transform rotate-1">
@@ -119,7 +119,7 @@ export default function ForgotPasswordPage() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="admin@voluntrack.com"
+                      placeholder="Your E-mail Address"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -146,7 +146,7 @@ export default function ForgotPasswordPage() {
                       </>
                     )}
                   </button>
-                  
+
                   <Link href="/login" className="flex items-center justify-center font-display font-bold text-sm text-ink/60 hover:text-ink transition-colors">
                     <ArrowLeft className="w-4 h-4 mr-1" />
                     Back to Login

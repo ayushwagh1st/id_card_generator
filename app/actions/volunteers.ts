@@ -3,7 +3,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
+import { headers } from 'next/headers'
 import { logActivityAction } from './activity'
+import { volunteerSchema, bulkImportVolunteerSchema } from '@/lib/validations'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function getVolunteersAction(
   page: number = 1,
@@ -81,9 +84,16 @@ export async function getVolunteersAction(
 }
 
 export async function addVolunteerAction(formData: any) {
+  const ip = (await headers()).get('x-forwarded-for') || 'unknown'
+  const rateLimit = await checkRateLimit(`add_vol_${ip}`, 10, 60000)
+  if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
+
+  const parsed = volunteerSchema.safeParse(formData)
+  if (!parsed.success) return { error: 'Invalid input data', details: parsed.error.flatten().fieldErrors }
+
   const supabase = await createClient()
   // Insert
-  const { data, error } = await supabase.from('volunteers').insert([formData]).select().single()
+  const { data, error } = await supabase.from('volunteers').insert([parsed.data]).select().single()
   
   if (error) {
     console.error('[PROD_LOG] Error in addVolunteerAction:', error)
@@ -99,9 +109,16 @@ export async function addVolunteerAction(formData: any) {
 }
 
 export async function updateVolunteerAction(id: string, formData: any) {
+  const ip = (await headers()).get('x-forwarded-for') || 'unknown'
+  const rateLimit = await checkRateLimit(`update_vol_${ip}`, 20, 60000)
+  if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
+
+  const parsed = volunteerSchema.partial().safeParse(formData)
+  if (!parsed.success) return { error: 'Invalid input data', details: parsed.error.flatten().fieldErrors }
+
   const supabase = await createClient()
 
-  const { error } = await supabase.from('volunteers').update(formData).eq('id', id)
+  const { error } = await supabase.from('volunteers').update(parsed.data).eq('id', id)
   
   if (error) {
     console.error(`[PROD_LOG] Error in updateVolunteerAction for ID ${id}:`, error)
@@ -163,13 +180,20 @@ export async function bulkApproveVolunteersAction(ids: string[]) {
 }
 
 export async function bulkImportVolunteersAction(records: any[]) {
+  const ip = (await headers()).get('x-forwarded-for') || 'unknown'
+  const rateLimit = await checkRateLimit(`bulk_vol_${ip}`, 5, 60000)
+  if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
+
+  const parsed = bulkImportVolunteerSchema.safeParse(records)
+  if (!parsed.success) return { error: 'Invalid input data format in bulk import.', details: parsed.error.flatten() }
+
   const supabase = await createClient()
 
-  if (records.length === 0) {
+  if (parsed.data.length === 0) {
     return { success: true, count: 0, duplicates: 0 }
   }
 
-  const { error } = await supabase.from('volunteers').insert(records)
+  const { error } = await supabase.from('volunteers').insert(parsed.data)
   if (error) {
     console.error('[PROD_LOG] Error in bulkImportVolunteersAction:', error)
     return { error: 'Bulk import encountered a database error.' }
