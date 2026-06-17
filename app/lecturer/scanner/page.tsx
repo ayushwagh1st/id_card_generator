@@ -123,6 +123,24 @@ function ScannerContent() {
       setRecentScans(prev => [{ id, time: new Date(), status, msg }, ...prev].slice(0, 5))
   }
 
+  const saveToOffline = (data: string, sessionId: string, scanMode: string, timestamp: string) => {
+      const newScan = { scanData: data, sessionId, mode: scanMode, timestamp }
+      setPendingScans(prev => {
+          const updated = [...prev, newScan]
+          localStorage.setItem('pending_scans', JSON.stringify(updated))
+          return updated
+      })
+      setLastScanResult({ status: 'offline', message: `Saved offline: ${data}` })
+      pushRecentScan(data, 'offline', 'Saved Offline')
+      
+      if (!isBulkMode) {
+          setTimeout(() => {
+              setIsProcessing(false)
+              setTimeout(() => setLastScanResult(null), 2000)
+          }, 1000)
+      }
+  }
+
   const handleScan = async (rawData: string) => {
       // Extract ID from URL if QR contains a verify URL
       let data = rawData;
@@ -150,20 +168,7 @@ function ScannerContent() {
 
       if (!isOnline) {
           // OFFLINE MODE: Save to local storage
-          const newScan = { scanData: data, sessionId: selectedSessionId, mode, timestamp }
-          const updatedPending = [...pendingScans, newScan]
-          setPendingScans(updatedPending)
-          localStorage.setItem('pending_scans', JSON.stringify(updatedPending))
-          
-          setLastScanResult({ status: 'offline', message: `Saved offline: ${data}` })
-          pushRecentScan(data, 'offline', 'Saved Offline')
-          
-          if (!isBulkMode) {
-              setTimeout(() => {
-                  setIsProcessing(false)
-                  setTimeout(() => setLastScanResult(null), 2000)
-              }, 1000)
-          }
+          saveToOffline(data, selectedSessionId, mode, timestamp)
           return
       }
 
@@ -179,6 +184,9 @@ function ScannerContent() {
                       const st = res.message?.includes('Late') ? 'late' : 'success'
                       pushRecentScan(data, st, res.message || 'Success')
                   }
+              }).catch(err => {
+                  console.warn('Network error in bulk mode, saving offline:', err)
+                  saveToOffline(data, selectedSessionId, mode, timestamp)
               })
               setLastScanResult({ status: 'success', message: 'Processing...' })
               setTimeout(() => setLastScanResult(null), 1000)
@@ -194,8 +202,8 @@ function ScannerContent() {
               }
           }
       } catch (err: any) {
-          setLastScanResult({ status: 'error', message: err.message || 'Scan failed' })
-          pushRecentScan(data, 'error', 'Network Error')
+          console.warn('Network error, saving offline:', err)
+          saveToOffline(data, selectedSessionId, mode, timestamp)
       } finally {
           if (!isBulkMode) {
               setTimeout(() => {

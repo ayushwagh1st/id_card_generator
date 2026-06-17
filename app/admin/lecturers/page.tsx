@@ -44,7 +44,7 @@ export default function LecturersPage() {
       const { data } = await getLecturersAction(1, 100, searchTerm, 'all')
       setLecturers(data || [])
     } catch (err: any) {
-      toast.error('Error loading lecturers')
+      toast.error('Error loading security')
     } finally {
       setLoading(false)
     }
@@ -62,12 +62,12 @@ export default function LecturersPage() {
     try {
       const res = await addLecturerAction({ name, email, mobile, password, status })
       if (res?.error) throw new Error(res.error)
-      toast.success('Lecturer added successfully')
+      toast.success('Security added successfully')
       setIsAddOpen(false)
       setName(''); setEmail(''); setMobile(''); setPassword(''); setStatus('Active');
       fetchLecturers()
     } catch (err: any) {
-      toast.error(err.message || 'Could not add lecturer')
+      toast.error(err.message || 'Could not add security')
     }
   }
 
@@ -93,11 +93,11 @@ export default function LecturersPage() {
       // For general update, we don't change password here anymore to avoid overwriting with blank
       const res = await updateLecturerAction(currentLecturer.id, { name, email, mobile, password: currentLecturer.password, status })
       if (res?.error) throw new Error(res.error)
-      toast.success('Lecturer updated successfully')
+      toast.success('Security updated successfully')
       setIsEditOpen(false)
       fetchLecturers()
     } catch (err: any) {
-      toast.error(err.message || 'Could not update lecturer')
+      toast.error(err.message || 'Could not update security')
     }
   }
 
@@ -116,14 +116,14 @@ export default function LecturersPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this lecturer?')) return
+    if (!confirm('Are you sure you want to delete this security personnel?')) return
     try {
       const res = await deleteLecturerAction(id)
       if (res?.error) throw new Error(res.error)
-      toast.success('Lecturer deleted')
+      toast.success('Security deleted')
       fetchLecturers()
     } catch (err: any) {
-      toast.error(err.message || 'Could not delete lecturer')
+      toast.error(err.message || 'Could not delete security')
     }
   }
 
