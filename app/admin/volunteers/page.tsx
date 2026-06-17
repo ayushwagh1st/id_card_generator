@@ -261,6 +261,22 @@ export default function VolunteersPage() {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const originalFile = e.target.files[0]
+      
+      // File Upload Security Checks
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+      if (!validTypes.includes(originalFile.type)) {
+        toast.error('Invalid file type. Only JPG, PNG, and WebP are allowed.')
+        e.target.value = ''
+        return
+      }
+
+      const maxSizeInBytes = 5 * 1024 * 1024 // 5MB limit
+      if (originalFile.size > maxSizeInBytes) {
+        toast.error('File is too large. Maximum size is 5MB.')
+        e.target.value = ''
+        return
+      }
+
       setCropOriginalFile(originalFile)
       const reader = new FileReader()
       reader.addEventListener('load', () => {

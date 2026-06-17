@@ -3,6 +3,29 @@ import { RegistrationEmail } from '@/components/emails/RegistrationEmail';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
 
+// Helper for generic exponential backoff retries
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelayMs: number = 1000
+): Promise<T> {
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    try {
+      return await operation();
+    } catch (error) {
+      attempt++;
+      if (attempt >= maxRetries) {
+        throw error;
+      }
+      const delay = baseDelayMs * Math.pow(2, attempt - 1);
+      console.warn(`Operation failed, retrying in ${delay}ms... (Attempt ${attempt + 1} of ${maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('Unreachable code in withRetry');
+}
+
 export async function sendRegistrationEmail({
   email,
   name,
@@ -25,27 +48,32 @@ export async function sendRegistrationEmail({
       return { success: true, mocked: true };
     }
 
-    const { data, error } = await resend.emails.send({
-      from: 'Bal Pradarshani <noreply@balpradarshani.com>', // Update this with verified domain if needed
-      to: [email],
-      subject: 'Welcome to Bal Pradarshani - Your Account Credentials',
-      react: RegistrationEmail({
-        loginId,
-        loginPass,
-        websiteUrl,
-        role,
-        name,
-      }),
-    });
+    // Wrapped inside withRetry for maximum reliability
+    const result = await withRetry(async () => {
+      const { data, error } = await resend.emails.send({
+        from: 'Bal Pradarshani <onboarding@resend.dev>', // Resend requires this for unverified domains
+        to: [email],
+        subject: 'Welcome to Bal Pradarshani - Your Account Credentials',
+        react: RegistrationEmail({
+          loginId,
+          loginPass,
+          websiteUrl,
+          role,
+          name,
+        }),
+      });
 
-    if (error) {
-      console.error('Resend email error:', error);
-      return { error: error.message };
-    }
+      if (error) {
+        // Throwing will trigger the retry mechanism
+        throw new Error(error.message);
+      }
+      return data;
+    }, 3, 1000); // 3 retries, starting with 1000ms delay
 
-    return { success: true, data };
+    return { success: true, data: result };
   } catch (err: any) {
-    console.error('Exception sending email:', err);
+    console.error('Exception sending email after retries:', err);
     return { error: err.message };
   }
 }
+
