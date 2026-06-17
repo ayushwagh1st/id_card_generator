@@ -34,7 +34,16 @@ export async function sendPasswordResetEmailAction(email: string) {
       return { error: 'Failed to generate reset link. Please check if the email is registered.' }
     }
 
-    const resetLink = data.properties.action_link
+    let resetLink = data.properties.action_link
+
+    // Force the link to point to /update-password in case Supabase ignored the redirectTo option
+    try {
+      const urlObj = new URL(resetLink)
+      urlObj.pathname = '/update-password'
+      resetLink = urlObj.toString()
+    } catch (e) {
+      console.warn('Failed to parse reset link URL')
+    }
 
     // Send the email via Resend
     const emailResult = await sendPasswordResetEmail({
