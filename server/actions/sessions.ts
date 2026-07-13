@@ -1,9 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, checkAuth } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logActivityAction } from './activity'
-import { headers } from 'next/headers'
 import { sessionSchema } from '@/lib/validations'
 import { checkRateLimit } from '@/lib/rate-limit'
 
@@ -15,6 +14,7 @@ export async function getSessionsAction(
   statusFilter: string = 'all',
   lecturerFilter: string = 'all'
 ) {
+  await checkAuth();
   const supabase = await createClient()
 
   let dbQuery = supabase
@@ -49,6 +49,8 @@ export async function getSessionsAction(
 }
 
 export async function addSessionAction(formData: any) {
+  await checkAuth();
+  const { headers } = await import('next/headers')
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`add_session_${ip}`, 10, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -73,6 +75,8 @@ export async function addSessionAction(formData: any) {
 }
 
 export async function updateSessionAction(id: string, formData: any) {
+  await checkAuth();
+  const { headers } = await import('next/headers')
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`update_session_${ip}`, 20, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -99,10 +103,10 @@ export async function updateSessionAction(id: string, formData: any) {
 }
 
 export async function deleteSessionAction(id: string) {
+  await checkAuth();
   const supabase = await createClient()
   
-  const { data: session } = await supabase.from('sessions').select('name').eq('id', id).single()
-  const { error } = await supabase.from('sessions').delete().eq('id', id)
+  const { data: session, error } = await supabase.from('sessions').delete().eq('id', id).select('name').single()
   
   if (error) {
     console.error('Error deleting session:', error)
@@ -118,6 +122,7 @@ export async function deleteSessionAction(id: string) {
 
 // Session Enrollment (Volunteer Assignment)
 export async function getSessionEnrollmentsAction(sessionId: string) {
+  await checkAuth();
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -138,6 +143,7 @@ export async function getSessionEnrollmentsAction(sessionId: string) {
 }
 
 export async function enrollVolunteersAction(sessionId: string, volunteerIds: string[]) {
+  await checkAuth();
   const supabase = await createClient()
 
   const records = volunteerIds.map(id => ({
@@ -166,10 +172,15 @@ export async function enrollVolunteersAction(sessionId: string, volunteerIds: st
 }
 
 export async function removeEnrollmentAction(enrollmentId: string) {
+  await checkAuth();
   const supabase = await createClient()
 
-  const { data: enrollment } = await supabase.from('volunteer_sessions').select('session:sessions(name), volunteer:volunteers(full_name)').eq('id', enrollmentId).single()
-  const { error } = await supabase.from('volunteer_sessions').delete().eq('id', enrollmentId)
+  const { data: enrollment, error } = await supabase
+    .from('volunteer_sessions')
+    .delete()
+    .eq('id', enrollmentId)
+    .select('session:sessions(name), volunteer:volunteers(full_name)')
+    .single()
 
   if (error) {
     console.error('Error removing enrollment:', error)

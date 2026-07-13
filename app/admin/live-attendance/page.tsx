@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Activity, Clock, CheckCircle, XCircle } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { getLiveAttendanceFeedAction } from '@/server/actions/attendance'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -11,32 +11,17 @@ export default function LiveAttendancePage() {
   const [loading, setLoading] = useState(true)
   const [liveFeed, setLiveFeed] = useState<any[]>([])
   const [stats, setStats] = useState({ todayCheckins: 0, todayLates: 0 })
-  const supabase = createClient()
 
   const fetchRecentFeed = useCallback(async () => {
     try {
-      const todayStr = new Date().toISOString().split('T')[0]
-      
-      const { data, error } = await supabase
-        .from('attendance')
-        .select(`
-          id,
-          attendance_status,
-          check_in_time,
-          check_out_time,
-          volunteer:volunteer_id ( full_name, snk_id ),
-          session:session_id ( name )
-        `)
-        .eq('attendance_date', todayStr)
-        .order('created_at', { ascending: false })
-        .limit(50)
+      const { data, error } = await getLiveAttendanceFeedAction(50)
 
-      if (error) throw error
+      if (error) throw new Error(error)
 
       setLiveFeed(data || [])
       
-      const checkins = data?.filter(d => d.attendance_status === 'Present').length || 0
-      const lates = data?.filter(d => d.attendance_status === 'Late').length || 0
+      const checkins = data?.filter((d: any) => d.attendance_status === 'Present').length || 0
+      const lates = data?.filter((d: any) => d.attendance_status === 'Late').length || 0
       
       setStats({ todayCheckins: checkins, todayLates: lates })
     } catch (err: any) {
@@ -45,30 +30,45 @@ export default function LiveAttendancePage() {
     } finally {
         setLoading(false)
     }
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     fetchRecentFeed()
 
-    const channel = supabase.channel('live-attendance')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'attendance' },
-        (payload) => {
-           console.log('Realtime Update:', payload)
-           // Soft refresh the feed to get joined data (names, sessions)
-           fetchRecentFeed()
-           toast('New Attendance Scan Detected', {
-               icon: <Activity className="w-4 h-4 text-blue-500" />
-           })
-        }
-      )
-      .subscribe()
+    let channel: any
+    let supabaseInstance: any
+
+    async function initRealtime() {
+      try {
+        const { createClient } = await import('@/lib/supabase/client')
+        supabaseInstance = createClient()
+        channel = supabaseInstance.channel('live-attendance')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'attendance' },
+            (payload: any) => {
+               console.log('Realtime Update:', payload)
+               // Soft refresh the feed to get joined data (names, sessions)
+               fetchRecentFeed()
+               toast('New Attendance Scan Detected', {
+                   icon: <Activity className="w-4 h-4 text-blue-500" />
+               })
+            }
+          )
+          .subscribe()
+      } catch (err) {
+        console.error('Failed to initialize realtime connection:', err)
+      }
+    }
+
+    initRealtime()
 
     return () => {
-      supabase.removeChannel(channel)
+      if (channel && supabaseInstance) {
+        supabaseInstance.removeChannel(channel)
+      }
     }
-  }, [supabase, fetchRecentFeed])
+  }, [fetchRecentFeed])
 
   if (loading) {
     return (

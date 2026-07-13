@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useReducer } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,30 +12,54 @@ import { Search, Plus, Edit, Trash2, KeyRound, Download, Eye, EyeOff } from 'luc
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { exportToPDF } from '@/lib/pdf'
-import { getLecturersAction, addLecturerAction, updateLecturerAction, deleteLecturerAction, resetLecturerPasswordAction } from '@/app/actions/lecturers'
+import { getLecturersAction, addLecturerAction, updateLecturerAction, deleteLecturerAction, resetLecturerPasswordAction } from '@/server/actions/lecturers'
 import Image from 'next/image'
 import { Users } from 'lucide-react'
+import { LecturersTable } from './_components/LecturersTable'
+import { LecturersModals } from './_components/LecturersModals'
 
 export default function LecturersPage() {
-  const [lecturers, setLecturers] = useState<any[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [loading, setLoading] = useState(true)
-  
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [isEditOpen, setIsEditOpen] = useState(false)
-  const [isResetPassOpen, setIsResetPassOpen] = useState(false)
-  const [currentLecturer, setCurrentLecturer] = useState<any>(null)
-  
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [mobile, setMobile] = useState('')
-  const [password, setPassword] = useState('')
-  const [status, setStatus] = useState('Active')
+  const [state, dispatch] = React.useReducer(
+    (state: any, action: any) => typeof action === 'function' ? { ...state, ...action(state) } : { ...state, ...action },
+    {
+      lecturers: [],
+      searchTerm: '',
+      loading: true,
+      isAddOpen: false,
+      isEditOpen: false,
+      isResetPassOpen: false,
+      currentLecturer: null,
+      name: '',
+      email: '',
+      mobile: '',
+      password: '',
+      status: 'Active',
+      visiblePasswords: {}
+    }
+  )
 
-  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({})
+  const {
+    lecturers, searchTerm, loading, isAddOpen, isEditOpen,
+    isResetPassOpen, currentLecturer, name, email, mobile,
+    password, status, visiblePasswords
+  } = state
+
+  const setLecturers = useCallback((v: any) => dispatch((s: any) => ({ lecturers: typeof v === 'function' ? v(s.lecturers) : v })), [])
+  const setSearchTerm = useCallback((v: any) => dispatch((s: any) => ({ searchTerm: typeof v === 'function' ? v(s.searchTerm) : v })), [])
+  const setLoading = useCallback((v: any) => dispatch((s: any) => ({ loading: typeof v === 'function' ? v(s.loading) : v })), [])
+  const setIsAddOpen = useCallback((v: any) => dispatch((s: any) => ({ isAddOpen: typeof v === 'function' ? v(s.isAddOpen) : v })), [])
+  const setIsEditOpen = useCallback((v: any) => dispatch((s: any) => ({ isEditOpen: typeof v === 'function' ? v(s.isEditOpen) : v })), [])
+  const setIsResetPassOpen = useCallback((v: any) => dispatch((s: any) => ({ isResetPassOpen: typeof v === 'function' ? v(s.isResetPassOpen) : v })), [])
+  const setCurrentLecturer = useCallback((v: any) => dispatch((s: any) => ({ currentLecturer: typeof v === 'function' ? v(s.currentLecturer) : v })), [])
+  const setName = useCallback((v: any) => dispatch((s: any) => ({ name: typeof v === 'function' ? v(s.name) : v })), [])
+  const setEmail = useCallback((v: any) => dispatch((s: any) => ({ email: typeof v === 'function' ? v(s.email) : v })), [])
+  const setMobile = useCallback((v: any) => dispatch((s: any) => ({ mobile: typeof v === 'function' ? v(s.mobile) : v })), [])
+  const setPassword = useCallback((v: any) => dispatch((s: any) => ({ password: typeof v === 'function' ? v(s.password) : v })), [])
+  const setStatus = useCallback((v: any) => dispatch((s: any) => ({ status: typeof v === 'function' ? v(s.status) : v })), [])
+  const setVisiblePasswords = useCallback((v: any) => dispatch((s: any) => ({ visiblePasswords: typeof v === 'function' ? v(s.visiblePasswords) : v })), [])
 
   const togglePassword = (id: string) => {
-    setVisiblePasswords(prev => ({ ...prev, [id]: !prev[id] }))
+    setVisiblePasswords({ ...visiblePasswords, [id]: !visiblePasswords[id] })
   }
 
   const fetchLecturers = useCallback(async () => {
@@ -48,7 +72,7 @@ export default function LecturersPage() {
     } finally {
       setLoading(false)
     }
-  }, [searchTerm])
+  }, [searchTerm, setLoading, setLecturers])
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -130,7 +154,7 @@ export default function LecturersPage() {
   const handleExportCredentials = () => {
     try {
       const headers = ['Name', 'Email (Login ID)', 'Password', 'Mobile', 'Status']
-      const rows = lecturers.map(l => [
+      const rows = lecturers.map((l: any) => [
         `"${l.name.replace(/"/g, '""')}"`,
         `"${l.email.replace(/"/g, '""')}"`,
         `"${(l.password || 'N/A').replace(/"/g, '""')}"`,
@@ -138,7 +162,7 @@ export default function LecturersPage() {
         `"${l.status}"`
       ])
 
-      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+      const csvContent = [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\n')
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
       const link = document.createElement('a')
       const url = URL.createObjectURL(blob)
@@ -157,7 +181,7 @@ export default function LecturersPage() {
   const handleExportPDF = () => {
     if (lecturers.length === 0) return
     const headers = ['Name', 'Email (Login ID)', 'Mobile', 'Status']
-    const rows = lecturers.map(l => [
+    const rows = lecturers.map((l: any) => [
         l.name,
         l.email,
         l.mobile || 'N/A',
@@ -173,8 +197,8 @@ export default function LecturersPage() {
     })
   }
 
-  const activeLecturers = lecturers.filter(l => l.status === 'Active').length
-  const inactiveLecturers = lecturers.filter(l => l.status === 'Inactive').length
+  const activeLecturers = lecturers.filter((l: any) => l.status === 'Active').length
+  const inactiveLecturers = lecturers.filter((l: any) => l.status === 'Inactive').length
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -241,194 +265,32 @@ export default function LecturersPage() {
           <Button onClick={handleExportPDF} variant="outline" className="w-full sm:w-auto">
             <Download className="w-4 h-4" /> Export PDF
           </Button>
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger render={
-              <Button className="w-full sm:w-auto px-5 gap-2">
-                <Plus className="h-4 w-4" /> Add Security
-              </Button>
-            } />
-          <DialogContent className="sm:max-w-md rounded-xl">
-            <DialogHeader>
-              <DialogTitle>Add Security</DialogTitle>
-              <DialogDescription>Create a new security profile.</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Full Name</Label>
-                <Input value={name} onChange={e => setName(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label>Mobile</Label>
-                <Input value={mobile} onChange={e => setMobile(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Password</Label>
-                <Input type="text" value={password} onChange={e => setPassword(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-                <Button type="submit">Create</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+          <LecturersModals
+            isAddOpen={isAddOpen} setIsAddOpen={setIsAddOpen}
+            isEditOpen={isEditOpen} setIsEditOpen={setIsEditOpen}
+            isResetPassOpen={isResetPassOpen} setIsResetPassOpen={setIsResetPassOpen}
+            currentLecturer={currentLecturer}
+            name={name} setName={setName}
+            email={email} setEmail={setEmail}
+            mobile={mobile} setMobile={setMobile}
+            password={password} setPassword={setPassword}
+            status={status} setStatus={setStatus}
+            handleCreate={handleCreate}
+            handleUpdate={handleUpdate}
+            handleResetPassword={handleResetPassword}
+          />
         </div>
       </div>
 
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-md rounded-xl">
-          <DialogHeader>
-            <DialogTitle>Edit Security</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleUpdate} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Full Name</Label>
-              <Input value={name} onChange={e => setName(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label>Mobile</Label>
-              <Input value={mobile} onChange={e => setMobile(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
-              <Button type="submit">Save Changes</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isResetPassOpen} onOpenChange={setIsResetPassOpen}>
-        <DialogContent className="sm:max-w-md rounded-xl">
-          <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
-            <DialogDescription>Assign a new temporary password to {currentLecturer?.name}.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleResetPassword} className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase text-muted-foreground">New Password</Label>
-              <Input type="text" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} placeholder="Min. 6 characters" />
-            </div>
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsResetPassOpen(false)}>Cancel</Button>
-              <Button type="submit">Reset Password</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
-        <div className="p-0">
-          {loading ? (
-            <div className="p-4 space-y-4">
-              <div className="rounded-md border">
-                <div className="border-b px-4 py-3 flex gap-4 bg-muted/40">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-24 ml-auto" />
-                </div>
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="px-4 py-4 flex items-center gap-4 border-b last:border-0">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-6 w-24 rounded-md" />
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-6 w-24 rounded-full" />
-                    <div className="flex gap-1.5 ml-auto">
-                      <Skeleton className="h-8 w-8 rounded-lg" />
-                      <Skeleton className="h-8 w-8 rounded-lg" />
-                      <Skeleton className="h-8 w-8 rounded-lg" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-          <Table>
-            <TableHeader className="bg-muted/40">
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Password</TableHead>
-                <TableHead>Mobile</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {lecturers.map(lect => (
-                <TableRow key={lect.id}>
-                  <TableCell className="font-medium">{lect.name}</TableCell>
-                  <TableCell>{lect.email}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-amber-600 bg-amber-500/5 px-2 py-1.5 rounded w-fit">
-                        {visiblePasswords[lect.id] ? (lect.password || 'N/A') : '••••••'}
-                      </span>
-                      <button onClick={() => togglePassword(lect.id)} className="text-muted-foreground hover:text-foreground transition-colors">
-                        {visiblePasswords[lect.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </TableCell>
-                  <TableCell>{lect.mobile}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${lect.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'}`}>
-                      {lect.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(lect)} title="Edit Security">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openResetPass(lect)} title="Reset Password" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50">
-                      <KeyRound className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(lect.id)} className="text-destructive">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {!loading && lecturers.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No security personnel found.</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          )}
-        </div>
-      </div>
+      <LecturersTable
+        loading={loading}
+        lecturers={lecturers}
+        visiblePasswords={visiblePasswords}
+        togglePassword={togglePassword}
+        openEdit={openEdit}
+        openResetPass={openResetPass}
+        handleDelete={handleDelete}
+      />
     </div>
   )
 }

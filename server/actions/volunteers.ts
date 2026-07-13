@@ -1,9 +1,7 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, checkAuth } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { cookies } from 'next/headers'
-import { headers } from 'next/headers'
 import { logActivityAction } from './activity'
 import { volunteerSchema, bulkImportVolunteerSchema } from '@/lib/validations'
 import { checkRateLimit } from '@/lib/rate-limit'
@@ -15,6 +13,7 @@ export async function getVolunteersAction(
   statusFilter: string = 'all',
   modelFilter: string = 'all'
 ) {
+  await checkAuth();
   const supabase = await createClient()
 
   // Get user role for RLS / manual filtering
@@ -22,6 +21,7 @@ export async function getVolunteersAction(
   if (!user) throw new Error('Unauthorized')
 
   // Support Mock User
+  const { cookies } = await import('next/headers')
   const cookieStore = await cookies()
   const mockUserStr = cookieStore.get('mock-user')?.value
   let role = user.user_metadata?.role
@@ -84,6 +84,8 @@ export async function getVolunteersAction(
 }
 
 export async function addVolunteerAction(formData: any) {
+  await checkAuth();
+  const { headers } = await import('next/headers')
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`add_vol_${ip}`, 10, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -109,6 +111,8 @@ export async function addVolunteerAction(formData: any) {
 }
 
 export async function updateVolunteerAction(id: string, formData: any) {
+  await checkAuth();
+  const { headers } = await import('next/headers')
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`update_vol_${ip}`, 20, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -134,9 +138,9 @@ export async function updateVolunteerAction(id: string, formData: any) {
 }
 
 export async function deleteVolunteerAction(id: string) {
+  await checkAuth();
   const supabase = await createClient()
-  const { data: volunteer } = await supabase.from('volunteers').select('full_name').eq('id', id).single()
-  const { error } = await supabase.from('volunteers').delete().eq('id', id)
+  const { data: volunteer, error } = await supabase.from('volunteers').delete().eq('id', id).select('full_name').single()
   if (error) {
     console.error(`[PROD_LOG] Error in deleteVolunteerAction for ID ${id}:`, error)
     return { error: 'Failed to delete volunteer.' }
@@ -150,6 +154,7 @@ export async function deleteVolunteerAction(id: string) {
 }
 
 export async function bulkDeleteVolunteersAction(ids: string[]) {
+  await checkAuth();
   const supabase = await createClient()
   const { error } = await supabase.from('volunteers').delete().in('id', ids)
   if (error) {
@@ -165,6 +170,7 @@ export async function bulkDeleteVolunteersAction(ids: string[]) {
 }
 
 export async function bulkApproveVolunteersAction(ids: string[]) {
+  await checkAuth();
   const supabase = await createClient()
   const { error } = await supabase.from('volunteers').update({ status: 'Approved' }).in('id', ids)
   if (error) {
@@ -180,6 +186,8 @@ export async function bulkApproveVolunteersAction(ids: string[]) {
 }
 
 export async function bulkImportVolunteersAction(records: any[]) {
+  await checkAuth();
+  const { headers } = await import('next/headers')
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`bulk_vol_${ip}`, 5, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -187,11 +195,11 @@ export async function bulkImportVolunteersAction(records: any[]) {
   const parsed = bulkImportVolunteerSchema.safeParse(records)
   if (!parsed.success) return { error: 'Invalid input data format in bulk import.', details: parsed.error.flatten() }
 
-  const supabase = await createClient()
-
   if (parsed.data.length === 0) {
     return { success: true, count: 0, duplicates: 0 }
   }
+
+  const supabase = await createClient()
 
   const { error } = await supabase.from('volunteers').insert(parsed.data)
   if (error) {
@@ -203,4 +211,27 @@ export async function bulkImportVolunteersAction(records: any[]) {
   revalidatePath('/head/volunteers')
   
   return { success: true, count: records.length, duplicates: 0 }
+}
+
+export async function uploadVolunteerPhotoAction(formData: FormData) {
+  await checkAuth()
+  const file = formData.get('file') as File | null
+  if (!file) throw new Error('No file provided')
+
+  const fileExt = 'jpg'
+  const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
+  const filePath = `${fileName}`
+
+  const supabase = await createClient()
+  const { data, error: uploadError } = await supabase.storage
+    .from('volunteer-photos')
+    .upload(filePath, file)
+
+  if (uploadError) throw new Error(uploadError.message)
+
+  const { data: urlData } = supabase.storage
+    .from('volunteer-photos')
+    .getPublicUrl(filePath)
+
+  return { publicUrl: urlData.publicUrl }
 }

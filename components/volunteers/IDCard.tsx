@@ -1,4 +1,5 @@
 import { QRCodeSVG } from 'qrcode.react'
+import Image from 'next/image'
 
 interface IDCardProps {
   volunteer: {
@@ -18,6 +19,24 @@ interface IDCardProps {
   side?: 'front' | 'back'
 }
 
+const CardWrapper = ({ children, width, height }: { children: React.ReactNode, width: string, height: string }) => (
+  <div 
+    className="relative bg-white flex flex-col items-center select-none overflow-hidden"
+    style={{ 
+      width: width, 
+      height: height,
+      outline: '0.5px solid #ccc',
+      outlineOffset: '-0.5px'
+    }}
+  >
+    <div className="absolute top-0 left-0 w-1 h-1 border-t border-l border-black z-50"></div>
+    <div className="absolute top-0 right-0 w-1 h-1 border-t border-r border-black z-50"></div>
+    <div className="absolute bottom-0 left-0 w-1 h-1 border-b border-l border-black z-50"></div>
+    <div className="absolute bottom-0 right-0 w-1 h-1 border-b border-r border-black z-50"></div>
+    {children}
+  </div>
+)
+
 export function IDCard({ volunteer, size = 'standard', side = 'front' }: IDCardProps) {
   const displayId = volunteer.snk_id || volunteer.id.substring(0, 8).toUpperCase()
   
@@ -29,36 +48,18 @@ export function IDCard({ volunteer, size = 'standard', side = 'front' }: IDCardP
     mobile: volunteer.mobile
   })
 
+  const dims = size === 'standard' 
+    ? { width: '54mm', height: '86mm', photo: { w: '30mm', h: '35mm' }, qr: 64 } 
+    : { width: '60mm', height: '95mm', photo: { w: '34mm', h: '40mm' }, qr: 76 }
+
   // Verification URL for back QR
   // Always use the live domain so cards printed from localhost still scan correctly!
   const baseUrl = 'https://keidportal.qzz.io'
   const verifyUrl = `${baseUrl}/verify/${volunteer.id}`
 
-  const dims = size === 'standard' 
-    ? { width: '54mm', height: '86mm', photo: { w: '30mm', h: '35mm' }, qr: 64 } 
-    : { width: '60mm', height: '95mm', photo: { w: '34mm', h: '40mm' }, qr: 76 }
-
-  const CardWrapper = ({ children }: { children: React.ReactNode }) => (
-    <div 
-      className="relative bg-white flex flex-col items-center select-none overflow-hidden"
-      style={{ 
-        width: dims.width, 
-        height: dims.height,
-        outline: '0.5px solid #ccc',
-        outlineOffset: '-0.5px'
-      }}
-    >
-      <div className="absolute top-0 left-0 w-1 h-1 border-t border-l border-black z-50"></div>
-      <div className="absolute top-0 right-0 w-1 h-1 border-t border-r border-black z-50"></div>
-      <div className="absolute bottom-0 left-0 w-1 h-1 border-b border-l border-black z-50"></div>
-      <div className="absolute bottom-0 right-0 w-1 h-1 border-b border-r border-black z-50"></div>
-      {children}
-    </div>
-  )
-
   if (side === 'front') {
     return (
-      <CardWrapper>
+      <CardWrapper width={dims.width} height={dims.height}>
         {/* Accommodation Indicator (Top Right Edge) */}
         <div 
           className={`absolute top-[20mm] right-0 w-[3mm] h-[6mm] rounded-l-full z-40 border border-r-0 border-white/50 shadow-sm ${
@@ -90,8 +91,7 @@ export function IDCard({ volunteer, size = 'standard', side = 'front' }: IDCardP
               style={{ width: dims.photo.w, height: dims.photo.h }}
             >
               {volunteer.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={volunteer.photoUrl} alt={volunteer.name} className="w-full h-full object-cover" />
+                <Image src={volunteer.photoUrl} alt={`${volunteer.name}'s portrait`} width={120} height={150} unoptimized className="w-full h-full object-cover" />
               ) : (
                 <span className="text-[8px] font-bold text-gray-300 uppercase tracking-widest">Photo</span>
               )}
@@ -144,7 +144,7 @@ export function IDCard({ volunteer, size = 'standard', side = 'front' }: IDCardP
 
   // Back Side
   return (
-    <CardWrapper>
+    <CardWrapper width={dims.width} height={dims.height}>
       {/* Header */}
       <div 
         className="w-full bg-[#111] text-white flex flex-col justify-center items-center"

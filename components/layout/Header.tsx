@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { User, Menu } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { getCurrentUserAction } from '@/server/actions/auth'
 
 interface HeaderProps {
   userName?: string
@@ -11,27 +11,21 @@ interface HeaderProps {
 }
 
 export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }: HeaderProps) {
-  const [displayName, setDisplayName] = useState(userName)
-  const supabase = createClient()
+  const [fetchedName, setFetchedName] = useState<string | null>(null)
+  const displayName = fetchedName || userName
 
   useEffect(() => {
     async function getUserName() {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const user = await getCurrentUserAction()
         if (user) {
           if (user.user_metadata?.full_name) {
-            setDisplayName(user.user_metadata.full_name)
-            return
+            setFetchedName(user.user_metadata.full_name)
+          } else if (user.email) {
+            // Fallback if no full_name is present in metadata
+            setFetchedName(user.email.split('@')[0])
           }
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', user.id)
-            .single()
-          if (profile?.full_name) {
-            setDisplayName(profile.full_name)
-            return
-          }
+          return
         }
 
         const sessionUserStr = document.cookie
@@ -39,36 +33,20 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
           .find(row => row.startsWith('mock-user='))
           ?.split('=')[1]
 
-        if (sessionUserStr) {
-          const sessionUser = JSON.parse(decodeURIComponent(sessionUserStr))
-          if (sessionUser.email) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('email', sessionUser.email)
-              .single()
-            if (profile?.full_name) {
-              setDisplayName(profile.full_name)
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch user profile:', error)
-        const sessionUserStr = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('mock-user='))
-          ?.split('=')[1]
         if (sessionUserStr) {
           try {
             const sessionUser = JSON.parse(decodeURIComponent(sessionUserStr))
-            if (sessionUser.full_name) setDisplayName(sessionUser.full_name)
+            if (sessionUser.full_name) setFetchedName(sessionUser.full_name)
+            else if (sessionUser.email) setFetchedName(sessionUser.email.split('@')[0])
           } catch(e) {}
         }
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error)
       }
     }
 
     getUserName()
-  }, [userName, supabase])
+  }, [userName])
 
   const roleLabel =
     roleName === 'SUPER_ADMIN' ? 'Super Admin' :
@@ -83,6 +61,7 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
       <div className="flex items-center gap-3">
         {onToggleSidebar && (
           <button
+            type="button"
             onClick={onToggleSidebar}
             className="p-2 rounded-[10px] text-foreground/50 hover:bg-muted hover:text-foreground md:hidden transition-colors"
             aria-label="Toggle Sidebar"

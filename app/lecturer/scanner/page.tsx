@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, Suspense, useRef } from 'react'
+import React, { useState, useEffect, Suspense, useRef, useReducer, useCallback } from 'react'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Scanner } from '@yudiel/react-qr-scanner'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -11,10 +12,10 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { AlertCircle, CheckCircle, Clock, XCircle, Camera, Users, LogIn, LogOut, Wifi, WifiOff, RefreshCw, Activity } from 'lucide-react'
 import { toast } from 'sonner'
-import { getSessionsAction } from '@/app/actions/sessions'
+import { getSessionsAction } from '@/server/actions/sessions'
 import { formatSessionLabel } from '@/lib/formatters'
-import { recordAttendanceAction, bulkSyncAttendanceAction } from '@/app/actions/attendance'
-import { createClient } from '@/lib/supabase/client'
+import { recordAttendanceAction, bulkSyncAttendanceAction } from '@/server/actions/attendance'
+import { getCurrentUserAction } from '@/server/actions/auth'
 
 // Audio fallback if file isn't present
 const playBeep = () => {
@@ -35,29 +36,47 @@ function ScannerContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialSession = searchParams.get('session')
-  const supabase = createClient()
 
-  const [sessions, setSessions] = useState<any[]>([])
-  const [selectedSessionId, setSelectedSessionId] = useState<string>(initialSession || 'none')
-  const [mode, setMode] = useState<'check-in' | 'check-out'>('check-in')
-  
-  // Offline & Bulk Support
-  const [isOnline, setIsOnline] = useState(true)
-  const [isBulkMode, setIsBulkMode] = useState(false)
-  const [pendingScans, setPendingScans] = useState<any[]>([])
-  const [recentScans, setRecentScans] = useState<{id: string, time: Date, status: string, msg: string}[]>([])
-  const [isSyncing, setIsSyncing] = useState(false)
-  
-  const [lastScanResult, setLastScanResult] = useState<{status: 'success'|'error'|'late'|'offline', message: string, volunteer?: {name: string, photo: string | null}} | null>(null)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [manualId, setManualId] = useState('')
+  const [state, dispatch] = React.useReducer(
+    (state: any, action: any) => typeof action === 'function' ? { ...state, ...action(state) } : { ...state, ...action },
+    {
+      sessions: [],
+      selectedSessionId: initialSession || 'none',
+      mode: 'check-in',
+      isOnline: true,
+      isBulkMode: false,
+      pendingScans: [],
+      recentScans: [],
+      isSyncing: false,
+      lastScanResult: null,
+      isProcessing: false,
+      manualId: ''
+    }
+  )
+
+  const {
+    sessions, selectedSessionId, mode, isOnline, isBulkMode,
+    pendingScans, recentScans, isSyncing, lastScanResult, isProcessing, manualId
+  } = state
+
+  const setSessions = useCallback((v: any) => dispatch((s: any) => ({ sessions: typeof v === 'function' ? v(s.sessions) : v })), [])
+  const setSelectedSessionId = useCallback((v: any) => dispatch((s: any) => ({ selectedSessionId: typeof v === 'function' ? v(s.selectedSessionId) : v })), [])
+  const setMode = useCallback((v: any) => dispatch((s: any) => ({ mode: typeof v === 'function' ? v(s.mode) : v })), [])
+  const setIsOnline = useCallback((v: any) => dispatch((s: any) => ({ isOnline: typeof v === 'function' ? v(s.isOnline) : v })), [])
+  const setIsBulkMode = useCallback((v: any) => dispatch((s: any) => ({ isBulkMode: typeof v === 'function' ? v(s.isBulkMode) : v })), [])
+  const setPendingScans = useCallback((v: any) => dispatch((s: any) => ({ pendingScans: typeof v === 'function' ? v(s.pendingScans) : v })), [])
+  const setRecentScans = useCallback((v: any) => dispatch((s: any) => ({ recentScans: typeof v === 'function' ? v(s.recentScans) : v })), [])
+  const setIsSyncing = useCallback((v: any) => dispatch((s: any) => ({ isSyncing: typeof v === 'function' ? v(s.isSyncing) : v })), [])
+  const setLastScanResult = useCallback((v: any) => dispatch((s: any) => ({ lastScanResult: typeof v === 'function' ? v(s.lastScanResult) : v })), [])
+  const setIsProcessing = useCallback((v: any) => dispatch((s: any) => ({ isProcessing: typeof v === 'function' ? v(s.isProcessing) : v })), [])
+  const setManualId = useCallback((v: any) => dispatch((s: any) => ({ manualId: typeof v === 'function' ? v(s.manualId) : v })), [])
 
   const lastScannedIdRef = useRef<{id: string, time: number} | null>(null)
 
   // 1. Load Sessions & Offline Data
   useEffect(() => {
       async function loadSessions() {
-          const { data: { user } } = await supabase.auth.getUser()
+          const user = await getCurrentUserAction()
           if (!user) return
           try {
             const role = user.user_metadata?.role
@@ -65,17 +84,17 @@ function ScannerContent() {
             const res = await getSessionsAction(1, 100, '', 'all', lecturerFilter)
             setSessions(res.data || [])
             // Save sessions locally for offline use
-            localStorage.setItem('lecturer_sessions', JSON.stringify(res.data || []))
+            localStorage.setItem('lecturer_sessions:v1', JSON.stringify(res.data || []))
           } catch (e) {
               // Fallback to local
-              const localSessions = localStorage.getItem('lecturer_sessions')
+              const localSessions = localStorage.getItem('lecturer_sessions:v1')
               if (localSessions) setSessions(JSON.parse(localSessions))
           }
       }
       loadSessions()
 
       // Load pending scans
-      const localScans = localStorage.getItem('pending_scans')
+      const localScans = localStorage.getItem('pending-scans:v1')
       if (localScans) setPendingScans(JSON.parse(localScans))
 
       // Network Listeners
@@ -89,17 +108,9 @@ function ScannerContent() {
           window.removeEventListener('online', handleOnline)
           window.removeEventListener('offline', handleOffline)
       }
-  }, [supabase.auth])
+  }, [setSessions, setPendingScans, setIsOnline])
 
-  // 2. Auto Sync
-  useEffect(() => {
-      if (isOnline && pendingScans.length > 0 && !isSyncing) {
-          syncPendingScans()
-      }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOnline])
-
-  const syncPendingScans = async () => {
+  const syncPendingScans = useCallback(async () => {
       if (pendingScans.length === 0 || isSyncing) return
       setIsSyncing(true)
       toast('Syncing offline scans...')
@@ -108,7 +119,7 @@ function ScannerContent() {
           if (res?.success) {
               toast.success(`Successfully synced ${pendingScans.length} offline scans!`)
               setPendingScans([])
-              localStorage.removeItem('pending_scans')
+              localStorage.removeItem('pending-scans:v1')
           } else {
               throw new Error('Sync failed')
           }
@@ -117,17 +128,24 @@ function ScannerContent() {
       } finally {
           setIsSyncing(false)
       }
-  }
+  }, [pendingScans, isSyncing, setPendingScans, setIsSyncing])
+
+  // 2. Auto Sync
+  useEffect(() => {
+      if (isOnline && pendingScans.length > 0 && !isSyncing) {
+          syncPendingScans()
+      }
+  }, [isOnline, pendingScans.length, isSyncing, syncPendingScans])
 
   const pushRecentScan = (id: string, status: string, msg: string) => {
-      setRecentScans(prev => [{ id, time: new Date(), status, msg }, ...prev].slice(0, 5))
+      setRecentScans((prev: any) => [{ id, time: new Date(), status, msg }, ...prev].slice(0, 5))
   }
 
   const saveToOffline = (data: string, sessionId: string, scanMode: string, timestamp: string) => {
       const newScan = { scanData: data, sessionId, mode: scanMode, timestamp }
-      setPendingScans(prev => {
+      setPendingScans((prev: any) => {
           const updated = [...prev, newScan]
-          localStorage.setItem('pending_scans', JSON.stringify(updated))
+          localStorage.setItem('pending-scans:v1', JSON.stringify(updated))
           return updated
       })
       setLastScanResult({ status: 'offline', message: `Saved offline: ${data}` })
@@ -238,9 +256,9 @@ function ScannerContent() {
                     </div>
                 )}
                 {pendingScans.length > 0 && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-950 rounded-full text-xs font-bold backdrop-blur-md border border-amber-400/20 cursor-pointer" onClick={syncPendingScans}>
+                    <button type="button" className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-950 rounded-full text-xs font-bold backdrop-blur-md border border-amber-400/20 cursor-pointer" onClick={syncPendingScans}>
                         <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} /> {pendingScans.length} PENDING SYNC
-                    </div>
+                    </button>
                 )}
             </div>
             <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">QR Attendance Scanner</h1>
@@ -253,13 +271,13 @@ function ScannerContent() {
                 <SelectTrigger className="w-full sm:w-[250px] bg-white text-zinc-900 border-none font-semibold">
                     <span data-slot="select-value" className="flex flex-1 text-left truncate">
                       {selectedSessionId !== 'none' && sessions.length > 0
-                        ? formatSessionLabel(sessions.find(s => s.id === selectedSessionId))
+                        ? formatSessionLabel(sessions.find((s: any) => s.id === selectedSessionId))
                         : "-- Select Session --"}
                     </span>
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="none">-- Select Session --</SelectItem>
-                    {sessions.map(s => (
+                    {sessions.map((s: any) => (
                         <SelectItem key={s.id} value={s.id} label={formatSessionLabel(s)}>{formatSessionLabel(s)}</SelectItem>
                     ))}
                 </SelectContent>
@@ -344,8 +362,7 @@ function ScannerContent() {
                           }`}>
                               <div className="flex items-center gap-4">
                                   {lastScanResult.volunteer?.photo ? (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img src={lastScanResult.volunteer.photo} alt="Volunteer" className="w-16 h-16 rounded-full border-2 border-white shadow-md object-cover shrink-0 bg-white/20" />
+                                      <Image src={lastScanResult.volunteer.photo} alt={`${lastScanResult.volunteer.name || 'Volunteer'}'s profile avatar`} width={64} height={64} unoptimized className="w-16 h-16 rounded-full border-2 border-white shadow-md object-cover shrink-0 bg-white/20" />
                                   ) : (
                                       <div className="w-16 h-16 rounded-full border-2 border-white/50 bg-white/10 flex items-center justify-center shrink-0 shadow-md">
                                           {lastScanResult.status === 'success' && <CheckCircle className="w-8 h-8 opacity-80" />}
@@ -383,8 +400,8 @@ function ScannerContent() {
                                   <p className="text-sm text-muted-foreground text-center py-8">Waiting for scans...</p>
                               ) : (
                                   <div className="space-y-2">
-                                      {recentScans.map((r, i) => (
-                                          <div key={i} className={`text-xs p-2 rounded-lg border flex justify-between items-center ${
+                                      {recentScans.map((r: any, i: number) => (
+                                          <div key={r.time.getTime() + '-' + i} className={`text-xs p-2 rounded-lg border flex justify-between items-center ${
                                               r.status === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-900' :
                                               r.status === 'late' ? 'bg-amber-50 border-amber-100 text-amber-900' :
                                               r.status === 'offline' ? 'bg-zinc-100 border-zinc-200 text-zinc-900' :

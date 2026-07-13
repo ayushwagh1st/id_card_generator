@@ -112,7 +112,11 @@ export async function updateSession(request: NextRequest) {
       ) {
         const urlObj = request.nextUrl.clone()
         urlObj.pathname = '/login'
-        return NextResponse.redirect(urlObj)
+        const redirectResponse = NextResponse.redirect(urlObj)
+        supabaseResponse.cookies.getAll().forEach((cookie) => {
+          redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+        })
+        return redirectResponse
       }
       return supabaseResponse
     }
@@ -132,15 +136,27 @@ export async function updateSession(request: NextRequest) {
 
     // Enforce role checks for real auth
     if (request.nextUrl.pathname.startsWith('/admin') && role !== 'SUPER_ADMIN') {
-      return NextResponse.redirect(new URL('/login', request.url))
+      const redirectResponse = NextResponse.redirect(new URL('/login', request.url))
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+      })
+      return redirectResponse
     }
 
     if (request.nextUrl.pathname.startsWith('/head') && role !== 'MODEL_HEAD') {
-      return NextResponse.redirect(new URL('/login', request.url))
+      const redirectResponse = NextResponse.redirect(new URL('/login', request.url))
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+      })
+      return redirectResponse
     }
 
     if (request.nextUrl.pathname.startsWith('/lecturer') && role !== 'LECTURER') {
-      return NextResponse.redirect(new URL('/login', request.url))
+      const redirectResponse = NextResponse.redirect(new URL('/login', request.url))
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+      })
+      return redirectResponse
     }
 
   } catch (err) {
@@ -151,7 +167,11 @@ export async function updateSession(request: NextRequest) {
     ) {
       const urlObj = request.nextUrl.clone()
       urlObj.pathname = '/login'
-      return NextResponse.redirect(urlObj)
+      const redirectResponse = NextResponse.redirect(urlObj)
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+      })
+      return redirectResponse
     }
   }
 

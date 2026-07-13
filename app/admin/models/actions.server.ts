@@ -1,9 +1,11 @@
 'use server'
+import { checkAuth } from '@/lib/supabase/server'
 
 import { createClient } from '@supabase/supabase-js'
 import { sendRegistrationEmail } from '@/lib/email'
 
 export async function createModelHeadAction(formData: FormData) {
+  await checkAuth();
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
@@ -46,8 +48,8 @@ export async function createModelHeadAction(formData: FormData) {
     return { error: 'Failed to create user. Unknown error.' }
   }
 
-  // 2. Try to manually insert into profiles
-  const { error: profileError } = await supabaseAdmin.from('profiles').insert({
+  // 2. Upsert into profiles to handle potential DB triggers that auto-create the row
+  const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
     id: authData.user.id,
     email: email,
     full_name: fullName,
@@ -56,9 +58,7 @@ export async function createModelHeadAction(formData: FormData) {
   })
 
   if (profileError) {
-    if (profileError.code !== '23505') {
-      console.warn('Profile insertion error:', profileError)
-    }
+    console.error('Profile upsert error:', profileError)
   }
 
   // 3. Send Email via Resend
@@ -74,6 +74,7 @@ export async function createModelHeadAction(formData: FormData) {
 }
 
 export async function updateModelHeadAction(id: string, formData: FormData) {
+  await checkAuth();
   const email = formData.get('email') as string
   const fullName = formData.get('fullName') as string
 
@@ -104,13 +105,16 @@ export async function updateModelHeadAction(id: string, formData: FormData) {
     full_name: fullName
   }).eq('id', id)
 
-  if (profileError) return { error: profileError.message }
+  if (profileError) {
+    console.error('Profile update error:', profileError)
+  }
 
   return { success: true }
 }
 
 export async function resetModelHeadPasswordAction(id: string, newPassword: string) {
   if (!newPassword || newPassword.length < 6) return { error: 'Password must be at least 6 characters.' }
+  await checkAuth();
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -136,6 +140,7 @@ export async function resetModelHeadPasswordAction(id: string, newPassword: stri
 }
 
 export async function deleteModelHeadAction(id: string) {
+  await checkAuth();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!supabaseUrl || !serviceRoleKey) return { error: 'Missing environment variables.' }
@@ -144,10 +149,71 @@ export async function deleteModelHeadAction(id: string) {
     auth: { autoRefreshToken: false, persistSession: false }
   })
 
-  // Profile is usually deleted via CASCADE, but we explicitly delete both to be safe
-  const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id)
-  if (authError) return { error: authError.message }
+  // 1. Delete from profiles first
+  const { error: profileError } = await supabaseAdmin.from('profiles').delete().eq('id', id)
+  if (profileError) {
+    console.error('Error deleting profile:', profileError)
+    return { error: 'Failed to delete profile.' }
+  }
 
+  // 2. Delete from auth (ignore not found errors if profile was already deleted)
+  const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id)
+  if (authError) {
+    console.error('Error deleting auth user (may already be deleted):', authError.message)
+  }
+
+  return { success: true }
+}
+
+import { createClient as createServerClient } from '@/lib/supabase/server'
+
+export async function getHeadsDataAction() {
+  await checkAuth();
+  const supabase = await createServerClient();
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, email, temp_password, created_at')
+    .eq('role', 'MODEL_HEAD')
+    .order('full_name')
+  if (error) throw new Error(error.message)
+  return profiles || []
+}
+
+export async function getModelsDataAction() {
+  await checkAuth();
+  const supabase = await createServerClient();
+  const { data, error } = await supabase
+    .from('models')
+    .select(`
+      id, name, exhibition_category, description, status, head_id,
+      profiles:head_id (full_name, email)
+    `)
+    .order('name')
+  if (error) throw new Error(error.message)
+  return data || []
+}
+
+export async function createModelAction(payload: any) {
+  await checkAuth();
+  const supabase = await createServerClient();
+  const { error } = await supabase.from('models').insert(payload)
+  if (error) throw new Error(error.message)
+  return { success: true }
+}
+
+export async function updateModelAction(id: string, payload: any) {
+  await checkAuth();
+  const supabase = await createServerClient();
+  const { error } = await supabase.from('models').update(payload).eq('id', id)
+  if (error) throw new Error(error.message)
+  return { success: true }
+}
+
+export async function deleteModelAction(id: string) {
+  await checkAuth();
+  const supabase = await createServerClient();
+  const { error } = await supabase.from('models').delete().eq('id', id)
+  if (error) throw new Error(error.message)
   return { success: true }
 }
 

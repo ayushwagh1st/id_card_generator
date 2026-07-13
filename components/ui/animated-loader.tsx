@@ -2,14 +2,16 @@ import Image from 'next/image'
 
 export function AnimatedLoader({ className = "w-6 h-6", text }: { className?: string; text?: string }) {
   if (!text) {
-    return <img src="/loader.svg" alt="Loading..." className={className} />
+    return <Image src="/loader.svg" alt="Loading..." width={24} height={24} className={className} />
   }
 
   return (
     <div className="flex items-center gap-2">
-      <img 
+      <Image 
         src="/loader.svg" 
         alt="Loading..." 
+        width={24} 
+        height={24}
         className={className}
       />
       <span className="text-sm font-semibold">{text}</span>

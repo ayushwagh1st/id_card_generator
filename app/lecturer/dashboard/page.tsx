@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Calendar, Activity } from 'lucide-react'
-import { getLecturerStatsAction } from '@/app/actions/attendance'
+import { getLecturerStatsAction } from '@/server/actions/attendance'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import Image from 'next/image'
@@ -75,9 +75,9 @@ export default function LecturerDashboard() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statItems.map((stat, i) => (
+        {statItems.map((stat) => (
           <div
-            key={i}
+            key={stat.title}
             className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl"
           >
             <div className={`icon-tile ${stat.tileClass} w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white`}>

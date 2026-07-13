@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useReducer } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,62 +25,59 @@ import { toast } from 'sonner'
 import { exportToPDF } from '@/lib/pdf'
 import { formatHeadLabel } from '@/lib/formatters'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
+import { getHeadsDataAction, getModelsDataAction, createModelAction, updateModelAction, deleteModelAction } from './actions.server'
+
 export default function ModelsPage() {
-  const [models, setModels] = useState<any[]>([])
-  const [heads, setHeads] = useState<any[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [loading, setLoading] = useState(true)
-  
-  // Form states
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [isEditOpen, setIsEditOpen] = useState(false)
-  const [currentModel, setCurrentModel] = useState<any>(null)
-  
-  const [name, setName] = useState('')
-  const [category, setCategory] = useState('')
-  const [description, setDescription] = useState('')
-  const [headId, setHeadId] = useState('none')
-  const [status, setStatus] = useState('Active')
+  const [state, dispatch] = useReducer(
+    (state: any, action: any) => {
+      switch (action.type) {
+        case 'SET_DATA':
+          return { ...state, models: action.payload.models, heads: action.payload.heads, loading: false }
+        case 'SET_LOADING':
+          return { ...state, loading: action.payload }
+        case 'SET_SEARCH_TERM':
+          return { ...state, searchTerm: action.payload }
+        case 'SET_FORM_FIELD':
+          return { ...state, [action.field]: action.value }
+        case 'OPEN_ADD':
+          return { ...state, isAddOpen: true, name: '', category: '', description: '', headId: 'none', status: 'Active' }
+        case 'CLOSE_ADD':
+          return { ...state, isAddOpen: false }
+        case 'OPEN_EDIT':
+          return {
+            ...state,
+            isEditOpen: true,
+            currentModel: action.payload,
+            name: action.payload.name,
+            category: action.payload.exhibition_category || '',
+            description: action.payload.description || '',
+            headId: action.payload.head_id || 'none',
+            status: action.payload.status || 'Active'
+          }
+        case 'CLOSE_EDIT':
+          return { ...state, isEditOpen: false, currentModel: null }
+        default:
+          return state
+      }
+    },
+    {
+      models: [], heads: [], searchTerm: '', loading: true,
+      isAddOpen: false, isEditOpen: false, currentModel: null,
+      name: '', category: '', description: '', headId: 'none', status: 'Active'
+    }
+  )
 
-  const supabase = createClient()
-
-  // Fetch models and heads from Supabase
   const fetchData = async () => {
-    setLoading(true)
+    dispatch({ type: 'SET_LOADING', payload: true })
     try {
-      // 1. Fetch profiles of Model Heads
-      const { data: profiles, error: profilesErr } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .eq('role', 'MODEL_HEAD')
-      
-      if (profilesErr) throw profilesErr
-      setHeads(profiles || [])
-
-      // 2. Fetch models
-      const { data: modelsData, error: modelsErr } = await supabase
-        .from('models')
-        .select(`
-          id,
-          name,
-          exhibition_category,
-          description,
-          status,
-          head_id,
-          profiles:head_id (
-            full_name,
-            email
-          )
-        `)
-        .order('name')
-      
-      if (modelsErr) throw modelsErr
-      setModels(modelsData || [])
+      const [headsData, modelsData] = await Promise.all([
+        getHeadsDataAction(),
+        getModelsDataAction()
+      ])
+      dispatch({ type: 'SET_DATA', payload: { heads: headsData, models: modelsData } })
     } catch (err: any) {
       toast.error(err.message || 'Error loading database records')
-    } finally {
-      setLoading(false)
+      dispatch({ type: 'SET_LOADING', payload: false })
     }
   }
 
@@ -88,85 +85,49 @@ export default function ModelsPage() {
     fetchData()
   }, [])
 
-  // Create Model
   const handleCreateModel = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim()) return toast.error('Model Name is required')
+    if (!state.name.trim()) return toast.error('Model Name is required')
 
     try {
-      const payload: any = {
-        name,
-        exhibition_category: category,
-        description,
-        status,
-        head_id: headId === 'none' ? null : headId
-      }
-
-      const { error } = await supabase.from('models').insert(payload)
-      if (error) throw error
-
+      await createModelAction({
+        name: state.name,
+        exhibition_category: state.category,
+        description: state.description,
+        status: state.status,
+        head_id: state.headId === 'none' ? null : state.headId
+      })
       toast.success('Model created successfully')
-      setIsAddOpen(false)
-      // Reset form
-      setName('')
-      setCategory('')
-      setDescription('')
-      setHeadId('none')
-      setStatus('Active')
-      
+      dispatch({ type: 'CLOSE_ADD' })
       fetchData()
     } catch (err: any) {
       toast.error(err.message || 'Could not create model')
     }
   }
 
-  // Edit Model Prep
-  const openEditDialog = (model: any) => {
-    setCurrentModel(model)
-    setName(model.name)
-    setCategory(model.exhibition_category || '')
-    setDescription(model.description || '')
-    setHeadId(model.head_id || 'none')
-    setStatus(model.status)
-    setIsEditOpen(true)
-  }
-
-  // Update Model
   const handleUpdateModel = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!currentModel) return
+    if (!state.currentModel) return
 
     try {
-      const payload = {
-        name,
-        exhibition_category: category,
-        description,
-        status,
-        head_id: headId === 'none' ? null : headId
-      }
-
-      const { error } = await supabase
-        .from('models')
-        .update(payload)
-        .eq('id', currentModel.id)
-
-      if (error) throw error
-
+      await updateModelAction(state.currentModel.id, {
+        name: state.name,
+        exhibition_category: state.category,
+        description: state.description,
+        status: state.status,
+        head_id: state.headId === 'none' ? null : state.headId
+      })
       toast.success('Model updated successfully')
-      setIsEditOpen(false)
+      dispatch({ type: 'CLOSE_EDIT' })
       fetchData()
     } catch (err: any) {
       toast.error(err.message || 'Could not update model')
     }
   }
 
-
-
   const handleDeleteModel = async (id: string) => {
-
     try {
-      const { error } = await supabase.from('models').delete().eq('id', id)
-      if (error) throw error
+      await deleteModelAction(id)
       toast.success('Model deleted successfully')
       fetchData()
     } catch (err: any) {
@@ -175,16 +136,16 @@ export default function ModelsPage() {
   }
 
   const handleExportCSV = () => {
-    if (models.length === 0) return
+    if (state.models.length === 0) return
     const headers = ['Model Name', 'Category', 'Description', 'Model Head', 'Status']
-    const rows = models.map(m => [
+    const rows = state.models.map((m: any) => [
         m.name,
         m.exhibition_category || '',
         m.description || '',
         m.profiles?.full_name || 'Unassigned',
         m.status || 'Active'
     ])
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => `"${e.join('","')}"`)].join("\n")
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map((e: any) => `"${e.join('","')}"`)].join("\n")
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement("a")
     link.setAttribute("href", encodedUri)
@@ -195,9 +156,9 @@ export default function ModelsPage() {
   }
 
   const handleExportPDF = () => {
-    if (models.length === 0) return
+    if (state.models.length === 0) return
     const headers = ['Model Name', 'Category', 'Description', 'Model Head', 'Status']
-    const rows = models.map(m => [
+    const rows = state.models.map((m: any) => [
         m.name,
         m.exhibition_category || '',
         m.description || '',
@@ -214,14 +175,14 @@ export default function ModelsPage() {
     })
   }
 
-  const filteredModels = models.filter(m => 
-    m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (m.exhibition_category && m.exhibition_category.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (m.profiles && m.profiles.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredModels = state.models.filter((m: any) => 
+    m.name.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+    (m.exhibition_category && m.exhibition_category.toLowerCase().includes(state.searchTerm.toLowerCase())) ||
+    (m.profiles && m.profiles.full_name.toLowerCase().includes(state.searchTerm.toLowerCase()))
   )
 
-  const activeModelsCount = models.filter(m => m.status === 'Active').length
-  const assignedHeadsCount = models.filter(m => m.head_id !== null).length
+  const activeModelsCount = state.models.filter((m: any) => m.status === 'Active').length
+  const assignedHeadsCount = state.models.filter((m: any) => m.head_id !== null).length
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -245,7 +206,7 @@ export default function ModelsPage() {
             <Image src="/images/icons/icon_database.png" alt="Models" width={56} height={56} className="object-cover" />
           </div>
           <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{models.length}</div>
+            <div className="font-display font-bold text-3xl text-ink leading-none">{state.models.length}</div>
             <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Total Models</div>
           </div>
         </div>
@@ -265,7 +226,7 @@ export default function ModelsPage() {
             <Image src="/images/icons/icon_users.png" alt="Heads" width={56} height={56} className="object-cover" />
           </div>
           <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{assignedHeadsCount} / {heads.length}</div>
+            <div className="font-display font-bold text-3xl text-ink leading-none">{assignedHeadsCount} / {state.heads.length}</div>
             <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Assigned Heads</div>
           </div>
         </div>
@@ -279,8 +240,8 @@ export default function ModelsPage() {
             type="search"
             placeholder="Search models, categories, heads..."
             className="pl-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={state.searchTerm}
+            onChange={(e) => dispatch({ type: 'SET_SEARCH_TERM', payload: e.target.value })}
           />
         </div>
 
@@ -294,9 +255,9 @@ export default function ModelsPage() {
           </Button>
 
           {/* Add Model Dialog */}
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger render={<Button className="w-full sm:w-auto" />}>
-              <Plus className="h-4 w-4" />
+          <Dialog open={state.isAddOpen} onOpenChange={(val) => val ? dispatch({ type: 'OPEN_ADD' }) : dispatch({ type: 'CLOSE_ADD' })}>
+            <DialogTrigger render={<Button className="w-full sm:w-auto px-5 gap-2" />}>
+              <Plus className="h-4 w-4 mr-2" />
               Add Exhibition Model
             </DialogTrigger>
             <DialogContent className="sm:max-w-md rounded-xl">
@@ -309,44 +270,44 @@ export default function ModelsPage() {
             <form onSubmit={handleCreateModel} className="space-y-4 py-2">
               <div className="space-y-1.5">
                 <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Model Name</Label>
-                <Input id="name" placeholder="e.g. Ground Traffic" value={name} onChange={e => setName(e.target.value)} required />
+                <Input id="name" placeholder="e.g. Ground Traffic" value={state.name} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'name', value: e.target.value })} required />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="category" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</Label>
-                <Input id="category" placeholder="e.g. Logistics" value={category} onChange={e => setCategory(e.target.value)} />
+                <Input id="category" placeholder="e.g. Logistics" value={state.category} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'category', value: e.target.value })} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</Label>
-                <Input id="description" placeholder="Brief duty details" value={description} onChange={e => setDescription(e.target.value)} />
+                <Input id="description" placeholder="Brief duty details" value={state.description} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'description', value: e.target.value })} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="head" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Model Head Assignment</Label>
-                <Select value={headId} onValueChange={(val) => setHeadId(val || 'none')}>
+                <Select value={state.headId} onValueChange={(val) => dispatch({ type: 'SET_FORM_FIELD', field: 'headId', value: val || 'none' })}>
                   <SelectTrigger id="head">
                     <SelectValue placeholder="Select a Model Head" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none" label="No Head Assigned">No Head Assigned</SelectItem>
-                    {heads.map(h => (
-                      <SelectItem key={h.id} value={h.id} label={formatHeadLabel(h)}>{formatHeadLabel(h)}</SelectItem>
+                    <SelectItem value="none">No Head Assigned</SelectItem>
+                    {state.heads.map((h: any) => (
+                      <SelectItem key={h.id} value={h.id}>{formatHeadLabel(h)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="status" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</Label>
-                <Select value={status} onValueChange={(val) => setStatus(val || 'Active')}>
+                <Select value={state.status} onValueChange={(val) => dispatch({ type: 'SET_FORM_FIELD', field: 'status', value: val || 'Active' })}>
                   <SelectTrigger id="status">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Active" label="Active">Active</SelectItem>
-                    <SelectItem value="Inactive" label="Inactive">Inactive</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <DialogFooter className="pt-2">
-                <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
+                <Button type="button" variant="outline" onClick={() => dispatch({ type: 'CLOSE_ADD' })}>Cancel</Button>
                 <Button type="submit">Create Model</Button>
               </DialogFooter>
             </form>
@@ -356,7 +317,7 @@ export default function ModelsPage() {
     </div>
 
       {/* Edit Model Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+      <Dialog open={state.isEditOpen} onOpenChange={(val) => !val && dispatch({ type: 'CLOSE_EDIT' })}>
         <DialogContent className="sm:max-w-md rounded-xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold tracking-tight">Edit Model Details</DialogTitle>
@@ -367,44 +328,44 @@ export default function ModelsPage() {
           <form onSubmit={handleUpdateModel} className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="edit-name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Model Name</Label>
-              <Input id="edit-name" value={name} onChange={e => setName(e.target.value)} required />
+              <Input id="edit-name" value={state.name} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'name', value: e.target.value })} required />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="edit-category" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</Label>
-              <Input id="edit-category" value={category} onChange={e => setCategory(e.target.value)} />
+              <Input id="edit-category" value={state.category} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'category', value: e.target.value })} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="edit-description" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</Label>
-              <Input id="edit-description" value={description} onChange={e => setDescription(e.target.value)} />
+              <Input id="edit-description" value={state.description} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'description', value: e.target.value })} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="edit-head" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Model Head Assignment</Label>
-              <Select value={headId} onValueChange={(val) => setHeadId(val || 'none')}>
+              <Select value={state.headId} onValueChange={(val) => dispatch({ type: 'SET_FORM_FIELD', field: 'headId', value: val || 'none' })}>
                 <SelectTrigger id="edit-head">
                   <SelectValue placeholder="Select a Model Head" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none" label="No Head Assigned">No Head Assigned</SelectItem>
-                  {heads.map(h => (
-                    <SelectItem key={h.id} value={h.id} label={formatHeadLabel(h)}>{formatHeadLabel(h)}</SelectItem>
+                  <SelectItem value="none">No Head Assigned</SelectItem>
+                  {state.heads.map((h: any) => (
+                    <SelectItem key={h.id} value={h.id}>{formatHeadLabel(h)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="edit-status" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</Label>
-              <Select value={status} onValueChange={(val) => setStatus(val || 'Active')}>
+              <Select value={state.status} onValueChange={(val) => dispatch({ type: 'SET_FORM_FIELD', field: 'status', value: val || 'Active' })}>
                 <SelectTrigger id="edit-status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Active" label="Active">Active</SelectItem>
-                  <SelectItem value="Inactive" label="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => dispatch({ type: 'CLOSE_EDIT' })}>Cancel</Button>
               <Button type="submit">Save changes</Button>
             </DialogFooter>
           </form>
@@ -414,7 +375,7 @@ export default function ModelsPage() {
       {/* Models Glassmorphism Table */}
       <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
         <div className="p-0">
-          {loading ? (
+          {state.loading ? (
             <div className="p-4 space-y-4">
               <div className="rounded-md border">
                 <div className="border-b px-4 py-3 flex gap-4 bg-muted/40">
@@ -453,7 +414,7 @@ export default function ModelsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredModels.map((model) => (
+                {filteredModels.map((model: any) => (
                   <TableRow key={model.id} className="hover:bg-muted/20 transition-colors duration-200">
                     <TableCell className="font-semibold text-sm text-foreground py-4 px-6">{model.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{model.exhibition_category || 'N/A'}</TableCell>
@@ -478,7 +439,7 @@ export default function ModelsPage() {
                     </TableCell>
                     <TableCell className="text-right py-4 px-6">
                       <div className="flex justify-end gap-1.5">
-                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(model)} className="hover:bg-primary/10 hover:text-primary rounded-xl">
+                        <Button variant="ghost" size="icon" onClick={() => dispatch({ type: 'OPEN_EDIT', payload: model })} className="hover:bg-primary/10 hover:text-primary rounded-xl">
                           <Edit className="h-4 w-4" />
                         </Button>
                         <AlertDialog>

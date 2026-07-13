@@ -1,112 +1,79 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import React, { useEffect, useRef, useReducer, useCallback } from 'react'
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
 import { useReactToPrint } from 'react-to-print'
-import { Printer, RefreshCw, Layers, ChevronLeft, Loader2, ZoomIn, ZoomOut, Maximize, ChevronRight } from 'lucide-react'
+import { Printer, RefreshCw, Layers, ChevronLeft, ChevronRight } from 'lucide-react'
 import { IDCard } from '@/components/volunteers/IDCard'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getPrintVolunteersAction } from './actions.server'
+import { PrintSettings } from './_components/PrintSettings'
+
+// Helper to reverse columns in a row so Back aligns with Front during Long Edge flip
+const mirrorPageForBack = (pageVols: any[]) => {
+  const mirrored = []
+  for (let i = 0; i < pageVols.length; i += 3) {
+    const row = pageVols.slice(i, i + 3)
+    // Pad empty slots with null to maintain column structural integrity
+    while (row.length < 3) row.push(null)
+    mirrored.push(...row.reverse())
+  }
+  return mirrored
+}
 
 export default function PrintCenter() {
-  const [volunteers, setVolunteers] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isFiltered, setIsFiltered] = useState(false)
-  const componentRef = useRef<HTMLDivElement>(null)
+  const [state, dispatch] = React.useReducer(
+    (state: any, action: any) => typeof action === 'function' ? { ...state, ...action(state) } : { ...state, ...action },
+    {
+      volunteers: [],
+      loading: true,
+      isFiltered: false,
+      cardSize: 'standard',
+      printMode: 'duplex',
+      zoom: 100,
+      currentBatch: 1
+    }
+  )
 
-  // Print settings
-  const [cardSize, setCardSize] = useState<'standard' | 'large'>('standard')
-  const [printMode, setPrintMode] = useState<'front' | 'back' | 'duplex'>('duplex')
-  const [zoom, setZoom] = useState(100)
-  
-  // Pagination & Chunking state
-  const [currentBatch, setCurrentBatch] = useState(1)
+  const { volunteers, loading, isFiltered, cardSize, printMode, zoom, currentBatch } = state
+
+  const setVolunteers = useCallback((v: any) => dispatch((s: any) => ({ volunteers: typeof v === 'function' ? v(s.volunteers) : v })), [])
+  const setLoading = useCallback((v: any) => dispatch((s: any) => ({ loading: typeof v === 'function' ? v(s.loading) : v })), [])
+  const setIsFiltered = useCallback((v: any) => dispatch((s: any) => ({ isFiltered: typeof v === 'function' ? v(s.isFiltered) : v })), [])
+  const setCardSize = useCallback((v: any) => dispatch((s: any) => ({ cardSize: typeof v === 'function' ? v(s.cardSize) : v })), [])
+  const setPrintMode = useCallback((v: any) => dispatch((s: any) => ({ printMode: typeof v === 'function' ? v(s.printMode) : v })), [])
+  const setZoom = useCallback((v: any) => dispatch((s: any) => ({ zoom: typeof v === 'function' ? v(s.zoom) : v })), [])
+  const setCurrentBatch = useCallback((v: any) => dispatch((s: any) => ({ currentBatch: typeof v === 'function' ? v(s.currentBatch) : v })), [])
   const SHEETS_PER_BATCH = 20 // 20 sheets max in DOM to prevent browser crash and memory leaks
 
-  const supabase = createClient()
-
-  const fetchPrintData = async () => {
+  const fetchPrintData = useCallback(async () => {
     setLoading(true)
     try {
-      const selectedIdsStr = localStorage.getItem('print-volunteer-ids')
-      let query = supabase
-        .from('volunteers')
-        .select(`
-          id,
-          snk_id,
-          full_name,
-          mobile_number,
-          gender,
-          age,
-          emergency_contact,
-          address,
-          role,
-          branch,
-          accommodation,
-          designation,
-          photo_url,
-          status,
-          models:model_id (
-            name,
-            profiles:head_id (
-              full_name
-            )
-          )
-        `)
-
+      const selectedIdsStr = localStorage.getItem('print-volunteer-ids:v1')
+      let selectedIds: string[] | null = null
       if (selectedIdsStr) {
-        const selectedIds = JSON.parse(selectedIdsStr)
-        if (selectedIds && selectedIds.length > 0) {
-          query = query.in('id', selectedIds)
-          setIsFiltered(true)
-        } else {
-          query = query.eq('status', 'Approved')
-          setIsFiltered(false)
-        }
-      } else {
-        query = query.eq('status', 'Approved')
-        setIsFiltered(false)
+        selectedIds = JSON.parse(selectedIdsStr)
       }
 
-      const { data, error } = await query
-      if (error) throw error
-
-      const mapped = (data || []).map(v => {
-        const modelObj = Array.isArray(v.models) ? v.models[0] : (v.models as any);
-        const headObj = modelObj?.profiles;
-        const headName = Array.isArray(headObj) ? (headObj[0] as any)?.full_name : (headObj as any)?.full_name || 'Unassigned';
-        
-        return {
-          id: v.id,
-          snk_id: v.snk_id,
-          name: v.full_name,
-          mobile: v.mobile_number,
-          model: modelObj?.name || 'Unassigned',
-          branch: v.branch,
-          accommodation: v.accommodation,
-          headName: headName,
-          role: v.designation || v.role || 'Volunteer',
-          photoUrl: v.photo_url,
-          emergencyContact: v.emergency_contact || 'N/A'
-        }
-      })
-
-      setVolunteers(mapped)
+      const { volunteers: fetchedVolunteers, isFiltered: filtered } = await getPrintVolunteersAction(selectedIds)
+      
+      setVolunteers(fetchedVolunteers)
+      setIsFiltered(filtered)
     } catch (err: any) {
       toast.error(err.message || 'Error fetching print records')
     } finally {
       setLoading(false)
     }
-  }
+  }, [setLoading, setVolunteers, setIsFiltered])
 
   useEffect(() => {
     fetchPrintData()
-  }, [])
+  }, [fetchPrintData])
+
+  const componentRef = useRef(null)
 
   const handlePrint = useReactToPrint({
     documentTitle: "Volunteer_ID_Cards",
@@ -138,17 +105,7 @@ export default function PrintCenter() {
     volunteerPages.push(volunteers.slice(i, i + CARDS_PER_PAGE))
   }
 
-  // Helper to reverse columns in a row so Back aligns with Front during Long Edge flip
-  const mirrorPageForBack = (pageVols: any[]) => {
-    const mirrored = []
-    for (let i = 0; i < pageVols.length; i += 3) {
-      const row = pageVols.slice(i, i + 3)
-      // Pad empty slots with null to maintain column structural integrity
-      while (row.length < 3) row.push(null)
-      mirrored.push(...row.reverse())
-    }
-    return mirrored
-  }
+
 
   // Build the array of print sheets based on selected mode
   const printSheets: { type: 'front' | 'back', data: any[], pageNum: number }[] = []
@@ -192,13 +149,13 @@ export default function PrintCenter() {
         <div className="flex flex-wrap gap-2 items-center">
           {totalBatches > 1 && (
             <div className="flex items-center gap-1 bg-muted p-1 rounded-xl mr-2">
-              <Button variant="ghost" size="icon" onClick={() => setCurrentBatch(b => Math.max(1, b - 1))} disabled={safeCurrentBatch === 1} className="h-8 w-8 rounded-lg hover:bg-background">
+              <Button variant="ghost" size="icon" onClick={() => setCurrentBatch((b: any) => Math.max(1, b - 1))} disabled={safeCurrentBatch === 1} className="h-8 w-8 rounded-lg hover:bg-background">
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <span className="text-[11px] font-bold px-2 text-muted-foreground uppercase tracking-wider">
                 Batch {safeCurrentBatch} of {totalBatches}
               </span>
-              <Button variant="ghost" size="icon" onClick={() => setCurrentBatch(b => Math.min(totalBatches, b + 1))} disabled={safeCurrentBatch === totalBatches} className="h-8 w-8 rounded-lg hover:bg-background">
+              <Button variant="ghost" size="icon" onClick={() => setCurrentBatch((b: any) => Math.min(totalBatches, b + 1))} disabled={safeCurrentBatch === totalBatches} className="h-8 w-8 rounded-lg hover:bg-background">
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
@@ -221,73 +178,14 @@ export default function PrintCenter() {
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         
         {/* Controls */}
-        <div className="xl:col-span-1 h-fit relative xl:sticky xl:top-6 z-10 mb-6 xl:mb-0 bento-white border-ink shadow-hard !p-0">
-          <CardHeader className="pb-4 bg-muted/20 border-b border-ink/10">
-            <CardTitle className="text-lg">Print Settings</CardTitle>
-            <CardDescription>Configure output dimensions and paper rules.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5 p-5">
-            
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-muted-foreground">Card Size</Label>
-              <Select value={cardSize} onValueChange={(v) => { if (v === 'standard' || v === 'large') setCardSize(v) }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="standard" label="Standard (54 x 86mm)">Standard (54 x 86mm)</SelectItem>
-                  <SelectItem value="large" label="Large (60 x 95mm)">Large (60 x 95mm)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-muted-foreground">Print Mode</Label>
-              <Select value={printMode} onValueChange={(v) => { if (v === 'front' || v === 'back' || v === 'duplex') setPrintMode(v) }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="duplex" label="Front + Back (Duplex)">Front + Back (Duplex)</SelectItem>
-                  <SelectItem value="front" label="Front Only">Front Only</SelectItem>
-                  <SelectItem value="back" label="Back Only">Back Only</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                {printMode === 'duplex' ? 'Standard Long-Edge binding flips automatically mirror the back.' : 'Single-sided rendering enabled.'}
-              </p>
-            </div>
-
-            <div className="pt-4 border-t border-dashed border-gray-200">
-              <div className="flex justify-between items-center mb-2">
-                <Label className="text-xs font-bold uppercase text-muted-foreground">Preview Zoom</Label>
-                <span className="text-xs font-bold">{zoom}%</span>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => setZoom(z => Math.max(50, z - 10))}>
-                  <ZoomOut className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => setZoom(100)}>
-                  <Maximize className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => setZoom(z => Math.min(200, z + 10))}>
-                  <ZoomIn className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="bg-amber-50 border border-amber-100 p-3 rounded-lg mt-4">
-              <h5 className="text-[10px] font-bold text-amber-800 uppercase mb-1">Pre-flight Checklist</h5>
-              <ul className="text-[10px] text-amber-700 space-y-1 list-disc pl-3">
-                <li>Load A4 Size Paper.</li>
-                <li>Set printer margins to <strong>None</strong> or <strong>Custom (0px)</strong>.</li>
-                <li>Disable "Headers and Footers" in print dialog.</li>
-                <li>Print at 100% scale (Do not fit to page).</li>
-              </ul>
-            </div>
-
-          </CardContent>
-        </div>
+        <PrintSettings
+          cardSize={cardSize}
+          printMode={printMode}
+          zoom={zoom}
+          setCardSize={setCardSize}
+          setPrintMode={setPrintMode}
+          setZoom={setZoom}
+        />
 
         {/* Preview Area */}
         <div className="xl:col-span-3 overflow-hidden bg-ink border-2 border-ink shadow-hard rounded-[32px] flex flex-col">
@@ -376,7 +274,7 @@ export default function PrintCenter() {
                     </div>
                   ))}
 
-                  <style jsx global>{`
+                  <style dangerouslySetInnerHTML={{ __html: `
                     @media print {
                       @page {
                         size: A4 portrait;
@@ -394,7 +292,7 @@ export default function PrintCenter() {
                         padding: 0 !important;
                       }
                     }
-                  `}</style>
+                  ` }} />
                 </div>
               </div>
             )}

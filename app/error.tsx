@@ -13,6 +13,9 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
+    // Ignore Next.js devtools simulated errors
+    if (error.message === 'NEXT_DEVTOOLS_SIMULATED_ERROR') return;
+
     // In production, this would securely ship logs to Datadog / Sentry
     console.error('[PROD_LOG] Global Error Caught:', {
       message: error.message,

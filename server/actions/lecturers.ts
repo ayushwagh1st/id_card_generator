@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, checkAuth } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
@@ -19,6 +19,7 @@ export async function getLecturersAction(
   query: string = '',
   statusFilter: string = 'all'
 ) {
+  await checkAuth();
   const supabase = await createClient()
 
   let dbQuery = supabase
@@ -47,6 +48,7 @@ export async function getLecturersAction(
 }
 
 export async function addLecturerAction(formData: any) {
+  await checkAuth();
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`add_lecturer_${ip}`, 5, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -118,6 +120,7 @@ export async function addLecturerAction(formData: any) {
 }
 
 export async function updateLecturerAction(id: string, formData: any) {
+  await checkAuth();
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`update_lecturer_${ip}`, 10, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -166,6 +169,7 @@ export async function updateLecturerAction(id: string, formData: any) {
 }
 
 export async function deleteLecturerAction(id: string) {
+  await checkAuth();
   const supabase = await createClient()
   
   const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
@@ -197,6 +201,7 @@ export async function deleteLecturerAction(id: string) {
 }
 
 export async function resetLecturerPasswordAction(id: string, newPassword: string) {
+  await checkAuth();
   const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') ||
     !process.env.SUPABASE_SERVICE_ROLE_KEY

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useReducer } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,26 +13,52 @@ import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { exportToPDF } from '@/lib/pdf'
 import Image from 'next/image'
-import { getSessionsAction, addSessionAction, updateSessionAction, deleteSessionAction } from '@/app/actions/sessions'
+import { getSessionsAction, addSessionAction, updateSessionAction, deleteSessionAction } from '@/server/actions/sessions'
 export default function SessionsPage() {
-  const [sessions, setSessions] = useState<any[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [loading, setLoading] = useState(true)
-  
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [isEditOpen, setIsEditOpen] = useState(false)
-  const [currentSession, setCurrentSession] = useState<any>(null)
-  
-  const [name, setName] = useState('')
-  const [category, setCategory] = useState('')
-  const [description, setDescription] = useState('')
-  const [lecturerName, setLecturerName] = useState('')
-  const [venue, setVenue] = useState('')
-  const [date, setDate] = useState('')
-  const [startTime, setStartTime] = useState('')
-  const [endTime, setEndTime] = useState('')
-  const [capacity, setCapacity] = useState('')
-  const [status, setStatus] = useState('Scheduled')
+  const [state, dispatch] = React.useReducer(
+    (state: any, action: any) => typeof action === 'function' ? { ...state, ...action(state) } : { ...state, ...action },
+    {
+      sessions: [],
+      searchTerm: '',
+      loading: true,
+      isAddOpen: false,
+      isEditOpen: false,
+      currentSession: null,
+      name: '',
+      category: '',
+      description: '',
+      lecturerName: '',
+      venue: '',
+      date: '',
+      startTime: '',
+      endTime: '',
+      capacity: '',
+      status: 'Scheduled'
+    }
+  )
+
+  const {
+    sessions, searchTerm, loading, isAddOpen, isEditOpen,
+    currentSession, name, category, description, lecturerName,
+    venue, date, startTime, endTime, capacity, status
+  } = state
+
+  const setSessions = useCallback((v: any) => dispatch((s: any) => ({ sessions: typeof v === 'function' ? v(s.sessions) : v })), [])
+  const setSearchTerm = useCallback((v: any) => dispatch((s: any) => ({ searchTerm: typeof v === 'function' ? v(s.searchTerm) : v })), [])
+  const setLoading = useCallback((v: any) => dispatch((s: any) => ({ loading: typeof v === 'function' ? v(s.loading) : v })), [])
+  const setIsAddOpen = useCallback((v: any) => dispatch((s: any) => ({ isAddOpen: typeof v === 'function' ? v(s.isAddOpen) : v })), [])
+  const setIsEditOpen = useCallback((v: any) => dispatch((s: any) => ({ isEditOpen: typeof v === 'function' ? v(s.isEditOpen) : v })), [])
+  const setCurrentSession = useCallback((v: any) => dispatch((s: any) => ({ currentSession: typeof v === 'function' ? v(s.currentSession) : v })), [])
+  const setName = useCallback((v: any) => dispatch((s: any) => ({ name: typeof v === 'function' ? v(s.name) : v })), [])
+  const setCategory = useCallback((v: any) => dispatch((s: any) => ({ category: typeof v === 'function' ? v(s.category) : v })), [])
+  const setDescription = useCallback((v: any) => dispatch((s: any) => ({ description: typeof v === 'function' ? v(s.description) : v })), [])
+  const setLecturerName = useCallback((v: any) => dispatch((s: any) => ({ lecturerName: typeof v === 'function' ? v(s.lecturerName) : v })), [])
+  const setVenue = useCallback((v: any) => dispatch((s: any) => ({ venue: typeof v === 'function' ? v(s.venue) : v })), [])
+  const setDate = useCallback((v: any) => dispatch((s: any) => ({ date: typeof v === 'function' ? v(s.date) : v })), [])
+  const setStartTime = useCallback((v: any) => dispatch((s: any) => ({ startTime: typeof v === 'function' ? v(s.startTime) : v })), [])
+  const setEndTime = useCallback((v: any) => dispatch((s: any) => ({ endTime: typeof v === 'function' ? v(s.endTime) : v })), [])
+  const setCapacity = useCallback((v: any) => dispatch((s: any) => ({ capacity: typeof v === 'function' ? v(s.capacity) : v })), [])
+  const setStatus = useCallback((v: any) => dispatch((s: any) => ({ status: typeof v === 'function' ? v(s.status) : v })), [])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -44,7 +70,7 @@ export default function SessionsPage() {
     } finally {
       setLoading(false)
     }
-  }, [searchTerm])
+  }, [searchTerm, setLoading, setSessions])
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -126,7 +152,7 @@ export default function SessionsPage() {
   const handleExportCSV = () => {
     if (sessions.length === 0) return
     const headers = ['Session Name', 'Category', 'Lecturer Name', 'Venue', 'Date', 'Time', 'Status']
-    const rows = sessions.map(s => [
+    const rows = sessions.map((s: any) => [
         s.name,
         s.category || '',
         s.lecturer_name || 'Unassigned',
@@ -135,7 +161,7 @@ export default function SessionsPage() {
         `${s.start_time} - ${s.end_time}`,
         s.status || ''
     ])
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => `"${e.join('","')}"`)].join("\n")
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map((e: any) => `"${e.join('","')}"`)].join("\n")
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement("a")
     link.setAttribute("href", encodedUri)
@@ -148,7 +174,7 @@ export default function SessionsPage() {
   const handleExportPDF = () => {
     if (sessions.length === 0) return
     const headers = ['Session Name', 'Category', 'Lecturer Name', 'Venue', 'Date', 'Time', 'Status']
-    const rows = sessions.map(s => [
+    const rows = sessions.map((s: any) => [
         s.name,
         s.category || '',
         s.lecturer_name || 'Unassigned',
@@ -167,8 +193,8 @@ export default function SessionsPage() {
     })
   }
 
-  const activeSessions = sessions.filter(s => s.status === 'Ongoing' || s.status === 'Scheduled').length
-  const completedSessions = sessions.filter(s => s.status === 'Completed').length
+  const activeSessions = sessions.filter((s: any) => s.status === 'Ongoing' || s.status === 'Scheduled').length
+  const completedSessions = sessions.filter((s: any) => s.status === 'Completed').length
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -433,7 +459,7 @@ export default function SessionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sessions.map(sess => (
+              {sessions.map((sess: any) => (
                 <TableRow key={sess.id}>
                   <TableCell>
                     <div className="font-semibold">{sess.name}</div>

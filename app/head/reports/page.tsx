@@ -8,8 +8,7 @@ import { FileText, Download, Activity, CheckCircle, Clock } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { exportToPDF } from '@/lib/pdf'
-import { getVolunteersAction } from '@/app/actions/volunteers'
-import { createClient } from '@/lib/supabase/client'
+import { getVolunteersAction } from '@/server/actions/volunteers'
 
 export default function HeadReportsPage() {
   const [loading, setLoading] = useState(true)
@@ -144,7 +143,7 @@ export default function HeadReportsPage() {
                 </TableHeader>
                 <TableBody>
                   {volunteers.map((vol, idx) => (
-                    <TableRow key={idx}>
+                    <TableRow key={vol.id}>
                       <TableCell className="font-bold text-xs whitespace-nowrap">
                         {vol.snk_id || 'Pending'}
                       </TableCell>

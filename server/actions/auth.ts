@@ -1,9 +1,11 @@
 'use server'
+import { checkAuth, createClient } from '@/lib/supabase/server'
 
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { sendPasswordResetEmail } from '@/lib/email'
 
-export async function sendPasswordResetEmailAction(email: string) {
+// oxlint-disable-next-line react-doctor/server-auth-actions -- password reset is meant to be called by anonymous users who forgot their credentials
+async function sendPasswordResetEmailAction(email: string) {
   if (!email) {
     return { error: 'Email is required.' }
   }
@@ -42,7 +44,7 @@ export async function sendPasswordResetEmailAction(email: string) {
       urlObj.pathname = '/update-password'
       resetLink = urlObj.toString()
     } catch (e) {
-      console.warn('Failed to parse reset link URL')
+      console.error('Failed to parse reset link URL')
     }
 
     // Send the email via Resend
@@ -60,4 +62,31 @@ export async function sendPasswordResetEmailAction(email: string) {
     console.error('Unexpected error in forgot password flow:', err)
     return { error: 'An unexpected error occurred.' }
   }
+}
+
+export async function loginAction(email: string, password: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  const role = data.user?.user_metadata?.role
+  return { success: true, role }
+}
+
+// oxlint-disable-next-line react-doctor/server-auth-actions -- logout is safe to run by unauthenticated users and checking auth beforehand might throw unhandled exceptions
+export async function logoutAction() {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+}
+
+export async function getCurrentUserAction() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user
 }

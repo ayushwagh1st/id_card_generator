@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 
 export async function createClient() {
+  const { cookies } = await import('next/headers')
   const cookieStore = await cookies()
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project-id.supabase.co'
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MTkwMDAwMDAwMH0.placeholder'
@@ -30,3 +30,11 @@ export async function createClient() {
   )
 }
 
+export async function checkAuth() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    throw new Error("Unauthorized")
+  }
+  return { user }
+}

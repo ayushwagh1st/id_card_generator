@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useReducer } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,28 +9,60 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Search, Users, ScanLine, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getSessionsAction, getSessionEnrollmentsAction } from '@/app/actions/sessions'
-import { bulkCheckoutAllAction } from '@/app/actions/attendance'
-import { createClient } from '@/lib/supabase/client'
+import { getSessionsAction, getSessionEnrollmentsAction } from '@/server/actions/sessions'
+import { bulkCheckoutAllAction } from '@/server/actions/attendance'
+import { getCurrentUserAction } from '@/server/actions/auth'
 import { useRouter } from 'next/navigation'
 
-export default function LecturerSessionsPage() {
-  const [sessions, setSessions] = useState<any[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [loading, setLoading] = useState(true)
-  
-  const [viewEnrollmentsOpen, setViewEnrollmentsOpen] = useState(false)
-  const [selectedSession, setSelectedSession] = useState<any>(null)
-  const [enrollments, setEnrollments] = useState<any[]>([])
-  const [loadingEnrollments, setLoadingEnrollments] = useState(false)
+const handleBulkCheckout = async (sessionId: string) => {
+    if (!confirm('Are you sure you want to check out everyone who has checked in for this session?')) return;
+    
+    const loadingToast = toast.loading('Processing bulk checkout...')
+    try {
+        const res = await bulkCheckoutAllAction(sessionId)
+        if (res?.error) {
+            toast.error(res.error, { id: loadingToast })
+        } else {
+            toast.success(res.message, { id: loadingToast })
+        }
+    } catch (err: any) {
+        toast.error('Failed to perform bulk checkout.', { id: loadingToast })
+    }
+}
 
-  const supabase = createClient()
+export default function LecturerSessionsPage() {
+  const [state, dispatch] = React.useReducer(
+    (state: any, action: any) => typeof action === 'function' ? { ...state, ...action(state) } : { ...state, ...action },
+    {
+      sessions: [],
+      searchTerm: '',
+      loading: true,
+      viewEnrollmentsOpen: false,
+      selectedSession: null,
+      enrollments: [],
+      loadingEnrollments: false
+    }
+  )
+
+  const {
+    sessions, searchTerm, loading, viewEnrollmentsOpen,
+    selectedSession, enrollments, loadingEnrollments
+  } = state
+
+  const setSessions = useCallback((v: any) => dispatch((s: any) => ({ sessions: typeof v === 'function' ? v(s.sessions) : v })), [])
+  const setSearchTerm = useCallback((v: any) => dispatch((s: any) => ({ searchTerm: typeof v === 'function' ? v(s.searchTerm) : v })), [])
+  const setLoading = useCallback((v: any) => dispatch((s: any) => ({ loading: typeof v === 'function' ? v(s.loading) : v })), [])
+  const setViewEnrollmentsOpen = useCallback((v: any) => dispatch((s: any) => ({ viewEnrollmentsOpen: typeof v === 'function' ? v(s.viewEnrollmentsOpen) : v })), [])
+  const setSelectedSession = useCallback((v: any) => dispatch((s: any) => ({ selectedSession: typeof v === 'function' ? v(s.selectedSession) : v })), [])
+  const setEnrollments = useCallback((v: any) => dispatch((s: any) => ({ enrollments: typeof v === 'function' ? v(s.enrollments) : v })), [])
+  const setLoadingEnrollments = useCallback((v: any) => dispatch((s: any) => ({ loadingEnrollments: typeof v === 'function' ? v(s.loadingEnrollments) : v })), [])
+
   const router = useRouter()
 
   const fetchSessions = useCallback(async () => {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await getCurrentUserAction()
       if (!user) return
 
       const role = user.user_metadata?.role
@@ -43,7 +75,7 @@ export default function LecturerSessionsPage() {
     } finally {
       setLoading(false)
     }
-  }, [searchTerm, supabase.auth])
+  }, [searchTerm, setLoading, setSessions])
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -71,21 +103,7 @@ export default function LecturerSessionsPage() {
       router.push(`/lecturer/scanner?session=${sessionId}`)
   }
 
-  const handleBulkCheckout = async (sessionId: string) => {
-      if (!confirm('Are you sure you want to check out everyone who has checked in for this session?')) return;
-      
-      const loadingToast = toast.loading('Processing bulk checkout...')
-      try {
-          const res = await bulkCheckoutAllAction(sessionId)
-          if (res?.error) {
-              toast.error(res.error, { id: loadingToast })
-          } else {
-              toast.success(res.message, { id: loadingToast })
-          }
-      } catch (err: any) {
-          toast.error('Failed to perform bulk checkout.', { id: loadingToast })
-      }
-  }
+
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -153,7 +171,7 @@ export default function LecturerSessionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sessions.map(sess => (
+              {sessions.map((sess: any) => (
                 <TableRow key={sess.id}>
                   <TableCell>
                     <div className="font-semibold">{sess.name}</div>
@@ -236,7 +254,7 @@ export default function LecturerSessionsPage() {
                           </TableRow>
                       </TableHeader>
                       <TableBody>
-                          {enrollments.map(e => (
+                          {enrollments.map((e: any) => (
                               <TableRow key={e.id}>
                                   <TableCell className="font-medium text-xs">{e.volunteer?.snk_id || 'Pending'}</TableCell>
                                   <TableCell>{e.volunteer?.full_name}</TableCell>

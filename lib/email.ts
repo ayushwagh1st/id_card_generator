@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { RegistrationEmail } from '@/components/emails/RegistrationEmail';
 
-const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
+const resend = new Resend(process.env.RESEND_API_KEY as string);
 
 // Helper for generic exponential backoff retries
 async function withRetry<T>(
@@ -12,6 +12,7 @@ async function withRetry<T>(
   let attempt = 0;
   while (attempt < maxRetries) {
     try {
+      // oxlint-disable-next-line react-doctor/async-await-in-loop -- false positive: sequential retry loop with backoff delay
       return await operation();
     } catch (error) {
       attempt++;
@@ -51,9 +52,9 @@ export async function sendRegistrationEmail({
     // Wrapped inside withRetry for maximum reliability
     const result = await withRetry(async () => {
       const { data, error } = await resend.emails.send({
-        from: 'Bal Pradarshani <onboarding@resend.dev>', // Resend requires this for unverified domains
+        from: 'Bal Pradarshani <onboarding@onboarding.keidportal.qzz.io>',
         to: [email],
-        subject: 'Welcome to Bal Pradarshani - Your Account Credentials',
+        subject: 'Welcome to Bal Pradarshani – Your Account is Ready',
         react: RegistrationEmail({
           loginId,
           loginPass,
@@ -95,7 +96,7 @@ export async function sendPasswordResetEmail({
 
     const result = await withRetry(async () => {
       const { data, error } = await resend.emails.send({
-        from: 'Bal Pradarshani <onboarding@resend.dev>', // Update this with verified domain if needed
+        from: 'Bal Pradarshani <onboarding@onboarding.keidportal.qzz.io>',
         to: [email],
         subject: 'Reset your password - Bal Pradarshani',
         react: ResetPasswordEmail({ resetLink }),

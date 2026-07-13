@@ -1,45 +1,47 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Sparkles, LogIn, UserPlus, ShieldCheck, Printer, ArrowRight, Users, FileCheck } from 'lucide-react'
 import GalleryImage from '@/components/GalleryImage'
 
-export default function Home() {
-  const steps = [
-    {
-      step: '01',
-      title: 'Login Securely',
-      desc: 'Use your Model Head credentials to securely access the central registration portal.',
-      icon: LogIn,
-      variant: 'bento-white',
-    },
-    {
-      step: '02',
-      title: 'Submit Details',
-      desc: 'Add volunteer information, upload their photo, and specify accommodation needs.',
-      icon: UserPlus,
-      variant: 'bento-lime',
-    },
-    {
-      step: '03',
-      title: 'Admin Approval',
-      desc: 'The Super Admin will review and verify your submitted volunteer profiles for accuracy.',
-      icon: ShieldCheck,
-      variant: 'bento-lavender',
-    },
-    {
-      step: '04',
-      title: 'ID Printing',
-      desc: 'Once approved, the admin generates and prints the official event badges.',
-      icon: Printer,
-      variant: 'bento-pastel',
-    },
-  ]
+const steps = [
+  {
+    step: '01',
+    title: 'Login Securely',
+    desc: 'Use your Model Head credentials to securely access the central registration portal.',
+    icon: LogIn,
+    variant: 'bento-white',
+  },
+  {
+    step: '02',
+    title: 'Submit Details',
+    desc: 'Add volunteer information, upload their photo, and specify accommodation needs.',
+    icon: UserPlus,
+    variant: 'bento-lime',
+  },
+  {
+    step: '03',
+    title: 'Admin Approval',
+    desc: 'The Super Admin will review and verify your submitted volunteer profiles for accuracy.',
+    icon: ShieldCheck,
+    variant: 'bento-lavender',
+  },
+  {
+    step: '04',
+    title: 'ID Printing',
+    desc: 'Once approved, the admin generates and prints the official event badges.',
+    icon: Printer,
+    variant: 'bento-pastel',
+  },
+]
 
-  const stats = [
-    { label: 'Volunteers', value: '300+', bg: 'bg-primary text-foreground' },
-    { label: 'Models', value: '30+', bg: 'bg-secondary text-ink' },
-    { label: 'Divisions', value: '3+', bg: 'bg-card text-ink' },
-    { label: 'Year', value: '2027', bg: 'bg-bg-pastel text-ink' },
-  ]
+const stats = [
+  { label: 'Volunteers', value: '300+', bg: 'bg-primary text-foreground' },
+  { label: 'Models', value: '30+', bg: 'bg-secondary text-ink' },
+  { label: 'Divisions', value: '3+', bg: 'bg-card text-ink' },
+  { label: 'Year', value: '2027', bg: 'bg-bg-pastel text-ink' },
+]
+
+export default function Home() {
 
   return (
     <div className="bg-background min-h-screen">
@@ -48,8 +50,7 @@ export default function Home() {
       <nav className="sticky top-0 z-[100] bg-card border-ink border-b-[3px] px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Bal Pradarshani Logo" className="w-10 h-10 rounded-lg border-2 border-ink object-cover bg-white" />
+            <Image src="/logo.png" alt="Bal Pradarshani Logo" width={40} height={40} className="w-10 h-10 rounded-lg border-2 border-ink object-cover bg-white" />
             <span className="font-display font-bold text-xl text-foreground">Bal Pradarshani</span>
           </div>
 
@@ -116,8 +117,7 @@ export default function Home() {
 
           <div className="lg:col-span-5 flex justify-center">
             <div className="relative border-3 border-ink rounded-[24px] shadow-hard overflow-hidden bg-card aspect-square w-full max-w-[360px] animate-in zoom-in-95 duration-500">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/hero_illustration.png" alt="Portal Illustration" className="w-full h-full object-cover" />
+              <Image src="/hero_illustration.png" alt="Portal Illustration" width={360} height={360} className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function Home() {
         <div className="grid grid-cols-2 md:grid-cols-4 bg-ink">
           {stats.map((s, i) => (
             <div
-              key={i}
+              key={s.label}
               className={`${s.bg} flex flex-col items-center justify-center py-10 px-6 text-center ${i < 3 ? 'border-r-[4px] border-ink' : ''}`}
             >
               <span className="font-display font-bold text-5xl leading-none">{s.value}</span>
@@ -156,7 +156,7 @@ export default function Home() {
               const Icon = step.icon
               return (
                 <div
-                  key={idx}
+                  key={step.title}
                   className={`${step.variant} flex flex-col gap-5 shadow-hard-sm hover:-translate-y-1 transition-transform duration-150`}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -229,8 +229,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center gap-3 mb-6">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.png" alt="Bal Pradarshani Logo" className="w-10 h-10 rounded-lg border-2 border-ink object-cover bg-white" />
+                <Image src="/logo.png" alt="Bal Pradarshani Logo" width={40} height={40} className="w-10 h-10 rounded-lg border-2 border-ink object-cover bg-white" />
                 <span className="font-display font-bold text-xl">Bal Pradarshani</span>
               </div>
               <p className="text-white/60 max-w-xs leading-relaxed">

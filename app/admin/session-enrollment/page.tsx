@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useReducer } from 'react'
+import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,48 +12,71 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Search, Trash2, Users, ChevronLeft, ChevronRight, CheckSquare } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getSessionsAction, getSessionEnrollmentsAction, enrollVolunteersAction, removeEnrollmentAction } from '@/app/actions/sessions'
-import { getVolunteersAction } from '@/app/actions/volunteers'
-import { createClient } from '@/lib/supabase/client'
+import { getSessionsAction, getSessionEnrollmentsAction, enrollVolunteersAction, removeEnrollmentAction } from '@/server/actions/sessions'
+import { getVolunteersAction } from '@/server/actions/volunteers'
+import { getModelsDataAction } from '@/app/admin/models/actions.server'
 import { formatSessionLabel, formatModelLabel, formatVolunteerLabel } from '@/lib/formatters'
 
 export default function SessionEnrollmentPage() {
-  const [sessions, setSessions] = useState<any[]>([])
-  const [selectedSessionId, setSelectedSessionId] = useState<string>('none')
-  const [enrollments, setEnrollments] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [state, dispatch] = React.useReducer(
+    (state: any, action: any) => typeof action === 'function' ? { ...state, ...action(state) } : { ...state, ...action },
+    {
+      sessions: [],
+      selectedSessionId: 'none',
+      enrollments: [],
+      loading: true,
+      volunteers: [],
+      searchVol: '',
+      modelFilter: 'all',
+      models: [],
+      page: 1,
+      totalPages: 1,
+      totalCount: 0,
+      loadingVols: false,
+      selectedVolunteers: []
+    }
+  )
 
-  // Volunteers listing state
-  const [volunteers, setVolunteers] = useState<any[]>([])
-  const [searchVol, setSearchVol] = useState('')
-  const [modelFilter, setModelFilter] = useState('all')
-  const [models, setModels] = useState<any[]>([])
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
-  const [loadingVols, setLoadingVols] = useState(false)
-  const [selectedVolunteers, setSelectedVolunteers] = useState<string[]>([])
+  const {
+    sessions, selectedSessionId, enrollments, loading,
+    volunteers, searchVol, modelFilter, models,
+    page, totalPages, totalCount, loadingVols, selectedVolunteers
+  } = state
+
+  const setSessions = useCallback((v: any) => dispatch((s: any) => ({ sessions: typeof v === 'function' ? v(s.sessions) : v })), [])
+  const setSelectedSessionId = useCallback((v: any) => dispatch((s: any) => ({ selectedSessionId: typeof v === 'function' ? v(s.selectedSessionId) : v })), [])
+  const setEnrollments = useCallback((v: any) => dispatch((s: any) => ({ enrollments: typeof v === 'function' ? v(s.enrollments) : v })), [])
+  const setLoading = useCallback((v: any) => dispatch((s: any) => ({ loading: typeof v === 'function' ? v(s.loading) : v })), [])
+  const setVolunteers = useCallback((v: any) => dispatch((s: any) => ({ volunteers: typeof v === 'function' ? v(s.volunteers) : v })), [])
+  const setSearchVol = useCallback((v: any) => dispatch((s: any) => ({ searchVol: typeof v === 'function' ? v(s.searchVol) : v })), [])
+  const setModelFilter = useCallback((v: any) => dispatch((s: any) => ({ modelFilter: typeof v === 'function' ? v(s.modelFilter) : v })), [])
+  const setModels = useCallback((v: any) => dispatch((s: any) => ({ models: typeof v === 'function' ? v(s.models) : v })), [])
+  const setPage = useCallback((v: any) => dispatch((s: any) => ({ page: typeof v === 'function' ? v(s.page) : v })), [])
+  const setTotalPages = useCallback((v: any) => dispatch((s: any) => ({ totalPages: typeof v === 'function' ? v(s.totalPages) : v })), [])
+  const setTotalCount = useCallback((v: any) => dispatch((s: any) => ({ totalCount: typeof v === 'function' ? v(s.totalCount) : v })), [])
+  const setLoadingVols = useCallback((v: any) => dispatch((s: any) => ({ loadingVols: typeof v === 'function' ? v(s.loadingVols) : v })), [])
+  // set selected volunteers has to correctly emulate the prev => function
+  const setSelectedVolunteers = useCallback((v: any) => dispatch((s: any) => ({ selectedVolunteers: typeof v === 'function' ? v(s.selectedVolunteers) : v })), [])
 
   const limit = 20
-  const supabase = createClient()
 
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     try {
       const res = await getSessionsAction(1, 100, '', 'all', 'all')
       setSessions(res.data || [])
     } catch (err: any) {
       toast.error('Failed to load sessions')
     }
-  }
+  }, [setSessions])
 
-  const fetchModels = async () => {
+  const fetchModels = useCallback(async () => {
     try {
-      const { data } = await supabase.from('models').select('id, name')
+      const data = await getModelsDataAction()
       setModels(data || [])
     } catch (err: any) {
       console.error('Failed to load models')
     }
-  }
+  }, [setModels])
 
   const fetchEnrollments = useCallback(async () => {
     if (selectedSessionId === 'none') {
@@ -68,7 +92,7 @@ export default function SessionEnrollmentPage() {
     } finally {
       setLoading(false)
     }
-  }, [selectedSessionId])
+  }, [selectedSessionId, setEnrollments, setLoading])
 
   const searchVolunteers = useCallback(async () => {
     if (selectedSessionId === 'none') return
@@ -79,8 +103,8 @@ export default function SessionEnrollmentPage() {
       const res = await getVolunteersAction(page, limit, searchVol, 'Approved', modelFilter)
       
       // Filter out already enrolled from the current page
-      const enrolledIds = enrollments.map(e => e.volunteer?.id)
-      const filtered = (res.data || []).filter(v => !enrolledIds.includes(v.id))
+      const enrolledIds = enrollments.map((e: any) => e.volunteer?.id)
+      const filtered = (res.data || []).filter((v: any) => !enrolledIds.includes(v.id))
       
       setVolunteers(filtered)
       setTotalCount(res.count || 0)
@@ -90,12 +114,12 @@ export default function SessionEnrollmentPage() {
     } finally {
       setLoadingVols(false)
     }
-  }, [searchVol, modelFilter, page, enrollments, selectedSessionId])
+  }, [searchVol, modelFilter, page, enrollments, selectedSessionId, setLoadingVols, setVolunteers, setTotalCount, setTotalPages])
 
   useEffect(() => {
     fetchSessions()
     fetchModels()
-  }, [])
+  }, [fetchSessions, fetchModels])
 
   useEffect(() => {
     fetchEnrollments()
@@ -103,7 +127,7 @@ export default function SessionEnrollmentPage() {
     setSearchVol('')
     setModelFilter('all')
     setSelectedVolunteers([])
-  }, [fetchEnrollments])
+  }, [fetchEnrollments, setPage, setSearchVol, setModelFilter, setSelectedVolunteers])
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -113,21 +137,21 @@ export default function SessionEnrollmentPage() {
   }, [searchVolunteers])
 
   const handleToggleVolunteer = (id: string) => {
-    setSelectedVolunteers(prev => 
-      prev.includes(id) ? prev.filter(vId => vId !== id) : [...prev, id]
+    setSelectedVolunteers((prev: any) => 
+      prev.includes(id) ? prev.filter((vId: any) => vId !== id) : [...prev, id]
     )
   }
 
   const handleSelectAllVisible = () => {
-    const visibleIds = volunteers.map(v => v.id)
-    const allSelected = visibleIds.every(id => selectedVolunteers.includes(id))
+    const visibleIds = volunteers.map((v: any) => v.id)
+    const allSelected = visibleIds.every((id: any) => selectedVolunteers.includes(id))
     
     if (allSelected) {
       // Deselect all visible
-      setSelectedVolunteers(prev => prev.filter(id => !visibleIds.includes(id)))
+      setSelectedVolunteers((prev: any) => prev.filter((id: any) => !visibleIds.includes(id)))
     } else {
       // Select all visible
-      setSelectedVolunteers(prev => Array.from(new Set([...prev, ...visibleIds])))
+      setSelectedVolunteers((prev: any) => Array.from(new Set([...prev, ...visibleIds])))
     }
   }
 
@@ -176,13 +200,13 @@ export default function SessionEnrollmentPage() {
           <SelectTrigger className="w-full sm:w-[400px]">
             <span data-slot="select-value" className="flex flex-1 text-left truncate">
               {selectedSessionId !== 'none' && sessions.length > 0
-                ? formatSessionLabel(sessions.find(s => s.id === selectedSessionId))
+                ? formatSessionLabel(sessions.find((s: any) => s.id === selectedSessionId))
                 : "Choose a session"}
             </span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">-- Select a Session --</SelectItem>
-            {sessions.map(s => (
+            {sessions.map((s: any) => (
                 <SelectItem key={s.id} value={s.id} label={formatSessionLabel(s)}>{formatSessionLabel(s)}</SelectItem>
             ))}
           </SelectContent>
@@ -218,13 +242,13 @@ export default function SessionEnrollmentPage() {
                                   <SelectTrigger>
                                       <span data-slot="select-value" className="flex flex-1 text-left truncate">
                                         {modelFilter !== 'all' && models.length > 0
-                                          ? formatModelLabel(models.find(m => m.id === modelFilter))
+                                          ? formatModelLabel(models.find((m: any) => m.id === modelFilter))
                                           : "All Models"}
                                       </span>
                                   </SelectTrigger>
                                   <SelectContent>
                                       <SelectItem value="all">All Models</SelectItem>
-                                      {models.map(m => (
+                                      {models.map((m: any) => (
                                           <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
                                       ))}
                                   </SelectContent>
@@ -233,7 +257,7 @@ export default function SessionEnrollmentPage() {
                               <div className="flex items-center justify-between pt-2">
                                   <Button variant="ghost" size="sm" onClick={handleSelectAllVisible} className="h-8 px-2 text-xs">
                                       <CheckSquare className="w-4 h-4 mr-2" />
-                                      {volunteers.length > 0 && volunteers.every(v => selectedVolunteers.includes(v.id)) 
+                                      {volunteers.length > 0 && volunteers.every((v: any) => selectedVolunteers.includes(v.id)) 
                                         ? "Deselect All Visible" 
                                         : "Select All Visible"}
                                   </Button>
@@ -256,15 +280,16 @@ export default function SessionEnrollmentPage() {
                               </div>
                           ) : (
                               <div className="space-y-2">
-                                  {volunteers.map(v => (
-                                      <div 
+                                  {volunteers.map((v: any) => (
+                                      <label 
                                         key={v.id} 
+                                        htmlFor={`checkbox-${v.id}`}
                                         className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
                                           selectedVolunteers.includes(v.id) ? 'border-primary bg-primary/5' : 'bg-card hover:bg-muted/40'
                                         }`}
-                                        onClick={() => handleToggleVolunteer(v.id)}
                                       >
                                           <Checkbox 
+                                            id={`checkbox-${v.id}`}
                                             checked={selectedVolunteers.includes(v.id)} 
                                             onCheckedChange={() => handleToggleVolunteer(v.id)}
                                           />
@@ -272,7 +297,7 @@ export default function SessionEnrollmentPage() {
                                               <span className="font-semibold text-sm">{formatVolunteerLabel(v)}</span>
                                               <span className="text-xs text-muted-foreground">{v.models?.name ? formatModelLabel(v.models) : 'No Model'}</span>
                                           </div>
-                                      </div>
+                                      </label>
                                   ))}
                                   {!loadingVols && volunteers.length === 0 && (
                                       <div className="text-center py-8 text-muted-foreground flex flex-col items-center">
@@ -288,7 +313,7 @@ export default function SessionEnrollmentPage() {
                             variant="outline" 
                             size="sm" 
                             disabled={page === 1}
-                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            onClick={() => setPage((p: any) => Math.max(1, p - 1))}
                           >
                             <ChevronLeft className="w-4 h-4" />
                           </Button>
@@ -299,7 +324,7 @@ export default function SessionEnrollmentPage() {
                             variant="outline" 
                             size="sm" 
                             disabled={page >= totalPages}
-                            onClick={() => setPage(p => p + 1)}
+                            onClick={() => setPage((p: any) => p + 1)}
                           >
                             <ChevronRight className="w-4 h-4" />
                           </Button>
@@ -347,13 +372,12 @@ export default function SessionEnrollmentPage() {
                             </TableRow>
                             </TableHeader>
                             <TableBody>
-                            {enrollments.map(e => (
+                            {enrollments.map((e: any) => (
                                 <TableRow key={e.id}>
                                     <TableCell>
                                         <div className="w-8 h-8 rounded-full bg-muted overflow-hidden">
                                             {e.volunteer?.photo_url && (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img src={e.volunteer.photo_url} alt="" className="w-full h-full object-cover" />
+                                                <Image src={e.volunteer.photo_url} alt={`${e.volunteer.full_name || 'Volunteer'}'s avatar`} width={32} height={32} unoptimized className="w-full h-full object-cover" />
                                             )}
                                         </div>
                                     </TableCell>

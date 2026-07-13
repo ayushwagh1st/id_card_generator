@@ -9,10 +9,10 @@ import { Label } from '@/components/ui/label'
 import { FileText, Download, CheckCircle, Clock, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getSessionsAction } from '@/app/actions/sessions'
+import { getSessionsAction } from '@/server/actions/sessions'
 import { formatSessionLabel } from '@/lib/formatters'
-import { getSessionAttendanceAction } from '@/app/actions/attendance'
-import { createClient } from '@/lib/supabase/client'
+import { getSessionAttendanceAction } from '@/server/actions/attendance'
+import { getCurrentUserAction } from '@/server/actions/auth'
 import { exportToPDF } from '@/lib/pdf'
 
 export default function LecturerReportsPage() {
@@ -21,11 +21,9 @@ export default function LecturerReportsPage() {
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  const supabase = createClient()
-
   const fetchSessions = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await getCurrentUserAction()
       if (!user) return
       const role = user.user_metadata?.role
       const lecturerFilter = role === 'LECTURER' ? user.id : 'all'
@@ -34,7 +32,7 @@ export default function LecturerReportsPage() {
     } catch (err: any) {
       toast.error('Failed to load sessions')
     }
-  }, [supabase.auth])
+  }, [])
 
   const fetchAttendance = useCallback(async () => {
     if (selectedSessionId === 'none') {

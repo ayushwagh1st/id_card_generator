@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useReducer, useState } from 'react'
+import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +11,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { getVolunteersAction, addVolunteerAction, updateVolunteerAction, deleteVolunteerAction, bulkDeleteVolunteersAction, bulkApproveVolunteersAction } from '@/app/actions/volunteers'
 import { formatModelLabel } from '@/lib/formatters'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, UploadCloud, Download } from 'lucide-react'
@@ -18,117 +18,50 @@ import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { compressImage } from '@/lib/image'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
 import ImageCropperDialog from '@/components/volunteers/ImageCropperDialog'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { exportToPDF } from '@/lib/pdf'
+import { getHeadVolunteersDataAction, createVolunteerAction, updateVolunteerAction, bulkImportVolunteersAction, uploadVolunteerPhotoAction } from './actions.server'
+
+type State = {
+  volunteers: any[]; myModels: any[]; loading: boolean; searchTerm: string;
+  filterModel: string; filterStatus: string; isAddOpen: boolean; isEditOpen: boolean;
+  currentVolunteer: any; fullName: string; mobileNumber: string; gender: string; age: string;
+  emergencyContact: string; address: string; modelId: string; role: string; branch: string;
+  remarks: string; photoUrl: string; accommodation: boolean; uploadingPhoto: boolean;
+  cropDialogOpen: boolean; cropImageSrc: string; cropOriginalFile: File | null;
+}
+
+const initialState: State = {
+  volunteers: [], myModels: [], loading: true, searchTerm: '',
+  filterModel: 'all', filterStatus: 'all', isAddOpen: false, isEditOpen: false,
+  currentVolunteer: null, fullName: '', mobileNumber: '', gender: 'Male', age: '',
+  emergencyContact: '', address: '', modelId: '', role: 'Volunteer', branch: '',
+  remarks: '', photoUrl: '', accommodation: false, uploadingPhoto: false,
+  cropDialogOpen: false, cropImageSrc: '', cropOriginalFile: null
+}
+
+function reducer(state: State, action: any): State {
+  switch (action.type) {
+    case 'SET_DATA': return { ...state, volunteers: action.payload.volunteers, myModels: action.payload.models, modelId: action.payload.models[0]?.id || '', loading: false }
+    case 'SET_LOADING': return { ...state, loading: action.payload }
+    case 'SET_STATE': return { ...state, [action.field]: action.payload }
+    case 'RESET_FORM': return { ...state, fullName: '', mobileNumber: '', age: '', emergencyContact: '', address: '', remarks: '', photoUrl: '', branch: '', role: 'Volunteer', accommodation: false, modelId: state.myModels[0]?.id || '' }
+    case 'OPEN_EDIT': return { ...state, currentVolunteer: action.payload, fullName: action.payload.full_name, mobileNumber: action.payload.mobile_number, gender: action.payload.gender || 'Male', age: action.payload.age ? action.payload.age.toString() : '', emergencyContact: action.payload.emergency_contact || '', address: action.payload.address || '', modelId: action.payload.model_id, role: action.payload.role || 'Volunteer', branch: action.payload.branch || '', accommodation: action.payload.accommodation || false, remarks: action.payload.remarks || '', photoUrl: action.payload.photo_url || '', isEditOpen: true }
+    default: return state
+  }
+}
 
 export default function HeadVolunteersPage() {
-  const [volunteers, setVolunteers] = useState<any[]>([])
-  const [myModels, setMyModels] = useState<any[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [state, dispatch] = useReducer(reducer, initialState)
 
-  // Filters
-  const [filterModel, setFilterModel] = useState('all')
-  const [filterStatus, setFilterStatus] = useState('all')
-
-  // Form states
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [isEditOpen, setIsEditOpen] = useState(false)
-  const [currentVolunteer, setCurrentVolunteer] = useState<any>(null)
-
-  const [fullName, setFullName] = useState('')
-  const [mobileNumber, setMobileNumber] = useState('')
-  const [gender, setGender] = useState('Male')
-  const [age, setAge] = useState('')
-  const [emergencyContact, setEmergencyContact] = useState('')
-  const [address, setAddress] = useState('')
-  const [modelId, setModelId] = useState('')
-  const [role, setRole] = useState('Volunteer')
-  const [branch, setBranch] = useState('')
-  const [remarks, setRemarks] = useState('')
-  const [photoUrl, setPhotoUrl] = useState('')
-  const [accommodation, setAccommodation] = useState(false)
-  const [uploadingPhoto, setUploadingPhoto] = useState(false)
-  const [cropDialogOpen, setCropDialogOpen] = useState(false)
-  const [cropImageSrc, setCropImageSrc] = useState('')
-  const [cropOriginalFile, setCropOriginalFile] = useState<File | null>(null)
-
-  const supabase = createClient()
-
-  // Fetch logged in head's details and volunteers
   const fetchData = async () => {
-    setLoading(true)
+    dispatch({ type: 'SET_LOADING', payload: true })
     try {
-      // 1. Get logged in user from supabase auth or cookie
-      let profileId = ''
-
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        profileId = user.id
-      } else {
-        const sessionUserStr = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('mock-user='))
-          ?.split('=')[1]
-
-        if (sessionUserStr) {
-          const sessionUser = JSON.parse(decodeURIComponent(sessionUserStr))
-          // Look up profile ID by email
-          const { data: profile, error: pErr } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('email', sessionUser.email)
-            .single()
-          if (!pErr && profile) {
-            profileId = profile.id
-          }
-        }
-      }
-
-      if (!profileId) {
-        // Fallback to seeded head
-        profileId = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12'
-      }
-
-      // 2. Fetch models supervised by this head
-      const { data: modelsData, error: modelsErr } = await supabase
-        .from('models')
-        .select('id, name')
-        .eq('head_id', profileId)
-
-      if (modelsErr) throw modelsErr
-      setMyModels(modelsData || [])
-
-      if (modelsData && modelsData.length > 0) {
-        const modelIds = modelsData.map(m => m.id)
-
-        // 3. Fetch volunteers in these models
-        const { data: volData, error: volErr } = await supabase
-          .from('volunteers')
-          .select(`
-            *,
-            models:model_id (
-              name
-            )
-          `)
-          .in('model_id', modelIds)
-          .order('created_at', { ascending: false })
-
-        if (volErr) throw volErr
-        setVolunteers(volData || [])
-
-        // Set default model in form if empty
-        if (!modelId) {
-          setModelId(modelsData[0].id)
-        }
-      } else {
-        setVolunteers([])
-      }
+      const data = await getHeadVolunteersDataAction()
+      dispatch({ type: 'SET_DATA', payload: data })
     } catch (err: any) {
       toast.error(err.message || 'Error loading records')
-    } finally {
-      setLoading(false)
+      dispatch({ type: 'SET_LOADING', payload: false })
     }
   }
 
@@ -139,35 +72,33 @@ export default function HeadVolunteersPage() {
   // Create Volunteer
   const handleCreateVolunteer = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!fullName.trim()) return toast.error('Full Name is required')
-    if (!mobileNumber.trim()) return toast.error('Mobile Number is required')
-    if (!modelId) return toast.error('Please assign to a model')
-    if (!photoUrl) return toast.error('Photo is required')
+    if (!state.fullName.trim()) return toast.error('Full Name is required')
+    if (!state.mobileNumber.trim()) return toast.error('Mobile Number is required')
+    if (!state.modelId) return toast.error('Please assign to a model')
+    if (!state.photoUrl) return toast.error('Photo is required')
 
     try {
       const payload: any = {
-        full_name: fullName,
-        mobile_number: mobileNumber,
-        gender,
-        age: age ? parseInt(age) : null,
-        emergency_contact: emergencyContact,
-        address,
-        model_id: modelId,
-        role,
-        branch,
-        remarks,
-        photo_url: photoUrl || null,
+        full_name: state.fullName,
+        mobile_number: state.mobileNumber,
+        gender: state.gender,
+        age: state.age ? parseInt(state.age) : null,
+        emergency_contact: state.emergencyContact,
+        address: state.address,
+        model_id: state.modelId,
+        role: state.role,
+        branch: state.branch,
+        remarks: state.remarks,
+        photo_url: state.photoUrl || null,
         status: 'Pending'
       }
 
-      const { error } = await supabase.from('volunteers').insert(payload)
-      if (error) throw error
+      const res: any = await createVolunteerAction(payload)
+      if (res?.error) throw new Error(res.error)
 
       toast.success('Volunteer added successfully')
-      setIsAddOpen(false)
-      // Reset
-      setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer'); setAccommodation(false);
-
+      dispatch({ type: 'SET_STATE', field: 'isAddOpen', payload: false })
+      dispatch({ type: 'RESET_FORM' })
       fetchData()
     } catch (err: any) {
       toast.error(err.message || 'Could not add volunteer')
@@ -176,57 +107,41 @@ export default function HeadVolunteersPage() {
 
   // Edit Prep
   const openEditDialog = (vol: any) => {
-    setCurrentVolunteer(vol)
-    setFullName(vol.full_name)
-    setMobileNumber(vol.mobile_number)
-    setGender(vol.gender || 'Male')
-    setAge(vol.age ? vol.age.toString() : '')
-    setEmergencyContact(vol.emergency_contact || '')
-    setAddress(vol.address || '')
-    setModelId(vol.model_id)
-    setRole(vol.role || 'Volunteer')
-    setBranch(vol.branch || '')
-    setAccommodation(vol.accommodation || false)
-    setRemarks(vol.remarks || '')
-    setPhotoUrl(vol.photo_url || '')
-    setIsEditOpen(true)
+    dispatch({ type: 'OPEN_EDIT', payload: vol })
   }
 
   // Update Volunteer
   const handleUpdateVolunteer = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!currentVolunteer) return
+    if (!state.currentVolunteer) return
 
     // Restriction: Cannot edit approved volunteers details
-    if (currentVolunteer.status === 'Approved') {
-      return toast.error('Approved volunteer details are locked and cannot be edited by Model Heads.')
+    if (state.currentVolunteer.status === 'Approved') {
+      return toast.error('Approved volunteer details are locked and cannot be edited by Heads.')
     }
-    if (!photoUrl) return toast.error('Photo is required')
+    if (!state.photoUrl) return toast.error('Photo is required')
 
     try {
       const payload = {
-        full_name: fullName,
-        mobile_number: mobileNumber,
-        gender,
-        age: age ? parseInt(age) : null,
-        emergency_contact: emergencyContact,
-        address,
-        model_id: modelId,
-        role,
-        branch,
-        remarks,
-        photo_url: photoUrl || null
+        full_name: state.fullName,
+        mobile_number: state.mobileNumber,
+        gender: state.gender,
+        age: state.age ? parseInt(state.age) : null,
+        emergency_contact: state.emergencyContact,
+        address: state.address,
+        model_id: state.modelId,
+        role: state.role,
+        branch: state.branch,
+        remarks: state.remarks,
+        photo_url: state.photoUrl || null
       }
 
-      const { error } = await supabase
-        .from('volunteers')
-        .update(payload)
-        .eq('id', currentVolunteer.id)
+      const res: any = await updateVolunteerAction(state.currentVolunteer.id, payload)
 
-      if (error) throw error
+      if (res?.error) throw new Error(res.error)
 
       toast.success('Volunteer profile updated successfully')
-      setIsEditOpen(false)
+      dispatch({ type: 'SET_STATE', field: 'isEditOpen', payload: false })
       fetchData()
     } catch (err: any) {
       toast.error(err.message || 'Could not update volunteer')
@@ -234,13 +149,13 @@ export default function HeadVolunteersPage() {
   }
 
   const handleExportPDF = () => {
-    if (volunteers.length === 0) {
+    if (state.volunteers.length === 0) {
       toast.error("No volunteers to export")
       return
     }
 
     const headers = ['SNK ID', 'Name', 'Mobile', 'Gender', 'Role', 'Status', 'Model']
-    const rows = volunteers.map(v => [
+    const rows = state.volunteers.map((v: any) => [
       v.snk_id || 'Pending',
       v.full_name || 'N/A',
       v.mobile_number || 'N/A',
@@ -264,11 +179,11 @@ export default function HeadVolunteersPage() {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const originalFile = e.target.files[0]
-      setCropOriginalFile(originalFile)
+      dispatch({ type: 'SET_STATE', field: 'cropOriginalFile', payload: originalFile })
       const reader = new FileReader()
       reader.addEventListener('load', () => {
-        setCropImageSrc(reader.result?.toString() || '')
-        setCropDialogOpen(true)
+        dispatch({ type: 'SET_STATE', field: 'cropImageSrc', payload: reader.result?.toString() || '' })
+        dispatch({ type: 'SET_STATE', field: 'cropDialogOpen', payload: true })
       })
       reader.readAsDataURL(originalFile)
       e.target.value = '' // clear input
@@ -276,44 +191,39 @@ export default function HeadVolunteersPage() {
   }
 
   const handleCropComplete = async (croppedBlob: Blob) => {
-    setCropDialogOpen(false)
-    setUploadingPhoto(true)
+    dispatch({ type: 'SET_STATE', field: 'cropDialogOpen', payload: false })
+    dispatch({ type: 'SET_STATE', field: 'uploadingPhoto', payload: true })
     try {
-      const file = await compressImage(new File([croppedBlob], cropOriginalFile?.name || 'photo.jpg', { type: 'image/jpeg' }), 800, 0.7) // Compress before upload
+      const file = await compressImage(new File([croppedBlob], state.cropOriginalFile?.name || 'photo.jpg', { type: 'image/jpeg' }), 800, 0.7) // Compress before upload
       const fileExt = 'jpg'
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
       const filePath = `${fileName}`
 
-      const { data, error: uploadError } = await supabase.storage
-        .from('volunteer-photos')
-        .upload(filePath, file)
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('filePath', filePath)
+      const { publicUrl } = await uploadVolunteerPhotoAction(formData)
 
-      if (uploadError) throw uploadError
-
-      const { data: urlData } = supabase.storage
-        .from('volunteer-photos')
-        .getPublicUrl(filePath)
-
-      setPhotoUrl(urlData.publicUrl)
+      dispatch({ type: 'SET_STATE', field: 'photoUrl', payload: publicUrl })
       toast.success('Photo uploaded successfully')
     } catch (err: any) {
       toast.error(err.message || 'Photo upload failed')
     } finally {
-      setUploadingPhoto(false)
+      dispatch({ type: 'SET_STATE', field: 'uploadingPhoto', payload: false })
     }
   }
 
   // CSV Import Callback
   const handleCSVUploadSuccess = async (data: any[]) => {
-    setLoading(true)
+    dispatch({ type: 'SET_LOADING', payload: true })
     try {
-      if (myModels.length === 0) {
+      if (state.myModels.length === 0) {
         return toast.error('You are not assigned to supervise any models yet. Upload blocked.')
       }
 
       // Map models name to IDs
       const modelMap: Record<string, string> = {}
-      myModels.forEach(m => {
+      state.myModels.forEach((m: any) => {
         modelMap[m.name.toLowerCase()] = m.id
       })
 
@@ -337,7 +247,7 @@ export default function HeadVolunteersPage() {
             role: row['Role'] || 'Volunteer',
             branch: row['Branch'] || '',
             status: 'Pending',
-            model_id: matchedModelId || myModels[0].id // default to first supervised model
+            model_id: matchedModelId || state.myModels[0].id // default to first supervised model
           })
         }
       })
@@ -347,26 +257,26 @@ export default function HeadVolunteersPage() {
         throw new Error('Some rows contain models outside your authority.')
       }
 
-      const { error } = await supabase.from('volunteers').insert(recordsToInsert)
-      if (error) throw error
+      const res: any = await bulkImportVolunteersAction(recordsToInsert)
+      if (res?.error) throw new Error(res.error)
 
       toast.success(`Successfully imported ${recordsToInsert.length} volunteers into database!`)
       fetchData()
     } catch (err: any) {
       toast.error(err.message || 'Database bulk insert failed')
     } finally {
-      setLoading(false)
+      dispatch({ type: 'SET_LOADING', payload: false })
     }
   }
 
   // Filtering
-  const filteredVolunteers = volunteers.filter(v => {
-    const matchesSearch = v.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.mobile_number.includes(searchTerm)
+  const filteredVolunteers = state.volunteers.filter((v: any) => {
+    const matchesSearch = v.full_name.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+      v.id.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+      v.mobile_number.includes(state.searchTerm)
 
-    const matchesModel = filterModel === 'all' || v.model_id === filterModel
-    const matchesStatus = filterStatus === 'all' || v.status === filterStatus
+    const matchesModel = state.filterModel === 'all' || v.model_id === state.filterModel
+    const matchesStatus = state.filterStatus === 'all' || v.status === state.filterStatus
 
     return matchesSearch && matchesModel && matchesStatus
   })
@@ -374,9 +284,9 @@ export default function HeadVolunteersPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <ImageCropperDialog
-        open={cropDialogOpen}
-        onOpenChange={setCropDialogOpen}
-        imageSrc={cropImageSrc}
+        open={state.cropDialogOpen}
+        onOpenChange={(val) => dispatch({ type: 'SET_STATE', field: 'cropDialogOpen', payload: val })}
+        imageSrc={state.cropImageSrc}
         onCropComplete={handleCropComplete}
       />
       {/* Header */}
@@ -392,7 +302,7 @@ export default function HeadVolunteersPage() {
         </div>
       </div>
 
-      {myModels.length === 0 ? (
+      {state.myModels.length === 0 ? (
         <Card className="bg-card p-12 text-center">
           <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-primary">
             <Users className="w-6 h-6" />
@@ -419,27 +329,27 @@ export default function HeadVolunteersPage() {
                     type="search"
                     placeholder="Search name, ID, phone..."
                     className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    value={state.searchTerm}
+                    onChange={(e) => dispatch({ type: 'SET_STATE', field: 'searchTerm', payload: e.target.value })}
                   />
                 </div>
 
                 {/* Model Filter */}
-                <Select value={filterModel} onValueChange={(val) => setFilterModel(val || 'all')}>
+                <Select value={state.filterModel} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'filterModel', payload: val || 'all' })}>
                   <SelectTrigger className="w-full sm:w-44 bg-card border-primary/10 rounded-xl">
                     <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="All My Models" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" label="All My Models">All My Models</SelectItem>
-                    {myModels.map(m => (
+                    {state.myModels.map((m: any) => (
                       <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
 
                 {/* Status Filter */}
-                <Select value={filterStatus} onValueChange={(val) => setFilterStatus(val || 'all')}>
+                <Select value={state.filterStatus} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'filterStatus', payload: val || 'all' })}>
                   <SelectTrigger className="w-full sm:w-36 bg-card border-primary/10 rounded-xl">
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
@@ -457,7 +367,7 @@ export default function HeadVolunteersPage() {
                   variant="outline"
                   className="w-full sm:w-auto"
                   onClick={() => {
-                    window.location.href = `/api/export?status=${filterStatus}&model=${filterModel}&search=${searchTerm}`
+                    window.location.href = `/api/export?status=${state.filterStatus}&model=${state.filterModel}&search=${state.searchTerm}`
                   }}
                 >
                   <Download className="h-4 w-4" />
@@ -473,13 +383,12 @@ export default function HeadVolunteersPage() {
                 </Button>
 
                 {/* Add Trigger */}
-                <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                <Dialog open={state.isAddOpen} onOpenChange={(val) => dispatch({ type: 'SET_STATE', field: 'isAddOpen', payload: val })}>
                   <DialogTrigger render={
                     <Button
                       className="w-full sm:w-auto px-5 gap-2"
                       onClick={() => {
-                        setFullName(''); setMobileNumber(''); setAge(''); setEmergencyContact(''); setAddress(''); setRemarks(''); setPhotoUrl(''); setBranch(''); setRole('Volunteer'); setAccommodation(false);
-                        if (myModels.length > 0) setModelId(myModels[0].id);
+                        dispatch({ type: 'RESET_FORM' });
                       }}
                     />
                   }>
@@ -495,18 +404,18 @@ export default function HeadVolunteersPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
-                          <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
+                          <Input value={state.fullName} onChange={e => dispatch({ type: 'SET_STATE', field: 'fullName', payload: e.target.value })} required />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
-                          <Input value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
+                          <Input value={state.mobileNumber} onChange={e => dispatch({ type: 'SET_STATE', field: 'mobileNumber', payload: e.target.value })} required />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender *</Label>
-                          <Select value={gender} onValueChange={(val) => setGender(val || 'Male')} required>
+                          <Select value={state.gender} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'gender', payload: val || 'Male' })} required>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Male">Male</SelectItem>
@@ -517,11 +426,11 @@ export default function HeadVolunteersPage() {
                         </div>
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age *</Label>
-                          <Input type="number" value={age} onChange={e => setAge(e.target.value)} required />
+                          <Input type="number" value={state.age} onChange={e => dispatch({ type: 'SET_STATE', field: 'age', payload: e.target.value })} required />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Seva/Role</Label>
-                          <Select value={role} onValueChange={(val) => setRole(val || 'Volunteer')}>
+                          <Select value={state.role} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'role', payload: val || 'Volunteer' })}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Volunteer">Volunteer</SelectItem>
@@ -535,18 +444,18 @@ export default function HeadVolunteersPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
-                          <Input value={branch} onChange={e => setBranch(e.target.value)} />
+                          <Input value={state.branch} onChange={e => dispatch({ type: 'SET_STATE', field: 'branch', payload: e.target.value })} />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
-                          <Select value={modelId} onValueChange={(val) => setModelId(val || '')}>
+                          <Select value={state.modelId} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'modelId', payload: val || '' })}>
                             <SelectTrigger>
                               <SelectValue placeholder="Choose Division">
-                                {myModels.find(m => m.id === modelId) ? formatModelLabel(myModels.find(m => m.id === modelId)) : "Choose Division"}
+                                {state.myModels.find((m: any) => m.id === state.modelId) ? formatModelLabel(state.myModels.find((m: any) => m.id === state.modelId)) : "Choose Division"}
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {myModels.map(m => (
+                              {state.myModels.map((m: any) => (
                                 <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
                               ))}
                             </SelectContent>
@@ -557,11 +466,11 @@ export default function HeadVolunteersPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
-                          <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} required />
+                          <Input value={state.emergencyContact} onChange={e => dispatch({ type: 'SET_STATE', field: 'emergencyContact', payload: e.target.value })} required />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
-                          <Input value={address} onChange={e => setAddress(e.target.value)} />
+                          <Input value={state.address} onChange={e => dispatch({ type: 'SET_STATE', field: 'address', payload: e.target.value })} />
                         </div>
                       </div>
 
@@ -569,30 +478,29 @@ export default function HeadVolunteersPage() {
                         <div className="space-y-1 md:col-span-4">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Requirements</Label>
                           <div className="flex items-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm w-full">
-                            <Checkbox id="add-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} />
+                            <Checkbox id="add-accommodation" checked={state.accommodation} onCheckedChange={(checked) => dispatch({ type: 'SET_STATE', field: 'accommodation', payload: checked as boolean })} />
                             <Label htmlFor="add-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
                           </div>
                         </div>
                         <div className="space-y-1 md:col-span-8">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
-                          <Input value={remarks} onChange={e => setRemarks(e.target.value)} />
+                          <Input value={state.remarks} onChange={e => dispatch({ type: 'SET_STATE', field: 'remarks', payload: e.target.value })} />
                         </div>
                       </div>
 
                       <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
                         <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo *</Label>
                         <div className="flex items-center gap-4 mt-2">
-                          {photoUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={photoUrl} alt="Preview" className="w-16 h-20 object-cover rounded-md border" />
+                          {state.photoUrl && (
+                            <Image src={state.photoUrl} alt="Volunteer preview" width={64} height={80} unoptimized className="w-16 h-20 object-cover rounded-md border" />
                           )}
-                          <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
-                          {uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
+                          <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={state.uploadingPhoto} />
+                          {state.uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
                         </div>
                       </div>
 
                       <DialogFooter className="pt-2">
-                        <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
+                        <Button type="button" variant="outline" onClick={() => dispatch({ type: 'SET_STATE', field: 'isAddOpen', payload: false })}>Cancel</Button>
                         <Button type="submit">Submit Volunteer</Button>
                       </DialogFooter>
                     </form>
@@ -602,7 +510,7 @@ export default function HeadVolunteersPage() {
             </div>
 
             {/* Edit Volunteer Dialog */}
-            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            <Dialog open={state.isEditOpen} onOpenChange={(val) => dispatch({ type: 'SET_STATE', field: 'isEditOpen', payload: val })}>
               <DialogContent className="sm:max-w-xl rounded-xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold">Edit Volunteer Details</DialogTitle>
@@ -612,19 +520,19 @@ export default function HeadVolunteersPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
-                      <Input value={fullName} onChange={e => setFullName(e.target.value)} required disabled={currentVolunteer?.status === 'Approved'} />
+                      <Input value={state.fullName} onChange={e => dispatch({ type: 'SET_STATE', field: 'fullName', payload: e.target.value })} required disabled={state.currentVolunteer?.status === 'Approved'} />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
-                      <Input value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} required />
+                      <Input value={state.mobileNumber} onChange={e => dispatch({ type: 'SET_STATE', field: 'mobileNumber', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} required />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender *</Label>
-                      <Select value={gender} onValueChange={(val) => setGender(val || 'Male')} disabled={currentVolunteer?.status === 'Approved'} required>
-                        <SelectTrigger disabled={currentVolunteer?.status === 'Approved'}><SelectValue /></SelectTrigger>
+                      <Select value={state.gender} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'gender', payload: val || 'Male' })} disabled={state.currentVolunteer?.status === 'Approved'} required>
+                        <SelectTrigger disabled={state.currentVolunteer?.status === 'Approved'}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Male">Male</SelectItem>
                           <SelectItem value="Female">Female</SelectItem>
@@ -634,12 +542,12 @@ export default function HeadVolunteersPage() {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age *</Label>
-                      <Input type="number" value={age} onChange={e => setAge(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} required />
+                      <Input type="number" value={state.age} onChange={e => dispatch({ type: 'SET_STATE', field: 'age', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} required />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Seva/Role</Label>
-                      <Select value={role} onValueChange={(val) => setRole(val || 'Volunteer')} disabled={currentVolunteer?.status === 'Approved'}>
-                        <SelectTrigger disabled={currentVolunteer?.status === 'Approved'}><SelectValue /></SelectTrigger>
+                      <Select value={state.role} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'role', payload: val || 'Volunteer' })} disabled={state.currentVolunteer?.status === 'Approved'}>
+                        <SelectTrigger disabled={state.currentVolunteer?.status === 'Approved'}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Volunteer">Volunteer</SelectItem>
                           <SelectItem value="Model Incharge">Model Incharge</SelectItem>
@@ -652,18 +560,18 @@ export default function HeadVolunteersPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
-                      <Input value={branch} onChange={e => setBranch(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
+                      <Input value={state.branch} onChange={e => dispatch({ type: 'SET_STATE', field: 'branch', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
-                      <Select value={modelId} onValueChange={(val) => setModelId(val || '')} disabled={currentVolunteer?.status === 'Approved'}>
-                        <SelectTrigger disabled={currentVolunteer?.status === 'Approved'}>
+                      <Select value={state.modelId} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'modelId', payload: val || '' })} disabled={state.currentVolunteer?.status === 'Approved'}>
+                        <SelectTrigger disabled={state.currentVolunteer?.status === 'Approved'}>
                           <SelectValue placeholder="Choose Division">
-                            {myModels.find(m => m.id === modelId) ? formatModelLabel(myModels.find(m => m.id === modelId)) : "Choose Division"}
+                            {state.myModels.find((m: any) => m.id === state.modelId) ? formatModelLabel(state.myModels.find((m: any) => m.id === state.modelId)) : "Choose Division"}
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          {myModels.map(m => (
+                          {state.myModels.map((m: any) => (
                             <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
                           ))}
                         </SelectContent>
@@ -674,11 +582,11 @@ export default function HeadVolunteersPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
-                      <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} required />
+                      <Input value={state.emergencyContact} onChange={e => dispatch({ type: 'SET_STATE', field: 'emergencyContact', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} required />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
-                      <Input value={address} onChange={e => setAddress(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
+                      <Input value={state.address} onChange={e => dispatch({ type: 'SET_STATE', field: 'address', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} />
                     </div>
                   </div>
 
@@ -686,37 +594,36 @@ export default function HeadVolunteersPage() {
                     <div className="space-y-1 md:col-span-4">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Requirements</Label>
                       <div className="flex items-center space-x-2 h-10 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm w-full">
-                        <Checkbox id="edit-accommodation" checked={accommodation} onCheckedChange={(checked) => setAccommodation(checked as boolean)} disabled={currentVolunteer?.status === 'Approved'} />
+                        <Checkbox id="edit-accommodation" checked={state.accommodation} onCheckedChange={(checked) => dispatch({ type: 'SET_STATE', field: 'accommodation', payload: checked as boolean })} disabled={state.currentVolunteer?.status === 'Approved'} />
                         <Label htmlFor="edit-accommodation" className="text-[11px] font-bold uppercase cursor-pointer whitespace-nowrap">Accommodation</Label>
                       </div>
                     </div>
                     <div className="space-y-1 md:col-span-8">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
-                      <Input value={remarks} onChange={e => setRemarks(e.target.value)} disabled={currentVolunteer?.status === 'Approved'} />
+                      <Input value={state.remarks} onChange={e => dispatch({ type: 'SET_STATE', field: 'remarks', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} />
                     </div>
                   </div>
 
                   <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
                     <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo *</Label>
                     <div className="flex items-center gap-4 mt-2">
-                      {photoUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={photoUrl} alt="Preview" className="w-16 h-20 object-cover rounded-md border" />
+                      {state.photoUrl && (
+                        <Image src={state.photoUrl} alt="Volunteer preview" width={64} height={80} unoptimized className="w-16 h-20 object-cover rounded-md border" />
                       )}
-                      <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto || currentVolunteer?.status === 'Approved'} />
-                      {uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
+                      <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={state.uploadingPhoto || state.currentVolunteer?.status === 'Approved'} />
+                      {state.uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
                     </div>
                   </div>
 
-                  {currentVolunteer?.status === 'Approved' && (
+                  {state.currentVolunteer?.status === 'Approved' && (
                     <p className="text-[11px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/15 p-2 rounded border border-amber-100">
                       ⚠️ Profile is approved and locked. Contact the Super Admin to request edits.
                     </p>
                   )}
 
                   <DialogFooter className="pt-2">
-                    <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
-                    <Button type="submit" disabled={currentVolunteer?.status === 'Approved'}>Save Changes</Button>
+                    <Button type="button" variant="outline" onClick={() => dispatch({ type: 'SET_STATE', field: 'isEditOpen', payload: false })}>Cancel</Button>
+                    <Button type="submit" disabled={state.currentVolunteer?.status === 'Approved'}>Save Changes</Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
@@ -725,7 +632,7 @@ export default function HeadVolunteersPage() {
             {/* List */}
             <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
               <div className="p-0">
-                {loading ? (
+                {state.loading ? (
                   <div className="p-4 space-y-4">
                     <div className="flex items-center justify-between">
                       <Skeleton className="h-8 w-[200px]" />
@@ -757,7 +664,7 @@ export default function HeadVolunteersPage() {
                       ))}
                     </div>
                   </div>
-                ) : volunteers.length === 0 ? (
+                ) : state.volunteers.length === 0 ? (
                   <div className="text-center py-16 text-muted-foreground text-sm font-semibold">
                     No volunteers registered in your models. Add one above!
                   </div>
@@ -775,14 +682,13 @@ export default function HeadVolunteersPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredVolunteers.map((vol) => (
+                      {filteredVolunteers.map((vol: any) => (
                         <TableRow key={vol.id} className="hover:bg-muted/20 transition-colors duration-200">
                           <TableCell className="font-bold text-sm text-primary py-4 px-6">{vol.snk_id || 'Pending'}</TableCell>
                           <TableCell>
                             <div className="w-10 h-12 rounded bg-muted overflow-hidden flex items-center justify-center border shadow-sm">
                               {vol.photo_url ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={vol.photo_url} alt="Profile" className="w-full h-full object-cover" />
+                                <Image src={vol.photo_url} alt={`${vol.full_name}'s avatar`} width={40} height={48} unoptimized className="w-full h-full object-cover" />
                               ) : (
                                 <Users className="w-4 h-4 text-muted-foreground" />
                               )}
@@ -798,17 +704,17 @@ export default function HeadVolunteersPage() {
                           <TableCell className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{vol.models?.name}</TableCell>
                           <TableCell>
                             <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full border ${vol.status === 'Approved'
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50'
                                 : vol.status === 'Rejected'
-                                  ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                                  ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/50'
+                                  : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50'
                               }`}>
                               {vol.status}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right px-6">
-                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(vol)} className="hover:bg-primary/10 rounded-xl">
-                              <Edit className="h-4 w-4" />
+                          <TableCell className="text-right py-4 space-x-1 px-6">
+                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(vol)} title="Edit Details" className="h-8 w-8 hover:bg-primary/10 rounded-lg">
+                              <Edit className="h-4 w-4 text-primary" />
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -822,7 +728,7 @@ export default function HeadVolunteersPage() {
                               </div>
                               <p className="text-muted-foreground font-semibold">No volunteers found</p>
                               <p className="text-xs text-muted-foreground/70 max-w-sm mx-auto">
-                                {searchTerm || filterStatus !== 'all' || filterModel !== 'all'
+                                {state.searchTerm || state.filterStatus !== 'all' || state.filterModel !== 'all'
                                   ? "Try adjusting your search or filters to find what you're looking for."
                                   : "There are no volunteers in the system yet."}
                               </p>
@@ -838,25 +744,44 @@ export default function HeadVolunteersPage() {
           </TabsContent>
 
           <TabsContent value="import">
-            <div className="grid gap-6 md:grid-cols-2">
-              <CSVUpload onUploadSuccess={handleCSVUploadSuccess} />
-              <Card className="">
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold">CSV Import Rules for Heads</CardTitle>
-                  <CardDescription>System access validation parameters.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm text-muted-foreground">
-                  <p>You can import multiple volunteer entries directly under your supervised models:</p>
-                  <div className="bg-amber-50 border border-amber-100 p-3 rounded-lg text-amber-700 text-xs font-semibold leading-relaxed">
-                    ⚠️ CRITICAL RULE: The <b>Model Name</b> column in your CSV file must match one of your assigned models:
-                    <ul className="list-disc pl-5 mt-1 text-amber-900">
-                      {myModels.map(m => <li key={m.id}>{m.name}</li>)}
-                    </ul>
-                    Any rows matching other models will block the upload.
+            <Card className="bg-card shadow-sm border-primary/10 rounded-2xl">
+              <CardHeader className="border-b border-primary/5 pb-6">
+                <CardTitle className="text-2xl font-bold flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <UploadCloud className="w-5 h-5 text-primary" />
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                  Bulk Import via CSV
+                </CardTitle>
+                <CardDescription className="text-base mt-2">
+                  Add multiple volunteers to your supervised models at once. Follow the template carefully.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-8">
+                <div className="bg-muted/30 rounded-xl p-6 border border-dashed border-primary/20">
+                  <CSVUpload
+                    onUploadSuccess={handleCSVUploadSuccess}
+                  />
+                </div>
+
+                <div className="mt-8 space-y-4">
+                  <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Guidelines for Head Import</h4>
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-3 text-sm text-muted-foreground bg-muted/20 p-3 rounded-lg">
+                      <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span>You can only import volunteers into models that you supervise: <strong className="text-foreground">{state.myModels.map((m: any) => m.name).join(', ') || 'None'}</strong>.</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-sm text-muted-foreground bg-muted/20 p-3 rounded-lg">
+                      <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span>The <strong>Model Name</strong> column in the CSV must match exactly.</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-sm text-muted-foreground bg-muted/20 p-3 rounded-lg">
+                      <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span>Photos must be uploaded manually for each imported volunteer later by editing their profile.</span>
+                    </li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       )}

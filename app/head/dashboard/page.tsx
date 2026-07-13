@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react'
 import { Users, CheckCircle, Clock, Database, TrendingUp, AlertTriangle, ScanLine } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { QRScannerDialog } from '@/components/QRScannerDialog'
 import Image from 'next/image'
+import { getHeadDashboardDataAction } from './actions.server'
 
 export default function HeadDashboard() {
   const [loading, setLoading] = useState(true)
@@ -17,54 +17,13 @@ export default function HeadDashboard() {
     pendingCount: 0
   })
   const [scannerOpen, setScannerOpen] = useState(false)
-  const supabase = createClient()
 
   const fetchDashboardData = async () => {
     setLoading(true)
     try {
-      let profileId = ''
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        profileId = user.id
-      } else {
-        const sessionUserStr = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('mock-user='))
-          ?.split('=')[1]
-        if (sessionUserStr) {
-          const sessionUser = JSON.parse(decodeURIComponent(sessionUserStr))
-          const { data: profile, error: pErr } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('email', sessionUser.email)
-            .single()
-          if (!pErr && profile) profileId = profile.id
-        }
-      }
-
-      if (!profileId) profileId = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12'
-
-      const { data: modelsData, error: modelsErr } = await supabase
-        .from('models')
-        .select('id, name, exhibition_category, status')
-        .eq('head_id', profileId)
-      if (modelsErr) throw modelsErr
-      setMyModels(modelsData || [])
-
-      if (modelsData && modelsData.length > 0) {
-        const modelIds = modelsData.map(m => m.id)
-        const { data: volData, error: volErr } = await supabase
-          .from('volunteers')
-          .select('status')
-          .in('model_id', modelIds)
-        if (volErr) throw volErr
-
-        setStats({
-          volunteersCount: volData?.length || 0,
-          approvedCount: volData?.filter(v => v.status === 'Approved').length || 0,
-          pendingCount: volData?.filter(v => v.status === 'Pending').length || 0
-        })
-      }
+      const data = await getHeadDashboardDataAction()
+      setMyModels(data.models)
+      setStats(data.stats)
     } catch (err: any) {
       toast.error(err.message || 'Error compiling head dashboard')
     } finally {
@@ -114,6 +73,7 @@ export default function HeadDashboard() {
             Live overview of volunteer registries and card validation states for your assigned models.
           </p>
           <button
+            type="button"
             onClick={() => setScannerOpen(true)}
             className="btn-primary bg-[var(--color-peach)] text-ink border-ink shadow-hard hover:bg-[var(--color-lavender)] mt-4 w-full sm:w-auto"
           >
@@ -135,9 +95,9 @@ export default function HeadDashboard() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        {statItems.map((stat, i) => (
+        {statItems.map((stat) => (
           <div
-            key={i}
+            key={stat.title}
             className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl"
           >
             <div className={`icon-tile ${stat.tileClass} w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white`}>

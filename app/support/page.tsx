@@ -39,8 +39,8 @@ export default function SupportPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {contacts.map((contact, index) => (
-            <Card key={index} className="bento-white shadow-hard border-ink hover:-translate-y-1 transition-transform duration-150 group">
+          {contacts.map((contact) => (
+            <Card key={contact.name} className="bento-white shadow-hard border-ink hover:-translate-y-1 transition-transform duration-150 group">
               <CardContent className="p-8 flex flex-col space-y-4">
                 <div className="icon-tile icon-tile-ink bg-secondary text-ink group-hover:scale-110 transition-transform duration-300">
                   <Phone className="w-6 h-6" />

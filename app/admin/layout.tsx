@@ -15,14 +15,21 @@ export default function AdminLayout({
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-30">
-        <Sidebar role="SUPER_ADMIN" />
+        <Sidebar userRole="SUPER_ADMIN" />
       </div>
 
       {/* Mobile Backdrop */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-ink/30 md:hidden animate-in fade-in duration-200"
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-ink/30 md:hidden animate-in fade-in duration-200 w-full cursor-default"
           onClick={() => setSidebarOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+              setSidebarOpen(false)
+            }
+          }}
+          aria-label="Close sidebar"
         />
       )}
 
@@ -33,7 +40,7 @@ export default function AdminLayout({
         }`}
         style={{ borderRight: '3px solid #111111' }}
       >
-        <Sidebar role="SUPER_ADMIN" closeMobileMenu={() => setSidebarOpen(false)} />
+        <Sidebar userRole="SUPER_ADMIN" closeMobileMenu={() => setSidebarOpen(false)} />
       </div>
 
       {/* Main */}

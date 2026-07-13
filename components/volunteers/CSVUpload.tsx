@@ -1,32 +1,50 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useReducer } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { UploadCloud, CheckCircle2, AlertCircle, Download, Loader2 } from 'lucide-react'
 import Papa from 'papaparse'
 import { toast } from 'sonner'
-import { bulkImportVolunteersAction } from '@/app/actions/volunteers'
-import { createClient } from '@/lib/supabase/client'
+import { bulkImportVolunteersAction } from '@/server/actions/volunteers'
+import { getModelsDataAction } from '@/app/admin/models/actions.server'
+
+const downloadTemplate = () => {
+  const headers = "Full Name,Mobile Number,Gender,Age,Model Name,Emergency Contact,Designation,Team,Address,Remarks"
+  const sample = "John Doe,9876543210,Male,25,Main Stage,+91 1234567890,Usher,Alpha,123 Street,"
+  const csvContent = `${headers}\n${sample}`
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  link.setAttribute('href', url)
+  link.setAttribute('download', 'volunteer_import_template.csv')
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
 
 export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[]) => void }) {
-  const [file, setFile] = useState<File | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  
-  // Preview states
-  const [parsedData, setParsedData] = useState<any[]>([])
-  const [validationResults, setValidationResults] = useState<{
-    valid: any[];
-    invalid: any[];
-    errors: string[];
-  } | null>(null)
-  
-  const [importing, setImporting] = useState(false)
-  const [results, setResults] = useState<{
-    successful: number;
-    duplicates: number;
-  } | null>(null)
+  const [state, dispatch] = React.useReducer(
+    (state: any, action: Partial<any>) => ({ ...state, ...action }),
+    {
+      file: null,
+      error: null,
+      parsedData: [],
+      validationResults: null,
+      importing: false,
+      results: null
+    }
+  )
+
+  const { file, error, parsedData, validationResults, importing, results } = state
+
+  const setFile = (v: any) => dispatch({ file: typeof v === 'function' ? v(file) : v })
+  const setError = (v: any) => dispatch({ error: typeof v === 'function' ? v(error) : v })
+  const setParsedData = (v: any) => dispatch({ parsedData: typeof v === 'function' ? v(parsedData) : v })
+  const setValidationResults = (v: any) => dispatch({ validationResults: typeof v === 'function' ? v(validationResults) : v })
+  const setImporting = (v: any) => dispatch({ importing: typeof v === 'function' ? v(importing) : v })
+  const setResults = (v: any) => dispatch({ results: typeof v === 'function' ? v(results) : v })
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -38,19 +56,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
     }
   }
 
-  const downloadTemplate = () => {
-    const headers = "Full Name,Mobile Number,Gender,Age,Model Name,Emergency Contact,Designation,Team,Address,Remarks"
-    const sample = "John Doe,9876543210,Male,25,Main Stage,+91 1234567890,Usher,Alpha,123 Street,"
-    const csvContent = `${headers}\n${sample}`
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', 'volunteer_import_template.csv')
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
+
 
   const previewCSV = async () => {
     if (!file) return
@@ -65,8 +71,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
         const errors: string[] = []
         
         // Fetch models to map names
-        const supabase = createClient()
-        const { data: modelsData } = await supabase.from('models').select('id, name')
+        const modelsData = await getModelsDataAction()
         const modelMap: Record<string, string> = {}
         if (modelsData) {
           modelsData.forEach(m => {
@@ -119,7 +124,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
     setImporting(true)
     try {
       // Strip original_model_name before insert
-      const payload = validationResults.valid.map(v => {
+      const payload = validationResults.valid.map((v: any) => {
         const { original_model_name, ...rest } = v
         return rest
       })
@@ -202,7 +207,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
 
               {validationResults.errors.length > 0 && (
                 <div className="text-xs text-red-500 max-h-24 overflow-y-auto space-y-1 bg-red-50 p-2 rounded border border-red-200">
-                  {validationResults.errors.map((err, i) => <div key={i}>{err}</div>)}
+                  {validationResults.errors.map((err: any) => <div key={err}>{err}</div>)}
                 </div>
               )}
 
@@ -218,8 +223,8 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {validationResults.valid.slice(0, 50).map((row, i) => (
-                      <TableRow key={i}>
+                    {validationResults.valid.slice(0, 50).map((row: any) => (
+                      <TableRow key={`${row.full_name}-${row.mobile_number}`}>
                         <TableCell className="text-xs font-medium">{row.full_name}</TableCell>
                         <TableCell className="text-xs">{row.mobile_number}</TableCell>
                         <TableCell className="text-xs">{row.original_model_name || 'None'}</TableCell>

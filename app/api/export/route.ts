@@ -2,6 +2,11 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+const CSV_HEADERS = [
+  'SNK ID', 'Full Name', 'Mobile Number', 'Gender', 'Age', 
+  'Address', 'Model/Division', 'Branch', 'Accommodation', 'Duty/Designation', 'Status', 'Registered Date'
+];
+// oxlint-disable-next-line react-doctor/nextjs-no-side-effect-in-get-handler -- CSV download is triggered via GET link and may refresh session cookies
 export async function GET(request: Request) {
   try {
     const cookieStore = await cookies()
@@ -98,10 +103,7 @@ export async function GET(request: Request) {
     }
 
     // Build CSV
-    const headers = [
-      'SNK ID', 'Full Name', 'Mobile Number', 'Gender', 'Age', 
-      'Address', 'Model/Division', 'Branch', 'Accommodation', 'Duty/Designation', 'Status', 'Registered Date'
-    ]
+    
     
     const rows = data.map(v => {
       const modelObj = Array.isArray(v.models) ? v.models[0] : v.models
@@ -124,7 +126,7 @@ export async function GET(request: Request) {
       ].join(',')
     })
 
-    const csvContent = [headers.join(','), ...rows].join('\n')
+    const csvContent = [CSV_HEADERS.join(','), ...rows].join('\n')
 
     return new NextResponse(csvContent, {
       status: 200,

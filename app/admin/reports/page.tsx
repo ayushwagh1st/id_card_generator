@@ -5,12 +5,50 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { FileText, Download, Activity, Users, Database, Shield, LayoutGrid, Loader2 } from 'lucide-react'
-import { getActivitiesAction } from '@/app/actions/activity'
-import { getVolunteerReportData, getSessionReportData, getModelReportData, getSecurityReportData } from '@/app/actions/reports'
+import { getActivitiesAction } from '@/server/actions/activity'
+import { getVolunteerReportData, getSessionReportData, getModelReportData, getSecurityReportData } from '@/server/actions/reports'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { exportToPDF, PDFSummaryStat } from '@/lib/pdf'
 import Image from 'next/image'
+
+const reports = [
+  {
+    id: 'volunteers',
+    title: 'Volunteer Analytics',
+    description: 'Demographics, department breakdowns, and assigned models.',
+    icon: Users,
+    color: 'pink'
+  },
+  {
+    id: 'sessions',
+    title: 'Session Analytics',
+    description: 'Attendance rates, session capacities, and checkouts.',
+    icon: LayoutGrid,
+    color: 'mint'
+  },
+  {
+    id: 'models',
+    title: 'Models Overview',
+    description: 'Allocation of volunteers across exhibition models.',
+    icon: Database,
+    color: 'blue'
+  },
+  {
+    id: 'security',
+    title: 'Security Roster',
+    description: 'List of all active security personnel and staff.',
+    icon: Shield,
+    color: 'lavender'
+  },
+  {
+    id: 'activity',
+    title: 'System Audit Log',
+    description: 'Export the recent global activity feed.',
+    icon: Activity,
+    color: 'orange'
+  }
+]
 
 export default function AdminReportsPage() {
   const [activities, setActivities] = useState<any[]>([])
@@ -180,43 +218,7 @@ export default function AdminReportsPage() {
     }
   }
 
-  const reports = [
-    {
-      id: 'volunteers',
-      title: 'Volunteer Analytics',
-      description: 'Demographics, department breakdowns, and assigned models.',
-      icon: Users,
-      color: 'pink'
-    },
-    {
-      id: 'sessions',
-      title: 'Session Analytics',
-      description: 'Attendance rates, session capacities, and checkouts.',
-      icon: LayoutGrid,
-      color: 'mint'
-    },
-    {
-      id: 'models',
-      title: 'Models Overview',
-      description: 'Allocation of volunteers across exhibition models.',
-      icon: Database,
-      color: 'blue'
-    },
-    {
-      id: 'security',
-      title: 'Security Roster',
-      description: 'List of all active security personnel and staff.',
-      icon: Shield,
-      color: 'lavender'
-    },
-    {
-      id: 'activity',
-      title: 'System Audit Log',
-      description: 'Export the recent global activity feed.',
-      icon: Activity,
-      color: 'orange'
-    }
-  ]
+
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -304,8 +306,8 @@ export default function AdminReportsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {activities.map((act, idx) => (
-                  <TableRow key={idx}>
+                {activities.map((act) => (
+                  <TableRow key={act.id}>
                     <TableCell className="font-medium whitespace-nowrap text-xs">
                       {new Date(act.created_at).toLocaleString()}
                     </TableCell>

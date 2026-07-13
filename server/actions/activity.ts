@@ -1,4 +1,5 @@
 'use server'
+import { checkAuth } from '@/lib/supabase/server'
 
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -70,6 +71,7 @@ export async function logActivityAction(
 }
 
 export async function getActivitiesAction(limit = 50, filterRole = 'all') {
+  await checkAuth();
     try {
         const cookieStore = await cookies()
         const supabase = createServerClient(

@@ -4,46 +4,45 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Sparkles, Users, Database, FileText, BarChart, LogOut, Printer, Shield, X, Activity } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { logoutAction } from '@/server/actions/auth'
 
 interface SidebarProps {
-  role: 'SUPER_ADMIN' | 'MODEL_HEAD' | 'LECTURER'
+  userRole: 'SUPER_ADMIN' | 'MODEL_HEAD' | 'LECTURER'
   closeMobileMenu?: () => void
 }
 
-export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
+const adminLinks = [
+  { name: 'Dashboard', href: '/admin/dashboard', icon: BarChart },
+  { name: 'Models', href: '/admin/models', icon: Database },
+  { name: 'Model Heads', href: '/admin/heads', icon: Shield },
+  { name: 'Security', href: '/admin/lecturers', icon: Users },
+  { name: 'Sessions', href: '/admin/sessions', icon: Database },
+  { name: 'Enrollment', href: '/admin/session-enrollment', icon: Users },
+  { name: 'Live Tracking', href: '/admin/live-attendance', icon: Activity },
+  { name: 'Volunteers', href: '/admin/volunteers', icon: Users },
+  { name: 'Reports', href: '/admin/reports', icon: FileText },
+  { name: 'Print Center', href: '/admin/print', icon: Printer },
+]
+
+const headLinks = [
+  { name: 'Dashboard', href: '/head/dashboard', icon: BarChart },
+  { name: 'My Volunteers', href: '/head/volunteers', icon: Users },
+  { name: 'Reports', href: '/head/reports', icon: FileText },
+]
+
+const lecturerLinks = [
+  { name: 'Dashboard', href: '/lecturer/dashboard', icon: BarChart },
+  { name: 'All Sessions', href: '/lecturer/sessions', icon: Database },
+  { name: 'QR Scanner', href: '/lecturer/scanner', icon: Shield },
+  { name: 'Reports', href: '/lecturer/reports', icon: FileText },
+]
+
+export function Sidebar({ userRole, closeMobileMenu }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
 
-  const adminLinks = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: BarChart },
-    { name: 'Models', href: '/admin/models', icon: Database },
-    { name: 'Model Heads', href: '/admin/heads', icon: Shield },
-    { name: 'Security', href: '/admin/lecturers', icon: Users },
-    { name: 'Sessions', href: '/admin/sessions', icon: Database },
-    { name: 'Enrollment', href: '/admin/session-enrollment', icon: Users },
-    { name: 'Live Tracking', href: '/admin/live-attendance', icon: Activity },
-    { name: 'Volunteers', href: '/admin/volunteers', icon: Users },
-    { name: 'Reports', href: '/admin/reports', icon: FileText },
-    { name: 'Print Center', href: '/admin/print', icon: Printer },
-  ]
-
-  const headLinks = [
-    { name: 'Dashboard', href: '/head/dashboard', icon: BarChart },
-    { name: 'My Volunteers', href: '/head/volunteers', icon: Users },
-    { name: 'Reports', href: '/head/reports', icon: FileText },
-  ]
-
-  const lecturerLinks = [
-    { name: 'Dashboard', href: '/lecturer/dashboard', icon: BarChart },
-    { name: 'All Sessions', href: '/lecturer/sessions', icon: Database },
-    { name: 'QR Scanner', href: '/lecturer/scanner', icon: Shield },
-    { name: 'Reports', href: '/lecturer/reports', icon: FileText },
-  ]
-
-  const links = role === 'SUPER_ADMIN' ? adminLinks : role === 'MODEL_HEAD' ? headLinks : lecturerLinks
+  const links = userRole === 'SUPER_ADMIN' ? adminLinks : userRole === 'MODEL_HEAD' ? headLinks : lecturerLinks
 
   const handleLogout = async () => {
     const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -55,9 +54,9 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
       document.cookie = 'mock-user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
       router.refresh()
     } else {
-      await supabase.auth.signOut()
+      await logoutAction()
     }
-    router.push('/login')
+    router.push('/')
   }
 
   return (
@@ -72,6 +71,7 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
         </div>
         {closeMobileMenu && (
           <button
+            type="button"
             onClick={closeMobileMenu}
             className="md:hidden p-1.5 rounded-lg text-foreground/50 hover:text-foreground hover:bg-muted transition-colors"
             aria-label="Close menu"
@@ -110,6 +110,7 @@ export function Sidebar({ role, closeMobileMenu }: SidebarProps) {
       {/* Logout */}
       <div className="p-3" style={{ borderTop: '3px solid #111111' }}>
         <button
+          type="button"
           onClick={() => {
             handleLogout()
             if (closeMobileMenu) closeMobileMenu()

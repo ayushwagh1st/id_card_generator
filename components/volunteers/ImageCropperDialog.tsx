@@ -47,7 +47,7 @@ export default function ImageCropperDialog({
 }: ImageCropperDialogProps) {
   const [crop, setCrop] = useState<Crop>()
   const imgRef = useRef<HTMLImageElement>(null)
-  const [completedCrop, setCompletedCrop] = useState<any>(null)
+  const completedCropRef = useRef<any>(null)
 
   function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
     const { width, height } = e.currentTarget
@@ -55,8 +55,9 @@ export default function ImageCropperDialog({
   }
 
   const handleSave = async () => {
-    if (!completedCrop || !imgRef.current) return
+    if (!completedCropRef.current || !imgRef.current) return
 
+    const completedCrop = completedCropRef.current
     const canvas = document.createElement('canvas')
     const scaleX = imgRef.current.naturalWidth / imgRef.current.width
     const scaleY = imgRef.current.naturalHeight / imgRef.current.height
@@ -96,10 +97,11 @@ export default function ImageCropperDialog({
             <ReactCrop
               crop={crop}
               onChange={(_, percentCrop) => setCrop(percentCrop)}
-              onComplete={(c) => setCompletedCrop(c)}
+              onComplete={(c) => { completedCropRef.current = c }}
               aspect={3 / 4}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
+              {/* oxlint-disable-next-line react-doctor/nextjs-no-img-element -- image cropper library requires a raw HTML img element to attach the ref */}
               <img
                 ref={imgRef}
                 alt="Crop me"

@@ -26,19 +26,11 @@ export const ResetPasswordEmail = ({
         <Font
           fontFamily="Space Grotesk"
           fallbackFontFamily="Helvetica"
-          webFont={{
-            url: 'https://fonts.gstatic.com/s/spacegrotesk/v15/V8mQoQDjQSkGpu8pn628QvLup4A.woff2',
-            format: 'woff2',
-          }}
           fontWeight={700}
         />
         <Font
           fontFamily="Inter"
           fallbackFontFamily="Arial"
-          webFont={{
-            url: 'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZJhjp-Ek-_EeA.woff2',
-            format: 'woff2',
-          }}
           fontWeight={400}
         />
       </Head>

@@ -4,8 +4,7 @@ import { CheckCircle2, XCircle, AlertTriangle, Building, Users, Phone, Hash, Shi
 import Image from 'next/image'
 
 export default async function VerifyPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = await params
-  const supabase = await createClient()
+  const [resolvedParams, supabase] = await Promise.all([params, createClient()])
 
   // Authentication Check (Block Outsiders)
   const { data: { user } } = await supabase.auth.getUser()
@@ -58,8 +57,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
         <CardHeader className="text-center -mt-10 pb-2 relative z-10">
           <div className="w-20 h-24 mx-auto rounded-[10px] overflow-hidden border-3 border-ink shadow-hard-xs bg-card flex items-center justify-center">
             {volunteer.photo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={volunteer.photo_url} alt="Photo" className="w-full h-full object-cover" />
+              <Image src={volunteer.photo_url} alt={`${volunteer.full_name}'s profile photo`} width={80} height={96} unoptimized className="w-full h-full object-cover" />
             ) : (
               <span className="text-xs text-muted-foreground">No Photo</span>
             )}

@@ -1,8 +1,9 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, checkAuth } from '@/lib/supabase/server'
 
 export async function getVolunteerReportData() {
+  await checkAuth();
   const supabase = await createClient()
 
   const { data: volunteers, error } = await supabase
@@ -42,6 +43,7 @@ export async function getVolunteerReportData() {
 }
 
 export async function getSessionReportData() {
+  await checkAuth();
   const supabase = await createClient()
 
   const { data: sessions, error } = await supabase
@@ -81,6 +83,7 @@ export async function getSessionReportData() {
 }
 
 export async function getModelReportData() {
+  await checkAuth();
   const supabase = await createClient()
 
   const { data: models, error } = await supabase
@@ -124,6 +127,7 @@ export async function getModelReportData() {
 }
 
 export async function getSecurityReportData() {
+  await checkAuth();
   const supabase = await createClient()
 
   const { data: security, error } = await supabase

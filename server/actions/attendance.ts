@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, checkAuth } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logActivityAction } from './activity'
 
@@ -10,6 +10,7 @@ export async function recordAttendanceAction(
   sessionId: string,
   mode: 'check-in' | 'check-out'
 ) {
+  await checkAuth();
   const supabase = await createClient()
 
   // 1. Get Logged in User
@@ -160,6 +161,7 @@ export async function recordAttendanceAction(
 }
 
 export async function getSessionAttendanceAction(sessionId: string) {
+  await checkAuth();
     const supabase = await createClient()
 
     const { data, error } = await supabase
@@ -184,6 +186,7 @@ export async function getSessionAttendanceAction(sessionId: string) {
 }
 
 export async function getLecturerStatsAction() {
+  await checkAuth();
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Unauthorized')
@@ -206,6 +209,7 @@ export async function getLecturerStatsAction() {
 }
 
 export async function bulkCheckoutAllAction(sessionId: string) {
+  await checkAuth();
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
@@ -233,7 +237,43 @@ export async function bulkCheckoutAllAction(sessionId: string) {
     return { success: true, message: 'All checked-in volunteers have been checked out.' }
 }
 
+export async function getLiveAttendanceFeedAction(limit = 50) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return { error: 'Unauthorized' }
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0]
+    
+    const { data, error } = await supabase
+      .from('attendance')
+      .select(`
+        id,
+        attendance_status,
+        check_in_time,
+        check_out_time,
+        volunteer:volunteer_id ( full_name, snk_id ),
+        session:session_id ( name )
+      `)
+      .eq('attendance_date', todayStr)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (error) {
+      console.error('Error fetching live attendance:', error)
+      return { error: 'Failed to fetch live attendance' }
+    }
+
+    return { data }
+  } catch (err: any) {
+    console.error(err)
+    return { error: 'Failed to fetch live attendance' }
+  }
+}
 export async function bulkSyncAttendanceAction(scans: any[]) {
+    await checkAuth();
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
@@ -248,6 +288,7 @@ export async function bulkSyncAttendanceAction(scans: any[]) {
             const { scanData, sessionId, mode, timestamp } = scan
             
             let parsedScanData = scanData
+            // oxlint-disable-next-line react-doctor/js-set-map-lookups -- false positive: parsedScanData is a string, not an array
             if (parsedScanData && parsedScanData.includes('/verify/')) {
                 const split = parsedScanData.split('/verify/')
                 if (split.length > 1) {
