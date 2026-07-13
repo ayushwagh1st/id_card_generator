@@ -35,9 +35,8 @@ export default function AdminLayout({
 
       {/* Mobile Drawer */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[80vw] bg-card transition-transform duration-300 md:hidden flex ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[80vw] bg-card transition-transform duration-300 md:hidden flex ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
         style={{ borderRight: '3px solid #111111' }}
       >
         <Sidebar userRole="SUPER_ADMIN" closeMobileMenu={() => setSidebarOpen(false)} />

@@ -95,36 +95,42 @@ export default function AdminDashboard() {
     <div className="space-y-6 animate-in fade-in duration-300">
 
       {/* Banner */}
-      <div className="rounded-[32px] bg-[var(--color-pink)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden group flex flex-col md:flex-row items-center justify-between gap-8">
+      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden group flex flex-col md:flex-row items-center justify-between gap-8">
         
-        <div className="relative z-10 space-y-4 max-w-xl">
-          <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
-            <CheckCircle className="w-4 h-4 mr-2" /> System Online
+        <div className="relative z-10 space-y-6 max-w-xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf3] text-[#027a48] text-xs font-semibold tracking-wide uppercase">
+            <span className="w-2 h-2 rounded-full bg-[#12b76a]"></span> System Online
           </div>
-          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">
-            Super Admin <span className="text-white" style={{ textShadow: '2px 2px 0 #111111' }}>Hub</span>
-          </h1>
-          <p className="font-sans font-medium text-ink/80 text-lg">
+          
+          <div>
+            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">
+              Super Admin <span className="text-[#8C6DFD]">Hub</span>
+            </h1>
+            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
+          </div>
+          
+          <p className="font-sans text-slate-500 text-lg max-w-md leading-relaxed">
             Live overview of volunteer networks, approval statistics, and division allocations.
           </p>
+          
           <button
             type="button"
             onClick={() => dispatch({ type: 'SET_SCANNER_OPEN', payload: true })}
-            className="btn-primary bg-[var(--color-yellow)] text-ink border-ink shadow-hard hover:bg-[var(--color-mint)] mt-4 w-full sm:w-auto"
+            className="inline-flex items-center justify-center gap-2 bg-[#8C6DFD] hover:bg-[#795de6] text-white px-6 py-3 rounded-xl font-medium transition-colors w-full sm:w-auto shadow-sm"
           >
             <ScanLine className="w-5 h-5" />
             Quick Scan ID
           </button>
         </div>
 
-        <div className="hidden md:block relative z-10 w-full max-w-[300px] aspect-square transform transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3">
+        <div className="hidden md:block relative z-10 w-full max-w-[350px] aspect-square transition-transform duration-500 group-hover:scale-105">
           <Image 
             src="/images/admin_dashboard_illustration.png" 
             alt="Control Center" 
             fill
             priority
-            className="object-contain drop-shadow-[8px_8px_0_rgba(17,17,17,1)]"
-            sizes="(max-width: 768px) 100vw, 300px"
+            className="object-contain drop-shadow-xl"
+            sizes="(max-width: 768px) 100vw, 350px"
           />
         </div>
       </div>

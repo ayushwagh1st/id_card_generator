@@ -3,8 +3,14 @@
 import { createClient, checkAuth } from '@/lib/supabase/server'
 
 export async function getDashboardStatsAction() {
-  await checkAuth();
-  const supabase = await createClient()
+  try {
+    let authResult;
+    try {
+      authResult = await checkAuth();
+    } catch (err) {
+      return { error: 'Unauthorized' };
+    }
+    const supabase = await createClient()
 
   const todayStr = new Date().toISOString().split('T')[0]
 
@@ -107,4 +113,8 @@ export async function getDashboardStatsAction() {
     chartData: formattedChart,
     activities: formattedActivities
   }
+} catch (error: any) {
+  console.error("Error in getDashboardStatsAction:", error);
+  return { error: error.message || "An unexpected error occurred" };
+}
 }

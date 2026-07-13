@@ -202,13 +202,16 @@ export default function LecturersPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="rounded-[32px] bg-[var(--color-blue)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="relative z-10 space-y-3">
-          <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf3] text-[#027a48] text-xs font-semibold tracking-wide uppercase">
             <Users className="w-4 h-4 mr-2" /> Security
           </div>
-          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Security Management</h1>
-          <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
+          <div>
+            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">Security Management</h1>
+            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
+          </div>
+          <p className="font-sans text-slate-500 text-lg max-w-xl leading-relaxed">
             Manage security personnel who will conduct sessions and mark attendance.
           </p>
         </div>

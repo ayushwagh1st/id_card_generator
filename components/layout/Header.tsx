@@ -38,7 +38,7 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
             const sessionUser = JSON.parse(decodeURIComponent(sessionUserStr))
             if (sessionUser.full_name) setFetchedName(sessionUser.full_name)
             else if (sessionUser.email) setFetchedName(sessionUser.email.split('@')[0])
-          } catch(e) {}
+          } catch (e) { }
         }
       } catch (error) {
         console.error('Failed to fetch user profile:', error)
@@ -50,8 +50,8 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
 
   const roleLabel =
     roleName === 'SUPER_ADMIN' ? 'Super Admin' :
-    roleName === 'MODEL_HEAD' ? 'Model Head' : 
-    roleName === 'SECURITY' ? 'Security' : 'Lecturer'
+      roleName === 'MODEL_HEAD' ? 'Model Head' :
+        roleName === 'SECURITY' ? 'Security' : 'Lecturer'
 
   return (
     <header

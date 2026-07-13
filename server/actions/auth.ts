@@ -86,7 +86,15 @@ export async function logoutAction() {
 }
 
 export async function getCurrentUserAction() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  return user
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error) {
+      console.error("Supabase getUser error:", error);
+    }
+    return user
+  } catch (error) {
+    console.error("Error in getCurrentUserAction:", error);
+    return null;
+  }
 }

@@ -242,7 +242,7 @@ function ScannerContent() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="rounded-[32px] bg-[var(--color-mint)] p-6 md:p-10 text-ink border-ink shadow-hard pattern-dots relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="relative z-10 flex flex-col md:flex-row gap-4 justify-between w-full md:items-end">
           <div>
             <div className="flex items-center gap-3 mb-2">
@@ -261,8 +261,11 @@ function ScannerContent() {
                     </button>
                 )}
             </div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">QR Attendance Scanner</h1>
-            <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
+            <div>
+            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">QR Attendance Scanner</h1>
+            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
+          </div>
+            <p className="font-sans text-slate-500 text-lg max-w-xl leading-relaxed">
               Scan volunteer ID cards to record attendance. {isOnline ? 'Data saved in real-time.' : 'Data saved locally.'}
             </p>
           </div>
