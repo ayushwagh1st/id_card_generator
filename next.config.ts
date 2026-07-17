@@ -34,6 +34,11 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["keidportal.qzz.io", "localhost:3000"],
+    },
+  },
 };
 
 export default nextConfig;

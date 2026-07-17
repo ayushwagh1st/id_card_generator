@@ -95,9 +95,12 @@ export async function updateSession(request: NextRequest) {
               headers: request.headers,
             },
           })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
+          cookiesToSet.forEach(({ name, value, options }) => {
+            const sessionOptions = { ...options }
+            delete sessionOptions.maxAge
+            delete sessionOptions.expires
+            supabaseResponse.cookies.set(name, value, sessionOptions)
+          })
         },
       },
     }
