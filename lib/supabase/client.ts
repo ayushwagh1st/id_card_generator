@@ -4,11 +4,7 @@ export function createClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project-id.supabase.co'
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'mock-supabase-anon-key-placeholder-12345'
   
-  return createBrowserClient(url, key, {
-    cookieOptions: {
-      maxAge: undefined as unknown as number,
-    }
-  })
+  return createBrowserClient(url, key)
 }
 
 export async function logoutUser() {

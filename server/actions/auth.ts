@@ -93,10 +93,11 @@ export async function logoutAction() {
 export async function getCurrentUserAction() {
   try {
     const { user } = await checkAuth();
-    // Next.js Server Actions crash if you return non-serializable objects (like the Supabase User class)
-    return user ? JSON.parse(JSON.stringify(user)) : null;
-  } catch (error) {
-    console.error("Error in getCurrentUserAction:", error);
+    return user ? structuredClone(user) : null;
+  } catch (error: any) {
+    if (error?.message !== 'Unauthorized') {
+      console.error("Error in getCurrentUserAction:", error);
+    }
     return null;
   }
 }
