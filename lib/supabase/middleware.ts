@@ -20,10 +20,10 @@ export async function updateSession(request: NextRequest) {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MTkwMDAwMDAwMH0.placeholder'
 
   // Mock User logic for local dev without supabase connected
-  const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  const isMockMode = process.env.NODE_ENV !== 'production' && (!process.env.NEXT_PUBLIC_SUPABASE_URL ||
     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') ||
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('placeholder')
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('placeholder'))
 
   if (isMockMode) {
     const mockUserCookie = request.cookies.get('mock-user')?.value

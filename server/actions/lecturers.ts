@@ -56,9 +56,9 @@ export async function addLecturerAction(formData: any) {
   const parsed = lecturerSchema.safeParse(formData)
   if (!parsed.success) return { error: 'Invalid input data', details: parsed.error.flatten().fieldErrors }
 
-  const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
+  const isMockMode = process.env.NODE_ENV !== 'production' && (!process.env.NEXT_PUBLIC_SUPABASE_URL || 
     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') ||
-    !process.env.SUPABASE_SERVICE_ROLE_KEY
+    !process.env.SUPABASE_SERVICE_ROLE_KEY)
 
   let userId = crypto.randomUUID()
 
