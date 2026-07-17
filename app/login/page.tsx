@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Mail, Lock, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
-import { loginAction } from '@/server/actions/auth'
+import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
@@ -30,17 +30,21 @@ export default function LoginPage() {
     }
 
     try {
-      const result = await loginAction(email, password)
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-      if (result.error) {
-        toast.error(result.error)
+      if (error) {
+        toast.error(error.message)
         setLoading(false)
         return
       }
 
-      if (result.success) {
+      if (data.user) {
         toast.success('Logged in successfully')
-        const role = result.role
+        const role = data.user.user_metadata?.role
         if (role === 'SUPER_ADMIN') {
           router.refresh()
           router.push('/admin/dashboard')
