@@ -5,7 +5,7 @@ import {
   updateLecturerAction,
   deleteLecturerAction,
   resetLecturerPasswordAction
-} from '../../app/actions/lecturers'
+} from '../../server/actions/lecturers'
 import { createClient } from '@/lib/supabase/server'
 
 describe('Lecturer Actions', () => {

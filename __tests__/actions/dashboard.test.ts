@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getDashboardStatsAction } from '../../app/actions/dashboard'
+import { getDashboardStatsAction } from '../../server/actions/dashboard'
 import { createClient } from '@/lib/supabase/server'
 
 describe('Dashboard Actions', () => {

@@ -7,7 +7,7 @@ import {
   getSessionEnrollmentsAction,
   enrollVolunteersAction,
   removeEnrollmentAction
-} from '../../app/actions/sessions'
+} from '../../server/actions/sessions'
 import { createClient } from '@/lib/supabase/server'
 
 describe('Session Actions', () => {

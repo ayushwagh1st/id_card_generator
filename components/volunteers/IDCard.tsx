@@ -21,18 +21,19 @@ interface IDCardProps {
 
 const CardWrapper = ({ children, width, height }: { children: React.ReactNode, width: string, height: string }) => (
   <div 
-    className="relative bg-white flex flex-col items-center select-none overflow-hidden"
+    className="relative flex flex-col select-none overflow-hidden bg-white"
     style={{ 
       width: width, 
       height: height,
-      outline: '0.5px solid #ccc',
-      outlineOffset: '-0.5px'
+      outline: '0.5px dashed #E2E8F0',
+      outlineOffset: '2px'
     }}
   >
-    <div className="absolute top-0 left-0 w-1 h-1 border-t border-l border-black z-50"></div>
-    <div className="absolute top-0 right-0 w-1 h-1 border-t border-r border-black z-50"></div>
-    <div className="absolute bottom-0 left-0 w-1 h-1 border-b border-l border-black z-50"></div>
-    <div className="absolute bottom-0 right-0 w-1 h-1 border-b border-r border-black z-50"></div>
+    {/* Crop marks for print safety */}
+    <div className="absolute top-0 left-0 w-1 h-1 border-t-[0.5px] border-l-[0.5px] border-gray-400 z-50"></div>
+    <div className="absolute top-0 right-0 w-1 h-1 border-t-[0.5px] border-r-[0.5px] border-gray-400 z-50"></div>
+    <div className="absolute bottom-0 left-0 w-1 h-1 border-b-[0.5px] border-l-[0.5px] border-gray-400 z-50"></div>
+    <div className="absolute bottom-0 right-0 w-1 h-1 border-b-[0.5px] border-r-[0.5px] border-gray-400 z-50"></div>
     {children}
   </div>
 )

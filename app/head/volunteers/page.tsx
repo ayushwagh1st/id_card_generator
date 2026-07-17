@@ -408,7 +408,7 @@ export default function HeadVolunteersPage() {
                         </div>
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
-                          <Input value={state.mobileNumber} onChange={e => dispatch({ type: 'SET_STATE', field: 'mobileNumber', payload: e.target.value })} required />
+                          <Input type="tel" value={state.mobileNumber} onChange={e => dispatch({ type: 'SET_STATE', field: 'mobileNumber', payload: e.target.value.replace(/\D/g, '') })} maxLength={10} required />
                         </div>
                       </div>
 
@@ -466,7 +466,7 @@ export default function HeadVolunteersPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
-                          <Input value={state.emergencyContact} onChange={e => dispatch({ type: 'SET_STATE', field: 'emergencyContact', payload: e.target.value })} required />
+                          <Input type="tel" value={state.emergencyContact} onChange={e => dispatch({ type: 'SET_STATE', field: 'emergencyContact', payload: e.target.value.replace(/\D/g, '') })} maxLength={10} required />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
@@ -524,7 +524,7 @@ export default function HeadVolunteersPage() {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
-                      <Input value={state.mobileNumber} onChange={e => dispatch({ type: 'SET_STATE', field: 'mobileNumber', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} required />
+                      <Input type="tel" value={state.mobileNumber} onChange={e => dispatch({ type: 'SET_STATE', field: 'mobileNumber', payload: e.target.value.replace(/\D/g, '') })} disabled={state.currentVolunteer?.status === 'Approved'} maxLength={10} required />
                     </div>
                   </div>
 
@@ -582,7 +582,7 @@ export default function HeadVolunteersPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
-                      <Input value={state.emergencyContact} onChange={e => dispatch({ type: 'SET_STATE', field: 'emergencyContact', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} required />
+                      <Input type="tel" value={state.emergencyContact} onChange={e => dispatch({ type: 'SET_STATE', field: 'emergencyContact', payload: e.target.value.replace(/\D/g, '') })} disabled={state.currentVolunteer?.status === 'Approved'} maxLength={10} required />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>

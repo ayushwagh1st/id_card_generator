@@ -96,7 +96,7 @@ export function VolunteersModals({
               </div>
               <div className="space-y-1">
                 <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
-                <Input value={mobileNumber} onChange={e => onFieldChange('mobileNumber', e.target.value)} required />
+                <Input type="tel" value={mobileNumber} onChange={e => onFieldChange('mobileNumber', e.target.value.replace(/\D/g, ''))} maxLength={10} required />
               </div>
             </div>
 
@@ -155,7 +155,7 @@ export function VolunteersModals({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
-                <Input value={emergencyContact} onChange={e => onFieldChange('emergencyContact', e.target.value)} required />
+                <Input type="tel" value={emergencyContact} onChange={e => onFieldChange('emergencyContact', e.target.value.replace(/\D/g, ''))} maxLength={10} required />
               </div>
               <div className="space-y-1">
                 <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
@@ -210,7 +210,7 @@ export function VolunteersModals({
               </div>
               <div className="space-y-1">
                 <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
-                <Input value={mobileNumber} onChange={e => onFieldChange('mobileNumber', e.target.value)} required />
+                <Input type="tel" value={mobileNumber} onChange={e => onFieldChange('mobileNumber', e.target.value.replace(/\D/g, ''))} maxLength={10} required />
               </div>
             </div>
 
@@ -269,7 +269,7 @@ export function VolunteersModals({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
-                <Input value={emergencyContact} onChange={e => onFieldChange('emergencyContact', e.target.value)} required />
+                <Input type="tel" value={emergencyContact} onChange={e => onFieldChange('emergencyContact', e.target.value.replace(/\D/g, ''))} maxLength={10} required />
               </div>
               <div className="space-y-1">
                 <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>

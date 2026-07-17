@@ -5,7 +5,7 @@ import {
   getLecturerStatsAction,
   bulkCheckoutAllAction,
   bulkSyncAttendanceAction
-} from '../../app/actions/attendance'
+} from '../../server/actions/attendance'
 import { createClient } from '@/lib/supabase/server'
 
 describe('Attendance Actions', () => {

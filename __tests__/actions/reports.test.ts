@@ -4,7 +4,7 @@ import {
   getSessionReportData,
   getModelReportData,
   getSecurityReportData
-} from '../../app/actions/reports'
+} from '../../server/actions/reports'
 import { createClient } from '@/lib/supabase/server'
 
 describe('Report Actions', () => {

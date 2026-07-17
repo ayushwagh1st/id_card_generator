@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { User, Menu } from 'lucide-react'
-import { getCurrentUserAction } from '@/server/actions/auth'
+import { useEffect, useState, useRef } from 'react'
+import { User, Menu, LogOut } from 'lucide-react'
+import { getCurrentUserAction, logoutAction } from '@/server/actions/auth'
 
 interface HeaderProps {
   userName?: string
@@ -12,7 +12,20 @@ interface HeaderProps {
 
 export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }: HeaderProps) {
   const [fetchedName, setFetchedName] = useState<string | null>(null)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  
   const displayName = fetchedName || userName
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     async function getUserName() {
@@ -48,6 +61,11 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
     getUserName()
   }, [userName])
 
+  const handleLogout = async () => {
+    await logoutAction()
+    window.location.href = '/login'
+  }
+
   const roleLabel =
     roleName === 'SUPER_ADMIN' ? 'Super Admin' :
       roleName === 'MODEL_HEAD' ? 'Model Head' :
@@ -79,11 +97,26 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
           <div className="font-display font-bold text-sm text-foreground leading-tight">{displayName}</div>
           <div className="font-display text-xs text-foreground/50 leading-tight">{roleLabel}</div>
         </div>
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-xl icon-tile-pink shrink-0"
-          style={{ border: '3px solid #111111', boxShadow: '4px 4px 0 #111111' }}
-        >
-          <User className="h-5 w-5" />
+        <div className="relative" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl icon-tile-pink shrink-0 cursor-pointer transition-transform hover:scale-105"
+            style={{ border: '3px solid #111111', boxShadow: '4px 4px 0 #111111' }}
+          >
+            <User className="h-5 w-5" />
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-card border-2 border-ink rounded-xl shadow-hard z-50 overflow-hidden">
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-3 text-sm font-bold hover:bg-muted transition-colors flex items-center gap-2 text-red-600 hover:text-red-700"
+              >
+                <LogOut className="w-4 h-4" />
+                Log out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

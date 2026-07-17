@@ -7,7 +7,7 @@ import {
   bulkDeleteVolunteersAction,
   bulkApproveVolunteersAction,
   bulkImportVolunteersAction
-} from '../../app/actions/volunteers'
+} from '../../server/actions/volunteers'
 import { createClient } from '@/lib/supabase/server'
 
 describe('Volunteer Actions', () => {

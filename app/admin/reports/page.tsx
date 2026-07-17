@@ -75,15 +75,22 @@ export default function AdminReportsPage() {
     fetchActivities()
   }, [])
 
-  const handleGenerateReport = async (type: string) => {
+  const handleGenerateReport = async (type: string, format: 'pdf' | 'csv' = 'pdf') => {
     setGenerating(type)
     try {
+      let headers: string[] = []
+      let rows: any[][] = []
+      let title = ''
+      let subtitle = ''
+      let filename = ''
+      let themeColor: [number, number, number] = [0, 0, 0]
+      let stats: any = []
+
       if (type === 'volunteers') {
         const res = await getVolunteerReportData()
         if (res.error) throw new Error(res.error)
-        
-        const headers = ['SNK ID', 'Name', 'Mobile', 'Age', 'Gender', 'Department', 'Assigned Model']
-        const rows = res.data!.map(v => [
+        headers = ['SNK ID', 'Name', 'Mobile', 'Age', 'Gender', 'Department', 'Assigned Model']
+        rows = res.data!.map(v => [
           v.snk_id || 'N/A',
           v.full_name,
           v.mobile_number,
@@ -92,125 +99,80 @@ export default function AdminReportsPage() {
           (v as any).department || 'N/A',
           (Array.isArray(v.models) ? v.models[0]?.name : (v.models as any)?.name) || 'Unassigned'
         ])
-
-        exportToPDF({
-          title: 'Volunteer Analytics & Directory',
-          subtitle: 'Comprehensive list of all registered volunteers',
-          filename: 'Volunteer_Analytics_Report.pdf',
-          headers,
-          data: rows,
-          themeColor: [244, 63, 94], // Rose/Pink
-          summaryStats: res.stats as PDFSummaryStat[]
-        })
-        toast.success('Volunteer Report generated!')
-      }
-
-      else if (type === 'sessions') {
+        title = 'Volunteer Analytics & Directory'
+        subtitle = 'Comprehensive list of all registered volunteers'
+        filename = 'Volunteer_Analytics_Report'
+        themeColor = [244, 63, 94]
+        stats = res.stats
+      } else if (type === 'sessions') {
         const res = await getSessionReportData()
         if (res.error) throw new Error(res.error)
-        
-        const headers = ['Session Name', 'Category', 'Date', 'Time', 'Venue', 'Lecturer', 'Status', 'Enrollments']
-        const rows = res.data!.map(s => {
-          const countArr = s.volunteer_sessions as any;
-          const enrolls = Array.isArray(countArr) ? countArr[0]?.count || countArr.length : 0;
-          return [
-            s.name,
-            s.category || 'N/A',
-            s.date,
-            `${s.start_time} - ${s.end_time}`,
-            s.venue || 'N/A',
-            s.lecturer_name || 'Unassigned',
-            s.status,
-            `${enrolls} / ${s.capacity || '∞'}`
-          ]
+        headers = ['Session Name', 'Category', 'Date', 'Time', 'Venue', 'Lecturer', 'Status', 'Enrollments']
+        rows = res.data!.map(s => {
+          const countArr = s.volunteer_sessions as any
+          const enrolls = Array.isArray(countArr) ? countArr[0]?.count || countArr.length : 0
+          return [s.name, s.category || 'N/A', s.date, `${s.start_time} - ${s.end_time}`, s.venue || 'N/A', s.lecturer_name || 'Unassigned', s.status, `${enrolls} / ${s.capacity || '∞'}`]
         })
-
-        exportToPDF({
-          title: 'Session & Attendance Analytics',
-          subtitle: 'Overview of all scheduled training sessions and enrollments',
-          filename: 'Session_Analytics_Report.pdf',
-          headers,
-          data: rows,
-          themeColor: [16, 185, 129], // Emerald
-          summaryStats: res.stats as PDFSummaryStat[]
-        })
-        toast.success('Session Report generated!')
-      }
-
-      else if (type === 'models') {
+        title = 'Session & Attendance Analytics'
+        subtitle = 'Overview of all scheduled training sessions and enrollments'
+        filename = 'Session_Analytics_Report'
+        themeColor = [16, 185, 129]
+        stats = res.stats
+      } else if (type === 'models') {
         const res = await getModelReportData()
         if (res.error) throw new Error(res.error)
-        
-        const headers = ['Model Name', 'Head Name', 'Status', 'Assigned Vols']
-        const rows = res.data!.map(m => {
-          const countArr = m.volunteers as any;
-          const assigned = Array.isArray(countArr) ? countArr[0]?.count || countArr.length : 0;
-          return [
-            m.name,
-            (Array.isArray(m.profiles) ? m.profiles[0]?.full_name : (m.profiles as any)?.full_name) || 'N/A',
-            m.status,
-            assigned
-          ]
+        headers = ['Model Name', 'Head Name', 'Status', 'Assigned Vols']
+        rows = res.data!.map(m => {
+          const countArr = m.volunteers as any
+          const assigned = Array.isArray(countArr) ? countArr[0]?.count || countArr.length : 0
+          return [m.name, (Array.isArray(m.profiles) ? m.profiles[0]?.full_name : (m.profiles as any)?.full_name) || 'N/A', m.status, assigned]
         })
-
-        exportToPDF({
-          title: 'Exhibition Models Allocation',
-          subtitle: 'Directory of exhibition models and volunteer distribution',
-          filename: 'Models_Allocation_Report.pdf',
-          headers,
-          data: rows,
-          themeColor: [59, 130, 246], // Blue
-          summaryStats: res.stats as PDFSummaryStat[]
-        })
-        toast.success('Models Report generated!')
-      }
-
-      else if (type === 'security') {
+        title = 'Exhibition Models Allocation'
+        subtitle = 'Directory of exhibition models and volunteer distribution'
+        filename = 'Models_Allocation_Report'
+        themeColor = [59, 130, 246]
+        stats = res.stats
+      } else if (type === 'security') {
         const res = await getSecurityReportData()
         if (res.error) throw new Error(res.error)
-        
-        const headers = ['Name', 'Email / Login', 'Mobile', 'Status']
-        const rows = res.data!.map(s => [
-          s.name,
-          s.email,
-          s.mobile || 'N/A',
-          s.status
-        ])
-
-        exportToPDF({
-          title: 'Security Personnel Roster',
-          subtitle: 'Active and inactive security staff',
-          filename: 'Security_Roster_Report.pdf',
-          headers,
-          data: rows,
-          themeColor: [139, 92, 246], // Violet
-          summaryStats: res.stats as PDFSummaryStat[]
-        })
-        toast.success('Security Report generated!')
-      }
-
-      else if (type === 'activity') {
+        headers = ['Name', 'Email / Login', 'Mobile', 'Status']
+        rows = res.data!.map(s => [s.name, s.email, s.mobile || 'N/A', s.status])
+        title = 'Security Personnel Roster'
+        subtitle = 'Active and inactive security staff'
+        filename = 'Security_Roster_Report'
+        themeColor = [139, 92, 246]
+        stats = res.stats
+      } else if (type === 'activity') {
         if (activities.length === 0) return toast.info('No activities to export.')
-        const headers = ['Date', 'User', 'Role', 'Action', 'Target']
-        const rows = activities.map(a => [
-            new Date(a.created_at).toLocaleString(),
-            a.user_name || 'System',
-            a.role,
-            a.action_type,
-            a.target || ''
-        ])
-
-        exportToPDF({
-          title: 'System Activity Audit Log',
-          subtitle: 'Latest 100 system actions',
-          filename: 'System_Activity_Audit.pdf',
-          headers,
-          data: rows,
-          themeColor: [249, 115, 22] // Orange
-        })
-        toast.success('Activity Log generated!')
+        headers = ['Date', 'User', 'Role', 'Action', 'Target']
+        rows = activities.map(a => [new Date(a.created_at).toLocaleString(), a.user_name || 'System', a.role, a.action_type, a.target || ''])
+        title = 'System Activity Audit Log'
+        subtitle = 'Latest 100 system actions'
+        filename = 'System_Activity_Audit'
+        themeColor = [249, 115, 22]
       }
 
+      if (format === 'csv') {
+        const csvContent = [
+          headers.join(','),
+          ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        ].join('\n')
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.setAttribute('href', url)
+        link.setAttribute('download', `${filename}.csv`)
+        link.style.visibility = 'hidden'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        toast.success(`${title} (CSV) generated!`)
+      } else {
+        exportToPDF({
+          title, subtitle, filename: `${filename}.pdf`, headers, data: rows, themeColor, summaryStats: stats
+        })
+        toast.success(`${title} (PDF) generated!`)
+      }
     } catch (err: any) {
       toast.error(err.message || 'Error generating report')
     } finally {
@@ -253,20 +215,34 @@ export default function AdminReportsPage() {
                   <p className="font-sans text-sm text-muted-foreground mt-1">{report.description}</p>
                 </div>
               </div>
-              <Button 
-                onClick={() => handleGenerateReport(report.id)} 
-                disabled={isGenerating}
-                className={`w-full font-bold shadow-hard-xs hover:translate-y-[1px] hover:shadow-none transition-all ${
-                  isGenerating ? 'opacity-70' : ''
-                }`}
-                variant="outline"
-              >
-                {isGenerating ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-                ) : (
-                  <><Download className="w-4 h-4 mr-2" /> Generate PDF</>
-                )}
-              </Button>
+              <div className="flex gap-2 w-full mt-2">
+                <Button 
+                  onClick={() => handleGenerateReport(report.id, 'pdf')} 
+                  disabled={isGenerating}
+                  className={`flex-1 font-bold shadow-hard-xs hover:translate-y-[1px] hover:shadow-none transition-all ${
+                    isGenerating ? 'opacity-70' : ''
+                  }`}
+                  variant="outline"
+                >
+                  {isGenerating ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  PDF
+                </Button>
+                <Button 
+                  onClick={() => handleGenerateReport(report.id, 'csv')} 
+                  disabled={isGenerating}
+                  className={`flex-1 font-bold shadow-hard-xs hover:translate-y-[1px] hover:shadow-none transition-all ${
+                    isGenerating ? 'opacity-70' : ''
+                  }`}
+                  variant="outline"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  CSV
+                </Button>
+              </div>
             </div>
           )
         })}

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { logActivityAction, getActivitiesAction } from '../../app/actions/activity'
+import { logActivityAction, getActivitiesAction } from '../../server/actions/activity'
 import { createClient } from '@/lib/supabase/server'
 
 describe('Activity Actions', () => {

@@ -42,7 +42,8 @@ export default function LiveAttendancePage() {
       try {
         const { createClient } = await import('@/lib/supabase/client')
         supabaseInstance = createClient()
-        channel = supabaseInstance.channel('live-attendance')
+        const channelName = `live-attendance-${Date.now()}-${Math.random()}`
+        channel = supabaseInstance.channel(channelName)
           .on(
             'postgres_changes',
             { event: '*', schema: 'public', table: 'attendance' },

@@ -2,6 +2,7 @@
 
 import { createClient, checkAuth } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { logActivityAction } from './activity'
 import { sessionSchema } from '@/lib/validations'
 import { checkRateLimit } from '@/lib/rate-limit'
@@ -50,7 +51,6 @@ export async function getSessionsAction(
 
 export async function addSessionAction(formData: any) {
   await checkAuth();
-  const { headers } = await import('next/headers')
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`add_session_${ip}`, 10, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -76,7 +76,6 @@ export async function addSessionAction(formData: any) {
 
 export async function updateSessionAction(id: string, formData: any) {
   await checkAuth();
-  const { headers } = await import('next/headers')
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`update_session_${ip}`, 20, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }

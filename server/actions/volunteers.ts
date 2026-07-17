@@ -2,6 +2,7 @@
 
 import { createClient, checkAuth } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { cookies, headers } from 'next/headers'
 import { logActivityAction } from './activity'
 import { volunteerSchema, bulkImportVolunteerSchema } from '@/lib/validations'
 import { checkRateLimit } from '@/lib/rate-limit'
@@ -21,7 +22,6 @@ export async function getVolunteersAction(
   if (!user) throw new Error('Unauthorized')
 
   // Support Mock User
-  const { cookies } = await import('next/headers')
   const cookieStore = await cookies()
   const mockUserStr = cookieStore.get('mock-user')?.value
   let role = user.user_metadata?.role
@@ -85,7 +85,6 @@ export async function getVolunteersAction(
 
 export async function addVolunteerAction(formData: any) {
   await checkAuth();
-  const { headers } = await import('next/headers')
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`add_vol_${ip}`, 10, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -112,7 +111,6 @@ export async function addVolunteerAction(formData: any) {
 
 export async function updateVolunteerAction(id: string, formData: any) {
   await checkAuth();
-  const { headers } = await import('next/headers')
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`update_vol_${ip}`, 20, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -187,7 +185,6 @@ export async function bulkApproveVolunteersAction(ids: string[]) {
 
 export async function bulkImportVolunteersAction(records: any[]) {
   await checkAuth();
-  const { headers } = await import('next/headers')
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`bulk_vol_${ip}`, 5, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
