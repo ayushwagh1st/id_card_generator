@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { RegistrationEmail } from '@/components/emails/RegistrationEmail';
 
-const resend = new Resend(process.env.RESEND_API_KEY as string);
+const resend = new Resend(process.env.RESEND_API_KEY || 're_123456789');
 
 // Helper for generic exponential backoff retries
 async function withRetry<T>(
