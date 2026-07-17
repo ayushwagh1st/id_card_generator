@@ -65,18 +65,23 @@ async function sendPasswordResetEmailAction(email: string) {
 }
 
 export async function loginAction(email: string, password: string) {
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-  if (error) {
-    return { error: error.message }
+    if (error) {
+      return { error: error.message }
+    }
+
+    const role = data.user?.user_metadata?.role
+    return { success: true, role }
+  } catch (err: any) {
+    console.error('loginAction unexpected error:', err)
+    return { error: 'An unexpected server error occurred. Please try again.' }
   }
-
-  const role = data.user?.user_metadata?.role
-  return { success: true, role }
 }
 
 // oxlint-disable-next-line react-doctor/server-auth-actions -- logout is safe to run by unauthenticated users and checking auth beforehand might throw unhandled exceptions
