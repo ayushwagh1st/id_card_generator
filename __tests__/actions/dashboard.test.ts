@@ -25,6 +25,6 @@ describe('Dashboard Actions', () => {
     })
 
     const result = await getDashboardStatsAction()
-    expect(result.stats.totalVolunteers).toBeDefined()
+    expect(result.stats?.totalVolunteers).toBeDefined()
   })
 })
