@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Sparkles, Users, Database, FileText, BarChart, LogOut, Printer, Shield, X, Activity } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { logoutAction } from '@/server/actions/auth'
+import { createClient } from '@/lib/supabase/client'
 
 interface SidebarProps {
   userRole: 'SUPER_ADMIN' | 'MODEL_HEAD' | 'LECTURER'
@@ -54,7 +54,8 @@ export function Sidebar({ userRole, closeMobileMenu }: SidebarProps) {
       document.cookie = 'mock-user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
       router.refresh()
     } else {
-      await logoutAction()
+      const supabase = createClient()
+      await supabase.auth.signOut()
     }
     router.push('/')
   }

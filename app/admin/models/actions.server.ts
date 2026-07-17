@@ -177,7 +177,7 @@ export async function getHeadsDataAction() {
       .eq('role', 'MODEL_HEAD')
       .order('full_name')
     if (error) throw new Error(error.message)
-    return profiles || []
+    return profiles ? JSON.parse(JSON.stringify(profiles)) : []
   } catch (error) {
     console.error("Error in getHeadsDataAction:", error);
     // Return mock data for local dev
@@ -205,7 +205,7 @@ export async function getModelsDataAction() {
       `)
       .order('name')
     if (error) throw new Error(error.message)
-    return data || []
+    return data ? JSON.parse(JSON.stringify(data)) : []
   } catch (error) {
     console.error("Error in getModelsDataAction:", error);
     // Return mock data for local dev
