@@ -92,12 +92,9 @@ export async function logoutAction() {
 
 export async function getCurrentUserAction() {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error } = await supabase.auth.getUser()
-    if (error) {
-      console.error("Supabase getUser error:", error);
-    }
-    return user
+    const { user } = await checkAuth();
+    // Next.js Server Actions crash if you return non-serializable objects (like the Supabase User class)
+    return user ? JSON.parse(JSON.stringify(user)) : null;
   } catch (error) {
     console.error("Error in getCurrentUserAction:", error);
     return null;
