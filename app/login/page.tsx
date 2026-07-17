@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Mail, Lock, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
@@ -30,6 +29,7 @@ export default function LoginPage() {
     }
 
     try {
+      const { createClient } = await import('@/lib/supabase/client')
       const supabase = createClient()
       const { data, error } = await supabase.auth.signInWithPassword({
         email,

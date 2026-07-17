@@ -226,7 +226,7 @@ export default function PrintCenter() {
                 <div ref={componentRef} className="print-engine-container">
                   {currentPrintSheets.map((sheet, idx) => (
                     <div 
-                      key={`${sheet.pageNum}-${sheet.type}-${idx}`} 
+                      key={`sheet-${sheet.pageNum}-${sheet.type}`} 
                       className="bg-white shadow-2xl mx-auto mb-8 print:shadow-none print:mb-0 relative"
                       style={{ 
                         width: '210mm', 

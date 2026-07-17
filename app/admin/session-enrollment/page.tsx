@@ -104,7 +104,8 @@ export default function SessionEnrollmentPage() {
       
       // Filter out already enrolled from the current page
       const enrolledIds = enrollments.map((e: any) => e.volunteer?.id)
-      const filtered = (res.data || []).filter((v: any) => !enrolledIds.includes(v.id))
+      const enrolledSet = new Set(enrolledIds)
+      const filtered = (res.data || []).filter((v: any) => !enrolledSet.has(v.id))
       
       setVolunteers(filtered)
       setTotalCount(res.count || 0)
@@ -144,11 +145,13 @@ export default function SessionEnrollmentPage() {
 
   const handleSelectAllVisible = () => {
     const visibleIds = volunteers.map((v: any) => v.id)
-    const allSelected = visibleIds.every((id: any) => selectedVolunteers.includes(id))
+    const selectedSet = new Set(selectedVolunteers)
+    const allSelected = visibleIds.every((id: any) => selectedSet.has(id))
     
     if (allSelected) {
       // Deselect all visible
-      setSelectedVolunteers((prev: any) => prev.filter((id: any) => !visibleIds.includes(id)))
+      const visibleSet = new Set(visibleIds)
+      setSelectedVolunteers((prev: any) => prev.filter((id: any) => !visibleSet.has(id)))
     } else {
       // Select all visible
       setSelectedVolunteers((prev: any) => Array.from(new Set([...prev, ...visibleIds])))
@@ -260,9 +263,12 @@ export default function SessionEnrollmentPage() {
                               <div className="flex items-center justify-between pt-2">
                                   <Button variant="ghost" size="sm" onClick={handleSelectAllVisible} className="h-8 px-2 text-xs">
                                       <CheckSquare className="w-4 h-4 mr-2" />
-                                      {volunteers.length > 0 && volunteers.every((v: any) => selectedVolunteers.includes(v.id)) 
-                                        ? "Deselect All Visible" 
-                                        : "Select All Visible"}
+                                      {(() => {
+                                        const selectedSet = new Set(selectedVolunteers)
+                                        return volunteers.length > 0 && volunteers.every((v: any) => selectedSet.has(v.id)) 
+                                          ? "Deselect All Visible" 
+                                          : "Select All Visible"
+                                      })()}
                                   </Button>
                                   
                                   <Button 
@@ -283,17 +289,19 @@ export default function SessionEnrollmentPage() {
                               </div>
                           ) : (
                               <div className="space-y-2">
-                                  {volunteers.map((v: any) => (
+                                  {(() => {
+                                    const selectedSet = new Set(selectedVolunteers)
+                                    return volunteers.map((v: any) => (
                                       <label 
                                         key={v.id} 
                                         htmlFor={`checkbox-${v.id}`}
                                         className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
-                                          selectedVolunteers.includes(v.id) ? 'border-primary bg-primary/5' : 'bg-card hover:bg-muted/40'
+                                          selectedSet.has(v.id) ? 'border-primary bg-primary/5' : 'bg-card hover:bg-muted/40'
                                         }`}
                                       >
                                           <Checkbox 
                                             id={`checkbox-${v.id}`}
-                                            checked={selectedVolunteers.includes(v.id)} 
+                                            checked={selectedSet.has(v.id)} 
                                             onCheckedChange={() => handleToggleVolunteer(v.id)}
                                           />
                                           <div className="flex flex-col flex-1">
@@ -301,7 +309,8 @@ export default function SessionEnrollmentPage() {
                                               <span className="text-xs text-muted-foreground">{v.models?.name ? formatModelLabel(v.models) : 'No Model'}</span>
                                           </div>
                                       </label>
-                                  ))}
+                                    ))
+                                  })()}
                                   {!loadingVols && volunteers.length === 0 && (
                                       <div className="text-center py-8 text-muted-foreground flex flex-col items-center">
                                         <Users className="h-8 w-8 mb-2 opacity-20" />

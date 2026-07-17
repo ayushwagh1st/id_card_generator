@@ -7,6 +7,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   // if "next" is in param, use it as the redirect URL
+  // oxlint-disable-next-line react-doctor/url-prefilled-privileged-action -- validated against open redirects below
   let next = searchParams.get('next') ?? '/'
   
   // Prevent open redirect vulnerabilities by ensuring it's a relative URL within our site

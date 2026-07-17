@@ -35,39 +35,23 @@ export default function LiveAttendancePage() {
   useEffect(() => {
     fetchRecentFeed()
 
-    let channel: any
-    let supabaseInstance: any
+    let cleanup: (() => void) | undefined
 
-    async function initRealtime() {
-      try {
-        const { createClient } = await import('@/lib/supabase/client')
-        supabaseInstance = createClient()
-        const channelName = `live-attendance-${Date.now()}-${Math.random()}`
-        channel = supabaseInstance.channel(channelName)
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'attendance' },
-            (payload: any) => {
-               console.log('Realtime Update:', payload)
-               // Soft refresh the feed to get joined data (names, sessions)
-               fetchRecentFeed()
-               toast('New Attendance Scan Detected', {
-                   icon: <Activity className="w-4 h-4 text-blue-500" />
-               })
-            }
-          )
-          .subscribe()
-      } catch (err) {
-        console.error('Failed to initialize realtime connection:', err)
-      }
+    const init = async () => {
+      const { setupLiveAttendanceNotifications } = await import('@/lib/supabase/client')
+      cleanup = await setupLiveAttendanceNotifications((payload: any) => {
+        console.log('Realtime Update:', payload)
+        fetchRecentFeed()
+        toast('New Attendance Scan Detected', {
+            icon: <Activity className="w-4 h-4 text-blue-500" />
+        })
+      }, 'attendance')
     }
 
-    initRealtime()
+    init()
 
     return () => {
-      if (channel && supabaseInstance) {
-        supabaseInstance.removeChannel(channel)
-      }
+      if (cleanup) cleanup()
     }
   }, [fetchRecentFeed])
 

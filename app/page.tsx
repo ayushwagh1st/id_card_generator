@@ -195,7 +195,7 @@ export default function Home() {
               "IMG_6980.JPG", "IMG_7052.JPG", "IMG_7125.JPG",
               "IMG_7192.JPG", "IMG_7280.JPG", "IMG_7295.JPG"
             ].map((img, idx) => (
-              <div key={idx} className="break-inside-avoid relative rounded-[20px] overflow-hidden border-2 border-white/10 group shadow-hard-sm">
+              <div key={img} className="break-inside-avoid relative rounded-[20px] overflow-hidden border-2 border-white/10 group shadow-hard-sm">
                 <div className="absolute inset-0 bg-ink/10 group-hover:bg-transparent transition-colors duration-300 z-10 pointer-events-none" />
                 <GalleryImage src={`/gallary/${img}`} alt={`Gallery image ${idx + 1}`} />
               </div>

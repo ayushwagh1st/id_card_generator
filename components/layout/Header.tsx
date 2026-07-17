@@ -103,6 +103,7 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex h-10 w-10 items-center justify-center rounded-xl icon-tile-pink shrink-0 cursor-pointer transition-transform hover:scale-105"
             style={{ border: '3px solid #111111', boxShadow: '4px 4px 0 #111111' }}
+            aria-label="Toggle user menu"
           >
             <User className="h-5 w-5" />
           </button>

@@ -181,10 +181,10 @@ export default function HeadVolunteersPage() {
       const originalFile = e.target.files[0]
       dispatch({ type: 'SET_STATE', field: 'cropOriginalFile', payload: originalFile })
       const reader = new FileReader()
-      reader.addEventListener('load', () => {
+      reader.onload = () => {
         dispatch({ type: 'SET_STATE', field: 'cropImageSrc', payload: reader.result?.toString() || '' })
         dispatch({ type: 'SET_STATE', field: 'cropDialogOpen', payload: true })
-      })
+      }
       reader.readAsDataURL(originalFile)
       e.target.value = '' // clear input
     }

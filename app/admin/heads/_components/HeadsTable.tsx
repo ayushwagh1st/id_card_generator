@@ -71,7 +71,7 @@ export function HeadsTable({
                         <span className="font-mono text-xs text-amber-600 bg-amber-500/5 px-2 py-1.5 rounded w-fit">
                           {state.visiblePasswords[head.id] ? (head.temp_password || 'N/A') : '••••••'}
                         </span>
-                        <button type="button" onClick={() => dispatch({ type: 'TOGGLE_PASSWORD', payload: head.id })} className="text-muted-foreground hover:text-foreground transition-colors">
+                        <button type="button" onClick={() => dispatch({ type: 'TOGGLE_PASSWORD', payload: head.id })} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Toggle password visibility">
                           {state.visiblePasswords[head.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>

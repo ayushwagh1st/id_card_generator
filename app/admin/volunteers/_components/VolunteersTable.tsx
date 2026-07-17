@@ -119,18 +119,20 @@ export function VolunteersTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {volunteers.map((vol) => (
-                <TableRow key={vol.id} className="hover:bg-muted/20 transition-colors duration-200">
-                  <TableCell className="py-4 px-4">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                      checked={selectedIds.includes(vol.id)}
-                      onChange={() => onToggleSelect(vol.id)}
-                      aria-label={`Select ${vol.full_name}`}
-                    />
-                  </TableCell>
-                  <TableCell className="font-bold text-sm text-primary">
+              {(() => {
+                const selectedSet = new Set(selectedIds)
+                return volunteers.map((vol) => (
+                  <TableRow key={vol.id} className="hover:bg-muted/20 transition-colors duration-200">
+                    <TableCell className="py-4 px-4">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
+                        checked={selectedSet.has(vol.id)}
+                        onChange={() => onToggleSelect(vol.id)}
+                        aria-label={`Select ${vol.full_name}`}
+                      />
+                    </TableCell>
+                    <TableCell className="font-bold text-sm text-primary">
                     {vol.snk_id || 'Pending'}
                   </TableCell>
                   <TableCell>
@@ -217,7 +219,8 @@ export function VolunteersTable({
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))
+            })()}
               {volunteers.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-16">

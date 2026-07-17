@@ -74,7 +74,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
         const modelsData = await getModelsDataAction()
         const modelMap: Record<string, string> = {}
         if (modelsData) {
-          modelsData.forEach(m => {
+          modelsData.forEach((m: any) => {
             modelMap[m.name.toLowerCase()] = m.id
           })
         }

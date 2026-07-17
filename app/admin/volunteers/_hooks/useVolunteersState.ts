@@ -326,10 +326,10 @@ export function useVolunteersState() {
 
       cropOriginalFileRef.current = originalFile
       const reader = new FileReader()
-      reader.addEventListener('load', () => {
+      reader.onload = () => {
         dispatchField('cropImageSrc', reader.result?.toString() || '')
         dispatchField('cropDialogOpen', true)
-      })
+      }
       reader.readAsDataURL(originalFile)
       e.target.value = '' // clear input
     }
