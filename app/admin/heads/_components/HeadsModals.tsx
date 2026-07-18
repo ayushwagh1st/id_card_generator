@@ -5,7 +5,24 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
-import { Plus } from 'lucide-react'
+import { Plus, RefreshCw, Copy, Eye, EyeOff } from 'lucide-react'
+import { toast } from 'sonner'
+import { useCallback } from 'react'
+
+function generatePassword(length = 10) {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+  const lower = 'abcdefghjkmnpqrstuvwxyz'
+  const digits = '23456789'
+  const all = upper + lower + digits
+  let pass =
+    upper[Math.floor(Math.random() * upper.length)] +
+    lower[Math.floor(Math.random() * lower.length)] +
+    digits[Math.floor(Math.random() * digits.length)]
+  for (let i = 3; i < length; i++) {
+    pass += all[Math.floor(Math.random() * all.length)]
+  }
+  return pass.split('').sort(() => Math.random() - 0.5).join('')
+}
 
 export function HeadsModals({
   state,
@@ -22,36 +39,114 @@ export function HeadsModals({
   handleResetPassword: (e: React.FormEvent) => any,
   handleDeleteHead: () => any
 }) {
+  
+  const handleGenerate = useCallback(() => {
+    const newPass = generatePassword()
+    dispatch({ type: 'SET_FORM_FIELD', field: 'headPassword', value: newPass })
+    if (!state.visiblePasswords['head']) {
+      dispatch({ type: 'TOGGLE_PASSWORD', payload: 'head' })
+    }
+  }, [dispatch, state.visiblePasswords])
+
+  const handleResetGenerate = useCallback(() => {
+    const newPass = generatePassword()
+    dispatch({ type: 'SET_FORM_FIELD', field: 'headPassword', value: newPass })
+    if (!state.visiblePasswords['reset']) {
+      dispatch({ type: 'TOGGLE_PASSWORD', payload: 'reset' })
+    }
+  }, [dispatch, state.visiblePasswords])
+
+  const handleCopy = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success('Password copied to clipboard')
+    } catch {
+      toast.error('Failed to copy')
+    }
+  }, [])
+
   return (
     <>
       {/* Create Dialog */}
       <Dialog open={state.isAddHeadOpen} onOpenChange={(val) => val ? dispatch({ type: 'OPEN_ADD' }) : dispatch({ type: 'CLOSE_ADD' })}>
         <DialogTrigger>
-          <div className="w-full sm:w-auto px-5 gap-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10">
+          <div className="w-full sm:w-auto px-5 gap-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 shadow-hard-xs font-bold">
             <Plus className="h-4 w-4 mr-2" />
-            Create Model Head
+            Add Model Head
           </div>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md rounded-xl">
+        <DialogContent className="sm:max-w-lg rounded-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold tracking-tight">Create Model Head</DialogTitle>
+            <DialogTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Add Model Head
+            </DialogTitle>
             <DialogDescription>
-              Generate credentials for a new exhibition supervisor.
+              Create a new model head account. They'll receive credentials to access the portal.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateHead} className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="head-name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Full Name</Label>
-              <Input id="head-name" placeholder="e.g. Ramesh Kumar" value={state.headName} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headName', value: e.target.value })} required />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="head-name" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Full Name *</Label>
+                <Input id="head-name" placeholder="e.g. Ramesh Kumar" value={state.headName} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headName', value: e.target.value })} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="head-email" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Email (Login ID) *</Label>
+                <Input id="head-email" type="email" placeholder="ramesh@example.com" value={state.headEmail} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headEmail', value: e.target.value })} required />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="head-email" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Email (Login ID)</Label>
-              <Input id="head-email" type="email" placeholder="ramesh@example.com" value={state.headEmail} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headEmail', value: e.target.value })} required />
+
+            {/* Password with generate */}
+            <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
+              <Label className="text-[11px] font-bold text-muted-foreground uppercase">Password *</Label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    type={state.visiblePasswords['head'] ? 'text' : 'password'}
+                    value={state.headPassword}
+                    onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headPassword', value: e.target.value })}
+                    required
+                    minLength={6}
+                    placeholder="Enter or generate password"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: 'TOGGLE_PASSWORD', payload: 'head' })}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="Toggle password visibility"
+                  >
+                    {state.visiblePasswords['head'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleGenerate}
+                  title="Generate password"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                {state.headPassword && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleCopy(state.headPassword)}
+                    title="Copy password"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Use the generate button for a strong random password.
+              </p>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="head-pass" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Temporary Password</Label>
-              <Input id="head-pass" type="password" placeholder="Min. 6 characters" value={state.headPassword} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headPassword', value: e.target.value })} required minLength={6} />
-            </div>
+
             <DialogFooter className="pt-2">
               <Button type="button" variant="outline" onClick={() => dispatch({ type: 'CLOSE_ADD' })}>Cancel</Button>
               <Button type="submit" disabled={state.isCreatingHead}>
@@ -64,19 +159,21 @@ export function HeadsModals({
 
       {/* Edit Dialog */}
       <Dialog open={state.isEditHeadOpen} onOpenChange={(val) => !val && dispatch({ type: 'CLOSE_EDIT' })}>
-        <DialogContent className="sm:max-w-md rounded-xl">
+        <DialogContent className="sm:max-w-lg rounded-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Model Head</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Edit Model Head</DialogTitle>
             <DialogDescription>Update the name or login email for this user.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleUpdateHead} className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase text-muted-foreground">Full Name</Label>
-              <Input value={state.headName} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headName', value: e.target.value })} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase text-muted-foreground">Email (Login ID)</Label>
-              <Input type="email" value={state.headEmail} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headEmail', value: e.target.value })} required />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
+                <Input value={state.headName} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headName', value: e.target.value })} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Email (Login ID) *</Label>
+                <Input type="email" value={state.headEmail} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headEmail', value: e.target.value })} required />
+              </div>
             </div>
             <DialogFooter className="pt-2">
               <Button type="button" variant="outline" onClick={() => dispatch({ type: 'CLOSE_EDIT' })}>Cancel</Button>
@@ -92,13 +189,53 @@ export function HeadsModals({
       <Dialog open={state.isResetPassOpen} onOpenChange={(val) => !val && dispatch({ type: 'CLOSE_RESET' })}>
         <DialogContent className="sm:max-w-md rounded-xl">
           <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Reset Password</DialogTitle>
             <DialogDescription>Assign a new temporary password to {state.currentHead?.full_name}.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleResetPassword} className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase text-muted-foreground">New Password</Label>
-              <Input type="text" value={state.headPassword} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headPassword', value: e.target.value })} required minLength={6} placeholder="Min. 6 characters" />
+            <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
+              <Label className="text-[11px] font-bold text-muted-foreground uppercase">New Password *</Label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    type={state.visiblePasswords['reset'] ? 'text' : 'password'}
+                    value={state.headPassword}
+                    onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headPassword', value: e.target.value })}
+                    required
+                    minLength={6}
+                    placeholder="Min. 6 characters"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: 'TOGGLE_PASSWORD', payload: 'reset' })}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="Toggle password visibility"
+                  >
+                    {state.visiblePasswords['reset'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleResetGenerate}
+                  title="Generate password"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                {state.headPassword && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleCopy(state.headPassword)}
+                    title="Copy password"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
             <DialogFooter className="pt-2">
               <Button type="button" variant="outline" onClick={() => dispatch({ type: 'CLOSE_RESET' })}>Cancel</Button>
@@ -114,7 +251,7 @@ export function HeadsModals({
       <Dialog open={state.isDeleteOpen} onOpenChange={(val) => !val && dispatch({ type: 'CLOSE_DELETE' })}>
         <DialogContent className="sm:max-w-md rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-rose-600">Delete Account</DialogTitle>
+            <DialogTitle className="text-rose-600 font-bold">Delete Account</DialogTitle>
             <DialogDescription>
               Are you sure you want to permanently delete <strong>{state.currentHead?.full_name}</strong>? 
               This will remove their login access. Reassign their models first if necessary.

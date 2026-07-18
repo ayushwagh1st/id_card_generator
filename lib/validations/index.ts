@@ -35,3 +35,9 @@ export const lecturerSchema = z.object({
 })
 
 export const bulkImportVolunteerSchema = z.array(volunteerSchema)
+
+export const modelHeadSchema = z.object({
+  fullName: z.string().min(2, "Full Name must be at least 2 characters"),
+  email: z.email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters").optional().nullable()
+})

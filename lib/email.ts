@@ -75,43 +75,4 @@ export async function sendRegistrationEmail({
   } catch (err: any) {
     console.error('Exception sending email after retries:', err);
     return { error: err.message };
-  }
-}
-
-import { ResetPasswordEmail } from '@/components/emails/ResetPasswordEmail';
-
-export async function sendPasswordResetEmail({
-  email,
-  resetLink,
-}: {
-  email: string;
-  resetLink: string;
-}) {
-  try {
-    if (!process.env.RESEND_API_KEY) {
-      console.log('RESEND_API_KEY is not set. Mocking password reset email to:', email);
-      console.log('Link:', resetLink);
-      return { success: true, mocked: true };
-    }
-
-    const result = await withRetry(async () => {
-      const { data, error } = await resend.emails.send({
-        from: 'Bal Pradarshani <onboarding@onboarding.keidportal.qzz.io>',
-        to: [email],
-        subject: 'Reset your password - Bal Pradarshani',
-        react: ResetPasswordEmail({ resetLink }),
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-      return data;
-    }, 3, 1000);
-
-    return { success: true, data: result };
-  } catch (err: any) {
-    console.error('Exception sending password reset email:', err);
-    return { error: err.message };
-  }
-}
-
+  }}

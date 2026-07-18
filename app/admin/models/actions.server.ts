@@ -3,15 +3,16 @@ import { checkAuth } from '@/lib/supabase/server'
 
 import { createClient } from '@supabase/supabase-js'
 import { sendRegistrationEmail } from '@/lib/email'
-
+import { modelHeadSchema } from '@/lib/validations'
 export async function createModelHeadAction(formData: FormData) {
   await checkAuth();
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
 
-  if (!email || !password || !fullName) {
-    return { error: 'All fields are required.' }
+  const parsed = modelHeadSchema.safeParse({ email, password, fullName })
+  if (!parsed.success) {
+    return { error: 'Invalid input data', details: parsed.error.flatten().fieldErrors }
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -78,8 +79,9 @@ export async function updateModelHeadAction(id: string, formData: FormData) {
   const email = formData.get('email') as string
   const fullName = formData.get('fullName') as string
 
-  if (!email || !fullName) {
-    return { error: 'Email and Full Name are required.' }
+  const parsed = modelHeadSchema.safeParse({ email, fullName })
+  if (!parsed.success) {
+    return { error: 'Invalid input data', details: parsed.error.flatten().fieldErrors }
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

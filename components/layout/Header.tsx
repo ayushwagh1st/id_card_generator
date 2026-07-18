@@ -34,6 +34,8 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
         if (user) {
           if (user.user_metadata?.full_name) {
             setFetchedName(user.user_metadata.full_name)
+          } else if (user.user_metadata?.name) {
+            setFetchedName(user.user_metadata.name)
           } else if (user.email) {
             // Fallback if no full_name is present in metadata
             setFetchedName(user.email.split('@')[0])
@@ -50,6 +52,7 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
           try {
             const sessionUser = JSON.parse(decodeURIComponent(sessionUserStr))
             if (sessionUser.full_name) setFetchedName(sessionUser.full_name)
+            else if (sessionUser.name) setFetchedName(sessionUser.name)
             else if (sessionUser.email) setFetchedName(sessionUser.email.split('@')[0])
           } catch (e) { }
         }

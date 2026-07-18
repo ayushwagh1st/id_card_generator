@@ -10,7 +10,7 @@ import {
   Text,
   Link,
   Hr,
-  Font,
+  Font
 } from '@react-email/components';
 
 interface RegistrationEmailProps {
@@ -35,6 +35,11 @@ export const RegistrationEmail = ({
     <Html>
       <Head>
         <Font
+          fontFamily="Space Grotesk"
+          fallbackFontFamily="Helvetica"
+          fontWeight={700}
+        />
+        <Font
           fontFamily="Inter"
           fallbackFontFamily="Arial"
           fontWeight={400}
@@ -42,72 +47,63 @@ export const RegistrationEmail = ({
         <Font
           fontFamily="Inter"
           fallbackFontFamily="Arial"
-          fontWeight={600}
+          fontWeight={700}
         />
       </Head>
       <Preview>Your account has been created successfully. Use the details below to sign in.</Preview>
       <Body style={main}>
         <Container style={container}>
+          {/* Main Neobrutalist Card */}
           <Section style={card}>
-            {/* Header */}
-            <Section style={header}>
-              <Text style={brandName}>Bal Pradarshani</Text>
-              <Text style={brandTagline}>Official Event Management Portal</Text>
-            </Section>
-
-            {/* Body Content */}
-            <Section style={content}>
-              <Text style={greeting}>Hello {name},</Text>
-
-              <Text style={paragraph}>Welcome to <strong>Bal Pradarshani</strong>!</Text>
-
-              <Text style={paragraph}>
-                Your account has been successfully created by the organizing committee.
+            <div style={headerDecor}>BAL PRADARSHANI</div>
+            <Section style={innerContent}>
+              
+              <Text style={tagline}>Official Event Management Portal</Text>
+              
+              <Text style={text}>
+                Hello {name},<br/><br/>
+                Welcome to <strong>Bal Pradarshani!</strong><br/><br/>
+                Your account has been successfully created by the organizing committee. You can now access the event portal using login details below.
               </Text>
-
-              <Text style={paragraph}>
-                You can now access the event portal using login details below.
-              </Text>
-
-              <Hr style={divider} />
-
-              {/* Credentials */}
-              <Text style={label}>Portal</Text>
-              <Link href={portalUrl} style={linkStyle}>{portalUrl}</Link>
-
-              <Text style={label}>Login Email</Text>
-              <Text style={value}>{loginId}</Text>
-
-              <Text style={label}>Temporary Password</Text>
-              <Text style={value}>{loginPass}</Text>
-
-              <Hr style={divider} />
+              
+              <Section style={infoBox}>
+                <Text style={infoLabel}>Portal</Text>
+                <Link href={portalUrl} style={infoLink}>{portalUrl}</Link>
+                
+                <Hr style={infoHr} />
+                
+                <Text style={infoLabel}>Login Email</Text>
+                <Text style={infoValue}>{loginId}</Text>
+                
+                <Hr style={infoHr} />
+                
+                <Text style={infoLabel}>Temporary Password</Text>
+                <Text style={infoValue}>{loginPass}</Text>
+              </Section>
 
               {/* Support Section */}
-              <Text style={supportHeading}>Need assistance?</Text>
-
+              <Heading style={supportHeading}>Need assistance?</Heading>
+              
               <Text style={supportLabel}>Support:</Text>
-              <Link href={supportUrl} style={linkStyle}>{supportUrl}</Link>
-
+              <Link href={supportUrl} style={supportLink}>{supportUrl}</Link>
+              
               <Text style={supportLabel}>Website:</Text>
-              <Link href={portalUrl} style={linkStyle}>{portalUrl}</Link>
-
-
-              {/* Warning */}
-              <Text style={warningText}>
-                If you were not expecting this email, please contact the organizing committee immediately.
-              </Text>
-
-              {/* Sign-off */}
+              <Link href={portalUrl} style={supportLink}>{portalUrl}</Link>
+              
+              {/* Warning Box */}
+              <Section style={warningBox}>
+                <Text style={warningText}>
+                  <strong>⚠️ NOTE:</strong> If you were not expecting this email, please contact the organizing committee immediately.
+                </Text>
+              </Section>
+              
               <Text style={signOff}>
-                Thank you,
+                Thank you,<br/>
+                <strong>Bal Pradarshani Organizing Committee</strong>
               </Text>
-              <Text style={signOffName}>
-                Bal Pradarshani Organizing Committee
-              </Text>
-
-              <Hr style={divider} />
-
+              
+              <Hr style={hr} />
+              
               <Text style={footer}>
                 This is an Automated email regarding your Bal Pradarshani account.
               </Text>
@@ -121,136 +117,160 @@ export const RegistrationEmail = ({
 
 export default RegistrationEmail;
 
-/* Clean Professional Styles */
+/* Neobrutalism Styles */
 
 const main = {
-  backgroundColor: '#f4f4f5',
-  fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-  padding: '40px 0',
+  backgroundColor: '#ECEBFC', // pastel bg
+  fontFamily: '"Inter", sans-serif',
+  padding: '60px 0',
 };
 
 const container = {
   margin: '0 auto',
-  padding: '0 16px',
-  maxWidth: '580px',
+  padding: '0 20px',
+  maxWidth: '600px',
 };
 
 const card = {
-  backgroundColor: '#ffffff',
-  borderRadius: '8px',
-  overflow: 'hidden' as const,
+  backgroundColor: '#FFFFFF',
+  border: '3px solid #111111',
+  borderRadius: '0',
+  boxShadow: '8px 8px 0px 0px #111111',
 };
 
-const header = {
-  backgroundColor: '#1a1a2e',
-  padding: '32px 40px',
+const headerDecor = {
+  backgroundColor: '#D4F03B', // lime primary for welcome
+  borderBottom: '3px solid #111111',
+  padding: '16px 20px',
+  fontFamily: '"Space Grotesk", sans-serif',
+  fontWeight: '700',
+  fontSize: '24px',
+  color: '#111111',
+  letterSpacing: '0.05em',
   textAlign: 'center' as const,
 };
 
-const brandName = {
-  color: '#ffffff',
-  fontSize: '24px',
-  fontWeight: '600',
-  margin: '0 0 4px',
-  letterSpacing: '0.02em',
+const innerContent = {
+  padding: '30px 40px',
 };
 
-const brandTagline = {
-  color: 'rgba(255,255,255,0.65)',
-  fontSize: '13px',
-  fontWeight: '400',
-  margin: '0',
-  letterSpacing: '0.03em',
-};
-
-const content = {
-  padding: '36px 40px 32px',
-};
-
-const greeting = {
-  fontSize: '16px',
-  color: '#1a1a2e',
-  margin: '0 0 20px',
-  lineHeight: '24px',
-};
-
-const paragraph = {
-  fontSize: '15px',
-  color: '#3f3f46',
-  lineHeight: '24px',
-  margin: '0 0 12px',
-};
-
-const divider = {
-  borderColor: '#e4e4e7',
-  borderTopWidth: '1px',
-  margin: '28px 0',
-};
-
-const label = {
-  fontSize: '12px',
-  fontWeight: '600',
-  color: '#71717a',
+const tagline = {
+  fontFamily: '"Space Grotesk", sans-serif',
+  fontSize: '14px',
+  fontWeight: '700',
+  color: '#111111',
+  margin: '0 0 24px',
+  textAlign: 'center' as const,
   textTransform: 'uppercase' as const,
-  letterSpacing: '0.06em',
+  letterSpacing: '0.05em',
+};
+
+const text = {
+  fontSize: '16px',
+  lineHeight: '24px',
+  color: '#111111',
+  marginBottom: '24px',
+};
+
+const infoBox = {
+  border: '3px solid #111111',
+  padding: '20px',
+  marginBottom: '32px',
+  backgroundColor: '#f8f9fa',
+};
+
+const infoLabel = {
+  fontFamily: '"Space Grotesk", sans-serif',
+  fontSize: '12px',
+  fontWeight: '700',
+  color: '#111111',
   margin: '0 0 4px',
+  letterSpacing: '0.05em',
+  textTransform: 'uppercase' as const,
 };
 
-const value = {
-  fontSize: '15px',
-  fontWeight: '600',
-  color: '#1a1a2e',
-  margin: '0 0 20px',
+const infoValue = {
+  fontSize: '16px',
+  fontWeight: '700',
+  color: '#111111',
+  margin: '0',
 };
 
-const linkStyle = {
-  display: 'inline-block' as const,
-  fontSize: '15px',
-  color: '#2563eb',
+const infoLink = {
+  fontSize: '16px',
+  fontWeight: '700',
+  color: '#2CBCE9', // blue
   textDecoration: 'underline',
-  textUnderlineOffset: '3px',
-  margin: '0 0 20px',
+  margin: '0',
+};
+
+const infoHr = {
+  borderColor: '#111111',
+  borderTopWidth: '2px',
+  borderStyle: 'dashed',
+  margin: '16px 0',
 };
 
 const supportHeading = {
-  fontSize: '15px',
-  fontWeight: '600',
-  color: '#1a1a2e',
+  fontFamily: '"Space Grotesk", sans-serif',
+  fontSize: '18px',
+  fontWeight: '700',
+  color: '#111111',
   margin: '0 0 16px',
 };
 
 const supportLabel = {
-  fontSize: '13px',
-  fontWeight: '600',
-  color: '#71717a',
-  margin: '0 0 2px',
-};
-
-const warningText = {
   fontSize: '14px',
-  color: '#a1a1aa',
-  fontStyle: 'italic' as const,
-  margin: '28px 0 24px',
-  lineHeight: '22px',
-};
-
-const signOff = {
-  fontSize: '15px',
-  color: '#3f3f46',
+  fontWeight: '700',
+  color: '#111111',
   margin: '0 0 4px',
 };
 
-const signOffName = {
-  fontSize: '15px',
-  fontWeight: '600',
-  color: '#1a1a2e',
+const supportLink = {
+  display: 'inline-block',
+  fontSize: '14px',
+  color: '#2CBCE9',
+  textDecoration: 'underline',
+  marginBottom: '16px',
+};
+
+const warningBox = {
+  backgroundColor: '#FF99C8', // pink accent
+  border: '3px solid #111111',
+  padding: '16px',
+  marginBottom: '32px',
+  boxShadow: '4px 4px 0px 0px #111111',
+};
+
+const warningText = {
+  fontFamily: '"Space Grotesk", sans-serif',
+  color: '#111111',
+  fontSize: '14px',
+  lineHeight: '22px',
   margin: '0',
+  fontWeight: 'bold',
+  letterSpacing: '0.02em',
+};
+
+const signOff = {
+  fontSize: '16px',
+  lineHeight: '24px',
+  color: '#111111',
+  marginBottom: '24px',
+};
+
+const hr = {
+  borderColor: '#111111',
+  borderTopWidth: '3px',
+  margin: '0 0 24px',
 };
 
 const footer = {
+  fontFamily: '"Space Grotesk", sans-serif',
+  color: 'rgba(17,17,17,0.7)',
   fontSize: '12px',
-  color: '#a1a1aa',
+  lineHeight: '18px',
   textAlign: 'center' as const,
   margin: '0',
-  lineHeight: '18px',
+  letterSpacing: '0.02em',
 };
