@@ -38,7 +38,7 @@ export async function setupGlobalNotifications(tableName: string): Promise<(() =
       import('lucide-react')
     ])
     
-    const channel = supabase.channel('global-notifications')
+    const channel = supabase.channel(`global-notifications-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: tableName },
@@ -52,7 +52,7 @@ export async function setupGlobalNotifications(tableName: string): Promise<(() =
       .subscribe()
       
     return () => {
-      channel.unsubscribe()
+      supabase.removeChannel(channel)
     }
   } catch (err) {
     console.error('Failed to initialize global notifications:', err)

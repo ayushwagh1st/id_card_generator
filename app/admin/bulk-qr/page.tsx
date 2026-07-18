@@ -85,14 +85,14 @@ export default function BulkQRPage() {
 
         const qrSize = stickerSize * 0.38;
         const qrX = x + (stickerSize - qrSize) / 2;
-        const qrY = y + (stickerSize - qrSize) / 2 + 1.5; // Centered and slightly nudged down
+        const qrY = y + (stickerSize - qrSize) / 2 - 3.5; // Adjusted 1mm down as requested
         
         doc.setFillColor(255, 255, 255);
         doc.roundedRect(qrX - 1, qrY - 1, qrSize + 2, qrSize + 2, 2, 2, 'F');
         doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
 
         const serial = `MSS-2027-${String(item.serial_number).padStart(3, '0')}`;
-        const textY = qrY + qrSize + 4;
+        const textY = qrY + qrSize + 4; // Text directly below QR
         const textX = x + (stickerSize / 2);
         
         doc.setFontSize(8);
@@ -168,7 +168,7 @@ export default function BulkQRPage() {
                     alt="Sticker Template" 
                     className="absolute inset-0 w-full h-full object-cover z-0"
                   />
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pt-2">
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pb-2">
                     <div className="bg-white p-1 rounded-md" style={{ width: '38%', aspectRatio: '1/1' }}>
                       <QRCodeSVG value={item.id} style={{ width: '100%', height: '100%' }} level="M" />
                     </div>
