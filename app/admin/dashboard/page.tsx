@@ -42,7 +42,9 @@ export default function AdminDashboard() {
         totalSessions: 0,
         totalLecturers: 0,
         todaySessions: 0,
-        attendancePercentage: 0
+        attendancePercentage: 0,
+        totalChildren: 0,
+        checkedInChildren: 0
       },
       chartData: [],
       activities: [],
@@ -66,6 +68,8 @@ export default function AdminDashboard() {
   }, [])
 
   const statItems = [
+    { title: 'Total Registered Children', value: state.stats.totalChildren.toLocaleString(), iconSrc: '/images/icons/icon_users.png', tileClass: 'icon-tile-lavender' },
+    { title: 'Children Checked In', value: state.stats.checkedInChildren.toLocaleString(), iconSrc: '/images/icons/icon_check.png', tileClass: 'icon-tile-lime' },
     { title: 'Total Volunteers', value: state.stats.totalVolunteers.toLocaleString(), iconSrc: '/images/icons/icon_users.png', tileClass: 'icon-tile-lime' },
     { title: 'Exhibition Models', value: state.stats.totalModels.toString(), iconSrc: '/images/icons/icon_database.png', tileClass: 'icon-tile-lavender' },
     { title: 'Total Sessions', value: state.stats.totalSessions.toString(), iconSrc: '/images/icons/icon_check.png', tileClass: 'icon-tile-ink' },

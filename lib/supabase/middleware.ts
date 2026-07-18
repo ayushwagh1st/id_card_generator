@@ -1,14 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { checkRateLimit } from '../rate-limit'
 
 export async function updateSession(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown'
-  const rateLimitResult = await checkRateLimit(`global_${ip}`, 200, 60000) // 200 req per minute globally
-  
-  if (!rateLimitResult.success) {
-    return new NextResponse('Too Many Requests', { status: 429 })
-  }
 
   let supabaseResponse = NextResponse.next({
     request: {

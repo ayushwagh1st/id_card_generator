@@ -153,3 +153,38 @@ export async function getSecurityReportData() {
     ]
   }
 }
+
+export async function getRegisteredChildrenReportData() {
+  await checkAuth();
+  const supabase = await createClient()
+
+  const { data: children, error } = await supabase
+    .from('children')
+    .select(`id, qr_id, name, contact_number, created_at, session:sessions(name)`)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching children report:', error)
+    return { error: 'Failed to fetch children data' }
+  }
+
+  const { data: qrCodes } = await supabase.from('qr_codes').select('id, serial_number')
+  
+  const enrichedChildren = children?.map(c => {
+    const qrMatch = qrCodes?.find(q => q.id === c.qr_id)
+    return {
+      ...c,
+      serial_number: qrMatch ? `MSS-2027-${String(qrMatch.serial_number).padStart(3, '0')}` : c.qr_id.substring(0, 8),
+      session_name: (c.session as any)?.name || 'N/A'
+    }
+  }) || []
+
+  const total = enrichedChildren.length
+  
+  return {
+    data: enrichedChildren,
+    stats: [
+      { label: 'Total Registered Children', value: total }
+    ]
+  }
+}

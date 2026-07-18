@@ -45,7 +45,25 @@ export async function recordAttendanceAction(
   const { data: volunteerData, error: volunteerError } = await query.single()
 
   if (volunteerError || !volunteerData) {
-      return { error: `Volunteer not found. Searched for: ${parsedScanData}` }
+      // Check if it's a child QR code instead
+      const { data: childData } = await supabase.from('children').select('id, name, status').eq('qr_id', parsedScanData).single()
+      
+      if (childData) {
+          const newStatus = mode === 'check-in' ? 'Checked In' : 'Checked Out'
+          const now = new Date().toISOString()
+          await supabase.from('children').update({
+              status: newStatus,
+              ...(mode === 'check-in' ? { checked_in_at: now } : { checked_out_at: now })
+          }).eq('id', childData.id)
+          
+          await logActivityAction(`CHILD_${mode.toUpperCase().replace('-', '_')}`, `Child ${childData.name}`, { message: `${mode === 'check-in' ? 'checked in' : 'checked out'} by security`, lecturerId })
+          return {
+              message: `[CHILD] ${childData.name} successfully ${mode === 'check-in' ? 'checked in' : 'checked out'}!`,
+              volunteer: { name: childData.name, photo_url: null }
+          }
+      }
+      
+      return { error: `Participant not found. Searched for: ${parsedScanData}` }
   }
 
   const volunteerId = volunteerData.id

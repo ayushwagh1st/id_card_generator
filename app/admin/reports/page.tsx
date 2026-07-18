@@ -6,13 +6,20 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { FileText, Download, Activity, Users, Database, Shield, LayoutGrid, Loader2 } from 'lucide-react'
 import { getActivitiesAction } from '@/server/actions/activity'
-import { getVolunteerReportData, getSessionReportData, getModelReportData, getSecurityReportData } from '@/server/actions/reports'
+import { getVolunteerReportData, getSessionReportData, getModelReportData, getSecurityReportData, getRegisteredChildrenReportData } from '@/server/actions/reports'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { exportToPDF, PDFSummaryStat } from '@/lib/pdf'
 import Image from 'next/image'
 
 const reports = [
+  {
+    id: 'children',
+    title: 'Registered Children',
+    description: 'List of all children registered via QR stickers.',
+    icon: Users,
+    color: 'lavender'
+  },
   {
     id: 'volunteers',
     title: 'Volunteer Analytics',
@@ -86,7 +93,23 @@ export default function AdminReportsPage() {
       let themeColor: [number, number, number] = [0, 0, 0]
       let stats: any = []
 
-      if (type === 'volunteers') {
+      if (type === 'children') {
+        const res = await getRegisteredChildrenReportData()
+        if (res.error) throw new Error(res.error)
+        headers = ['Serial No', 'Name', 'Contact', 'Session', 'Registered At']
+        rows = res.data!.map(c => [
+          c.serial_number || 'N/A',
+          c.name,
+          c.contact_number || 'N/A',
+          c.session_name || 'N/A',
+          new Date(c.created_at).toLocaleString()
+        ])
+        title = 'Registered Children Directory'
+        subtitle = 'List of all children registered via QR stickers'
+        filename = 'Registered_Children_Report'
+        themeColor = [139, 92, 246] // purple/lavender
+        stats = res.stats
+      } else if (type === 'volunteers') {
         const res = await getVolunteerReportData()
         if (res.error) throw new Error(res.error)
         headers = ['SNK ID', 'Name', 'Mobile', 'Age', 'Gender', 'Department', 'Assigned Model']

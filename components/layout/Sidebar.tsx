@@ -22,6 +22,9 @@ const adminLinks = [
   { name: 'Volunteers', href: '/admin/volunteers', icon: Users },
   { name: 'Reports', href: '/admin/reports', icon: FileText },
   { name: 'Print Center', href: '/admin/print', icon: Printer },
+  { name: 'Bulk QR', href: '/admin/bulk-qr', icon: Printer },
+  { name: 'Spot Registration', href: '/admin/spot-registration', icon: Shield },
+  { name: 'Children Directory', href: '/admin/directory', icon: Users },
 ]
 
 const headLinks = [
@@ -35,6 +38,8 @@ const lecturerLinks = [
   { name: 'All Sessions', href: '/lecturer/sessions', icon: Database },
   { name: 'QR Scanner', href: '/lecturer/scanner', icon: Shield },
   { name: 'Reports', href: '/lecturer/reports', icon: FileText },
+  { name: 'Spot Registration', href: '/lecturer/spot-registration', icon: Shield },
+  { name: 'Children Directory', href: '/lecturer/directory', icon: Users },
 ]
 
 export function Sidebar({ userRole, closeMobileMenu }: SidebarProps) {

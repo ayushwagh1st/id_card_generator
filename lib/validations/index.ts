@@ -41,3 +41,10 @@ export const modelHeadSchema = z.object({
   email: z.email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters").optional().nullable()
 })
+
+export const childSchema = z.object({
+  qr_id: z.string().uuid("Invalid QR ID"),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  contact_number: z.string().optional().nullable(),
+  session_id: z.string().uuid("Invalid Session ID").optional().nullable()
+})

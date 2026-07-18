@@ -27,7 +27,9 @@ export async function getDashboardStatsAction() {
     totalLecturersRes,
     todaySessionsRes,
     totalEnrollmentsRes,
-    totalPresentRes
+    totalPresentRes,
+    totalChildrenRes,
+    checkedInChildrenRes
   ] = await Promise.all([
     supabase.from('volunteers').select('*', { count: 'exact', head: true }),
     supabase.from('models').select('*', { count: 'exact', head: true }),
@@ -40,7 +42,9 @@ export async function getDashboardStatsAction() {
     supabase.from('lecturers').select('*', { count: 'exact', head: true }),
     supabase.from('sessions').select('*', { count: 'exact', head: true }).eq('date', todayStr),
     supabase.from('volunteer_sessions').select('*', { count: 'exact', head: true }),
-    supabase.from('attendance').select('*', { count: 'exact', head: true }).in('attendance_status', ['Present', 'Late'])
+    supabase.from('attendance').select('*', { count: 'exact', head: true }).in('attendance_status', ['Present', 'Late']),
+    supabase.from('children').select('*', { count: 'exact', head: true }),
+    supabase.from('children').select('*', { count: 'exact', head: true }).eq('status', 'Checked In')
   ])
 
   const { count: totalVolunteers, error: volErr } = volRes
@@ -59,6 +63,8 @@ export async function getDashboardStatsAction() {
   const { count: todaySessions } = todaySessionsRes
   const { count: totalEnrollments } = totalEnrollmentsRes
   const { count: totalPresent } = totalPresentRes
+  const { count: totalChildren } = totalChildrenRes
+  const { count: checkedInChildren } = checkedInChildrenRes
 
   const modelCounts: Record<string, number> = {}
   models?.forEach(m => {
@@ -108,7 +114,9 @@ export async function getDashboardStatsAction() {
       totalSessions: totalSessions || 0,
       totalLecturers: totalLecturers || 0,
       todaySessions: todaySessions || 0,
-      attendancePercentage
+      attendancePercentage,
+      totalChildren: totalChildren || 0,
+      checkedInChildren: checkedInChildren || 0
     },
     chartData: formattedChart,
     activities: formattedActivities
