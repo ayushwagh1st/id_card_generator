@@ -88,6 +88,7 @@ export function Sidebar({ userRole, closeMobileMenu }: SidebarProps) {
                 key={link.name}
                 href={link.href}
                 onClick={closeMobileMenu}
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   'flex items-center gap-3 rounded-xl px-3 py-2.5 font-display font-semibold text-sm transition-all duration-150',
                   isActive

@@ -33,7 +33,7 @@ describe('Volunteer Actions', () => {
     mockSupabase.select.mockReturnThis()
     mockSupabase.single.mockResolvedValueOnce({ data: { id: '1' }, error: null })
 
-    const result = await addVolunteerAction({ full_name: 'John Doe' })
+    const result = await addVolunteerAction({ full_name: 'John Doe', mobile_number: '9876543210' })
     expect(result.success).toBe(true)
     expect(result.data).toBeDefined()
   })
@@ -47,12 +47,10 @@ describe('Volunteer Actions', () => {
   })
 
   it('should delete volunteer', async () => {
-    mockSupabase.select.mockReturnThis()
-    mockSupabase.eq.mockReturnThis()
-    mockSupabase.single.mockResolvedValueOnce({ data: { full_name: 'John' } })
-    
     mockSupabase.delete.mockReturnThis()
-    mockSupabase.eq.mockResolvedValueOnce({ error: null })
+    mockSupabase.eq.mockReturnThis()
+    mockSupabase.select.mockReturnThis()
+    mockSupabase.single.mockResolvedValueOnce({ data: { full_name: 'John' }, error: null })
 
     const result = await deleteVolunteerAction('1')
     expect(result.success).toBe(true)
@@ -77,7 +75,7 @@ describe('Volunteer Actions', () => {
   it('should bulk import volunteers', async () => {
     mockSupabase.insert.mockResolvedValueOnce({ error: null })
 
-    const result = await bulkImportVolunteersAction([{ full_name: 'Vol 1' }])
+    const result = await bulkImportVolunteersAction([{ full_name: 'Vol 1', mobile_number: '9876543210' }])
     expect(result.success).toBe(true)
     expect(result.count).toBe(1)
   })

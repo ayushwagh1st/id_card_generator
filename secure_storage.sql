@@ -22,13 +22,19 @@ WITH CHECK (
   (auth.role() = 'authenticated') -- This can be further restricted to only SUPER_ADMIN if needed
 );
 
--- 5. Policy: Allow authenticated users to update/delete their own uploads (or admins to delete any)
-CREATE POLICY "Authenticated users can update volunteer photos"
+-- 5. Policy: Allow Super Admins to update or delete volunteer photos
+CREATE POLICY "Super Admins can update volunteer photos"
 ON storage.objects FOR UPDATE
 TO authenticated
-USING ( bucket_id = 'volunteer-photos' );
+USING (
+  bucket_id = 'volunteer-photos' AND
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'SUPER_ADMIN'
+);
 
-CREATE POLICY "Authenticated users can delete volunteer photos"
+CREATE POLICY "Super Admins can delete volunteer photos"
 ON storage.objects FOR DELETE
 TO authenticated
-USING ( bucket_id = 'volunteer-photos' );
+USING (
+  bucket_id = 'volunteer-photos' AND
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'SUPER_ADMIN'
+);

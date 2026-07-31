@@ -18,7 +18,12 @@ CREATE INDEX IF NOT EXISTS idx_lecturers_status ON public.lecturers (status);
 -- Optimizes reverse lookups by head_id
 CREATE INDEX IF NOT EXISTS idx_models_head_id ON public.models (head_id);
 
--- Attendance / Logs (if exist, commonly queried by session or volunteer)
--- Assuming a table named attendance_logs exists based on previous files, uncomment if applicable:
--- CREATE INDEX IF NOT EXISTS idx_attendance_logs_volunteer_id ON public.attendance_logs (volunteer_id);
--- CREATE INDEX IF NOT EXISTS idx_attendance_logs_session_id ON public.attendance_logs (session_id);
+-- Attendance / Volunteer Sessions Indexes
+CREATE INDEX IF NOT EXISTS idx_attendance_volunteer_id ON public.attendance (volunteer_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_session_id ON public.attendance (session_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_date ON public.attendance (attendance_date);
+CREATE INDEX IF NOT EXISTS idx_attendance_composite ON public.attendance (volunteer_id, session_id, attendance_date);
+
+CREATE INDEX IF NOT EXISTS idx_volunteer_sessions_volunteer_id ON public.volunteer_sessions (volunteer_id);
+CREATE INDEX IF NOT EXISTS idx_volunteer_sessions_session_id ON public.volunteer_sessions (session_id);
+

@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS lecturers (
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     mobile TEXT,
-    password TEXT, -- Informational field, Admin sets this initially
     status TEXT DEFAULT 'Active',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

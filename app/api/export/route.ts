@@ -36,11 +36,17 @@ export async function GET(request: Request) {
     const user = authData.user
     const role = user.user_metadata?.role
 
+    if (role !== 'SUPER_ADMIN' && role !== 'MODEL_HEAD') {
+      return new NextResponse('Forbidden: Insufficient permissions', { status: 403 })
+    }
+
     // Parse URL parameters for filters
     const { searchParams } = new URL(request.url)
     const statusFilter = searchParams.get('status') || 'all'
     const modelFilter = searchParams.get('model') || 'all'
-    const querySearch = searchParams.get('search') || ''
+    const rawSearch = searchParams.get('search') || ''
+    // Sanitize search string for PostgREST query to prevent filter injection
+    const querySearch = rawSearch.replace(/[%_,()]/g, '')
 
     // Build Query
     let query = supabase

@@ -1,53 +1,55 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, Inter, Geist_Mono, Noto_Sans_Devanagari, Cormorant_Garamond, Montserrat } from "next/font/google";
+import { Space_Grotesk, Inter, Geist_Mono, Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-
-const cormorant = Cormorant_Garamond({
-  variable: "--font-cormorant",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { PWAInstaller } from "@/components/PWAInstaller";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "600", "700"],
+  display: "swap",
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const notoDevanagari = Noto_Sans_Devanagari({
   variable: "--font-devanagari",
   subsets: ["devanagari"],
-  weight: ["400", "600", "700", "900"],
+  weight: ["400", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Bal Pradarshani ID Portal",
-  description: "Magical exhibition volunteer ID generation and management system.",
+  description: "Official volunteer registration, ID generation, and event management portal for Nirankari Sant Samagam.",
   manifest: "/manifest.json",
+  openGraph: {
+    title: "Bal Pradarshani ID Portal",
+    description: "Official volunteer registration, ID generation, and event management portal for Nirankari Sant Samagam.",
+    type: "website",
+    locale: "en_IN",
+    siteName: "Bal Pradarshani ID Portal",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: "#8C6DFD",
 };
-
-import { PWAInstaller } from "@/components/PWAInstaller";
 
 export default function RootLayout({
   children,
@@ -57,7 +59,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${inter.variable} ${geistMono.variable} ${notoDevanagari.variable} ${cormorant.variable} ${montserrat.variable} h-full`}
+      className={`${spaceGrotesk.variable} ${inter.variable} ${geistMono.variable} ${notoDevanagari.variable} h-full`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>

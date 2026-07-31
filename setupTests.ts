@@ -25,6 +25,9 @@ vi.mock('next/headers', () => ({
     set: vi.fn(),
     delete: vi.fn(),
   }),
+  headers: vi.fn().mockResolvedValue({
+    get: vi.fn().mockReturnValue('127.0.0.1'),
+  }),
 }))
 
 // Provide a global mock for supabase server client
@@ -58,6 +61,7 @@ vi.mock('@/lib/supabase/server', () => {
   }
   return {
     createClient: vi.fn().mockResolvedValue(supabaseClientMock),
+    checkAuth: vi.fn().mockResolvedValue({ user: { id: 'test-user', email: 'test@example.com' } }),
   }
 })
 

@@ -1,22 +1,4 @@
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-
-export interface PDFSummaryStat {
-  label: string
-  value: string | number
-}
-
-interface PDFOptions {
-  title: string
-  subtitle?: string
-  filename: string
-  headers: string[]
-  data: (string | number)[][]
-  themeColor?: [number, number, number] // RGB
-  summaryStats?: PDFSummaryStat[]
-}
-
-export function exportToPDF({
+export async function exportToPDF({
   title,
   subtitle,
   filename,
@@ -25,6 +7,11 @@ export function exportToPDF({
   themeColor = [99, 102, 241], // Default Indigo
   summaryStats
 }: PDFOptions) {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ])
+
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
