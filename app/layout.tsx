@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter, Geist_Mono, Noto_Sans_Devanagari } from "next/fon
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { PWAInstaller } from "@/components/PWAInstaller";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -63,9 +64,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <PWAInstaller />
-        {children}
-        <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <PWAInstaller />
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

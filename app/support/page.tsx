@@ -1,58 +1,65 @@
-import { Card, CardContent } from '@/components/ui/card'
-import { Phone, ArrowLeft, HeadphonesIcon } from 'lucide-react'
+import { Phone, ArrowLeft, HeadphonesIcon, Sparkles } from 'lucide-react'
 import Link from 'next/link'
+import { GlassCard } from '@/components/ui/GlassCard'
+import { Button } from '@/components/ui/button'
 
 export const metadata = {
-  title: 'Support & Help Center | SNK ID Card System',
+  title: 'Support & Help Center | Samagam Portal',
 }
 
 const contacts = [
-  { name: 'Akshay Shriram ji', phone: '+91 99205 34540' },
-  { name: 'Naresh ji', phone: '+91 72087 71142' },
-  { name: 'Arvind Kanojiya ji', phone: '+91 90043 21660' },
-  { name: 'Ayush wagh ji (Technical Support)', phone: '+91 96534 79985' },
+  { name: 'Akshay Shriram ji', role: 'Organizing Executive', phone: '+91 99205 34540' },
+  { name: 'Naresh ji', role: 'Operations Lead', phone: '+91 72087 71142' },
+  { name: 'Arvind Kanojiya ji', role: 'Credential Supervisor', phone: '+91 90043 21660' },
+  { name: 'Ayush Wagh ji', role: 'Technical Lead & Engineering', phone: '+91 96534 79985' },
 ]
 
 export default function SupportPage() {
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-hidden pattern-dots">
-      <div className="max-w-3xl w-full px-6 py-12 relative z-10 flex flex-col space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex flex-col items-center justify-center relative overflow-hidden py-12 px-4">
+      <div className="max-w-4xl w-full space-y-8 relative z-10">
 
         <div>
-          <Link href="/" className="inline-flex items-center btn-secondary !py-2 !px-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
+          <Link href="/">
+            <Button variant="outline" size="sm" className="gap-2">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Portal</span>
+            </Button>
           </Link>
         </div>
 
-        <div className="text-center space-y-6 bg-primary border-[3px] border-ink p-8 md:p-12 rounded-[32px] shadow-hard relative overflow-hidden">
-          <div className="absolute -right-4 -top-4 opacity-10">
-            <HeadphonesIcon className="w-64 h-64 text-ink" />
+        <GlassCard className="p-8 sm:p-12" glowColor="blue">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500 mb-2">
+            <HeadphonesIcon className="w-4 h-4" />
+            <span>Help Center</span>
           </div>
-          <div className="relative z-10 text-left">
-            <span className="eyebrow !text-ink !border-ink !bg-white/50 backdrop-blur-sm">Help Center</span>
-            <h1 className="font-display font-bold text-5xl md:text-6xl text-ink tracking-tight mb-4">Support Team</h1>
-            <p className="text-ink/80 font-sans text-xl max-w-lg">
-              Need assistance with volunteer registration, model assignment, or ID card generation? Contact our core support team below.
-            </p>
-          </div>
-        </div>
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-3">
+            Core Operations Support
+          </h1>
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
+            Need assistance with volunteer registration, model assignment, credential batch approval, or technical troubleshooting? Reach out directly to our committee leads.
+          </p>
+        </GlassCard>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {contacts.map((contact) => (
-            <Card key={contact.name} className="bento-white shadow-hard border-ink hover:-translate-y-1 transition-transform duration-150 group">
-              <CardContent className="p-8 flex flex-col space-y-4">
-                <div className="icon-tile icon-tile-ink bg-secondary text-ink group-hover:scale-110 transition-transform duration-300">
-                  <Phone className="w-6 h-6" />
+            <GlassCard key={contact.name} className="p-6" glowColor="cyan">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                  <Phone className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-display font-bold text-ink text-2xl mb-1">{contact.name}</h3>
-                  <a href={`tel:${contact.phone.replace(/[^0-9+]/g, '')}`} className="font-sans font-bold text-xl text-primary hover:text-ink hover:underline underline-offset-4 decoration-2 decoration-ink inline-block transition-colors">
+                <div className="space-y-1">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 block">{contact.role}</span>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">{contact.name}</h3>
+                  <a 
+                    href={`tel:${contact.phone.replace(/[^0-9+]/g, '')}`} 
+                    className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline block pt-1"
+                  >
                     {contact.phone}
                   </a>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
           ))}
         </div>
       </div>

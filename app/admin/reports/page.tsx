@@ -10,6 +10,7 @@ import { getVolunteerReportData, getSessionReportData, getModelReportData, getSe
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { exportToPDF, PDFSummaryStat } from '@/lib/pdf'
+import { GlassCard } from '@/components/ui/GlassCard'
 import Image from 'next/image'
 
 const reports = [
@@ -207,20 +208,21 @@ export default function AdminReportsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf3] text-[#027a48] text-xs font-semibold tracking-wide uppercase">
-            <FileText className="w-4 h-4 mr-2" /> Hub
+      {/* Hero Banner */}
+      <GlassCard className="p-8 md:p-10 relative overflow-hidden" glowColor="emerald">
+        <div className="relative z-10 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold tracking-wide uppercase border border-emerald-500/20">
+            <FileText className="w-4 h-4" /> 
+            <span>Hub</span>
           </div>
-          <div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">Report Hub</h1>
-            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
-          </div>
-          <p className="font-sans text-slate-500 text-lg max-w-xl leading-relaxed">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Report Hub
+          </h1>
+          <p className="font-sans text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl leading-relaxed">
             Generate beautiful PDF analytics and comprehensive data exports across all system modules.
           </p>
         </div>
-      </div>
+      </GlassCard>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {reports.map(report => {
@@ -228,77 +230,73 @@ export default function AdminReportsPage() {
           const isGenerating = generating === report.id
           
           return (
-            <div key={report.id} className="bento-white flex flex-col justify-between gap-4 shadow-hard-sm !p-6 !rounded-[24px]">
+            <GlassCard key={report.id} className="p-6 flex flex-col justify-between gap-4" glowColor="blue">
               <div className="space-y-3">
-                <div className={`icon-tile icon-tile-${report.color} w-12 h-12 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white`}>
-                  <Icon className="w-6 h-6" />
+                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                  <Icon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-display font-bold text-xl text-ink">{report.title}</h3>
-                  <p className="font-sans text-sm text-muted-foreground mt-1">{report.description}</p>
+                  <h3 className="font-bold text-lg text-slate-900 dark:text-white">{report.title}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{report.description}</p>
                 </div>
               </div>
               <div className="flex gap-2 w-full mt-2">
                 <Button 
                   onClick={() => handleGenerateReport(report.id, 'pdf')} 
                   disabled={isGenerating}
-                  className={`flex-1 font-bold shadow-hard-xs hover:translate-y-[1px] hover:shadow-none transition-all ${
-                    isGenerating ? 'opacity-70' : ''
-                  }`}
+                  className="flex-1"
                   variant="outline"
                 >
                   {isGenerating ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
                   ) : (
-                    <Download className="w-4 h-4 mr-2" />
+                    <Download className="w-3.5 h-3.5 mr-1.5" />
                   )}
                   PDF
                 </Button>
                 <Button 
                   onClick={() => handleGenerateReport(report.id, 'csv')} 
                   disabled={isGenerating}
-                  className={`flex-1 font-bold shadow-hard-xs hover:translate-y-[1px] hover:shadow-none transition-all ${
-                    isGenerating ? 'opacity-70' : ''
-                  }`}
+                  className="flex-1"
                   variant="outline"
                 >
-                  <FileText className="w-4 h-4 mr-2" />
+                  <FileText className="w-3.5 h-3.5 mr-1.5" />
                   CSV
                 </Button>
               </div>
-            </div>
+            </GlassCard>
           )
         })}
       </div>
 
-      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0 mt-8">
-        <CardHeader className="bg-muted/20 border-b border-ink/10">
-          <CardTitle className="text-lg flex items-center gap-2 font-bold text-ink">
-            <Activity className="w-5 h-5 text-blue-500" />
-            Global Activity Feed
-          </CardTitle>
-          <CardDescription>
-            The last 100 actions performed across the system.
-          </CardDescription>
-        </CardHeader>
+      <GlassCard className="p-0 overflow-hidden mt-8" glowColor="purple">
+        <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/60 flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-base text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-500" />
+              Global Activity Audit Feed
+            </h3>
+            <p className="text-xs text-slate-400">The last 100 system audit actions</p>
+          </div>
+        </div>
         <CardContent className="p-0">
           {loading ? (
             <div className="p-6 space-y-4">
-              <Skeleton className="h-10 w-full rounded-xl" />
-              <Skeleton className="h-10 w-full rounded-xl" />
-              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-2xl" />
+              <Skeleton className="h-10 w-full rounded-2xl" />
+              <Skeleton className="h-10 w-full rounded-2xl" />
             </div>
           ) : activities.length === 0 ? (
             <div className="text-center py-16 px-4">
-              <div className="mx-auto w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-                <Activity className="w-8 h-8 text-primary opacity-80" />
+              <div className="mx-auto w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-3">
+                <Activity className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold mb-1">No Activities Yet</h3>
-              <p className="text-muted-foreground text-sm font-medium">Action logs will appear here once users interact with the system.</p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">No System Activities Yet</h3>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">Audit logs will appear here once administrative actions occur.</p>
             </div>
           ) : (
             <Table>
-              <TableHeader className="bg-muted/40">
+              <TableHeader>
                 <TableRow>
                   <TableHead>Time</TableHead>
                   <TableHead>User</TableHead>
@@ -310,12 +308,12 @@ export default function AdminReportsPage() {
               <TableBody>
                 {activities.map((act) => (
                   <TableRow key={act.id}>
-                    <TableCell className="font-medium whitespace-nowrap text-xs">
+                    <TableCell className="font-mono text-xs text-slate-400 whitespace-nowrap">
                       {new Date(act.created_at).toLocaleString()}
                     </TableCell>
-                    <TableCell className="font-bold">{act.user_name || 'System'}</TableCell>
+                    <TableCell className="font-semibold text-slate-900 dark:text-white">{act.user_name || 'System'}</TableCell>
                     <TableCell>
-                      <span className="px-3 py-1 rounded-full bg-ink/5 border border-ink/10 text-xs font-bold uppercase tracking-wider text-ink">
+                      <span className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 text-xs font-mono font-semibold uppercase tracking-wider">
                         {act.role}
                       </span>
                     </TableCell>
@@ -333,7 +331,7 @@ export default function AdminReportsPage() {
             </Table>
           )}
         </CardContent>
-      </div>
+      </GlassCard>
     </div>
   )
 }

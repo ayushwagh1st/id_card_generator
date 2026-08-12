@@ -2,15 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import Image from 'next/image'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Mail, Lock, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { toast } from 'sonner'
+import { GlassCard } from '@/components/ui/GlassCard'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { motion } from 'framer-motion'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -67,113 +66,125 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background relative overflow-hidden select-none p-4 sm:p-8">
-      {/* Container */}
-      <div className="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-        
-        {/* Left Side: Illustration / Brand */}
-        <div className="hidden lg:flex flex-col justify-center items-center h-[90vh] bento-pink pattern-dots relative overflow-hidden group border-ink shadow-hard rounded-[32px]">
-          <div className="absolute top-8 left-8 badge-flat bg-white text-ink border-ink transform -rotate-3 z-20">
-            <Sparkles className="w-4 h-4 mr-2" />
-            Portal Access
+    <div className="relative min-h-screen bg-background text-foreground flex items-center justify-center p-4 sm:p-8 overflow-hidden select-none">
+      {/* Slow Ambient Aurora Background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-[20%] left-[20%] w-[650px] h-[650px] rounded-full bg-blue-500/15 dark:bg-blue-600/20 blur-[140px] animate-aurora-1" />
+        <div className="absolute -bottom-[20%] right-[20%] w-[700px] h-[700px] rounded-full bg-indigo-500/15 dark:bg-indigo-600/20 blur-[150px] animate-aurora-2" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        {/* Left Side: 3D Showcase Panel */}
+        <div className="hidden lg:flex flex-col justify-between h-[520px] p-10 rounded-3xl glass-panel glass-edge-light relative overflow-hidden">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-semibold w-max">
+            <Sparkles className="w-4 h-4" />
+            <span>Spatial Portal v2027</span>
           </div>
-          
-          <div className="relative z-10 transform transition-transform duration-500 group-hover:scale-105 group-hover:rotate-2 w-full max-w-[80%] aspect-square flex items-center justify-center">
-            <Image 
-              src="/images/login_illustration.png" 
-              alt="Magical ID Portal" 
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-contain drop-shadow-[12px_12px_0_rgba(17,17,17,1)]"
-              priority
-            />
+
+          <div className="relative z-10 my-auto text-center space-y-4">
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
+              className="relative w-48 h-48 mx-auto"
+            >
+              <Image
+                src="/logo.png"
+                alt="Bal Pradarshani Logo"
+                fill
+                priority
+                className="object-contain drop-shadow-2xl"
+              />
+            </motion.div>
+
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Bal Pradarshani Portal
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+              Experience the next-generation spatial credential system for volunteers and model heads.
+            </p>
           </div>
-          
-          <div className="absolute bottom-8 right-8 bento-yellow p-4 shadow-hard flex items-center gap-3 transform rotate-3 z-20">
-             <ShieldCheck className="w-6 h-6 text-ink" />
-             <span className="font-display font-bold text-ink">Secure & Fast</span>
+
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200/50 dark:border-slate-800/60 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5 text-emerald-500 font-medium">
+              <ShieldCheck className="w-4 h-4" />
+              <span>Encrypted Authentication</span>
+            </div>
+            <span className="font-mono">60th Samagam</span>
           </div>
         </div>
 
-        {/* Right Side: Form */}
-        <div className="flex justify-center items-center h-full w-full">
-          <div className="w-full max-w-md card-flat p-8 sm:p-10 bg-white shadow-hard relative">
-            <div className="absolute -top-6 -right-6 icon-tile icon-tile-mint w-14 h-14 shadow-hard transform rotate-6 z-10">
-              <Lock className="w-7 h-7" />
-            </div>
-
-            <div className="space-y-4 pb-8">
-              <span className="eyebrow text-ink/70">Welcome Back</span>
-              <h1 className="text-4xl font-bold font-display text-ink leading-tight">
-                Enter the <br/> <span className="text-[var(--color-pink)]" style={{ textShadow: '2px 2px 0 #111111, -1px -1px 0 #111111, 1px -1px 0 #111111, -1px 1px 0 #111111, 1px 1px 0 #111111' }}>Portal</span>
-              </h1>
-              <p className="text-muted-foreground text-sm font-sans font-medium leading-relaxed">
-                Enter your credentials to access the magical ID portal system. Let's make some magic!
-              </p>
-            </div>
-            
-            <form onSubmit={handleLogin} className="space-y-6">
-              {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="font-display font-bold text-sm text-ink">
-                  Email Address
-                </Label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink/50 group-focus-within:text-ink transition-colors" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@company.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-12 h-14 border-ink-2 shadow-hard-xs rounded-xl font-medium text-lg focus-visible:ring-0 focus-visible:shadow-hard transition-shadow"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div className="space-y-2">
-                  <Label htmlFor="password" className="font-display font-bold text-sm text-ink">
-                    Password
-                  </Label>
-                <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink/50 group-focus-within:text-ink transition-colors" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-12 h-14 border-ink-2 shadow-hard-xs rounded-xl font-medium text-lg focus-visible:ring-0 focus-visible:shadow-hard transition-shadow"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-6">
-                <button
-                  type="submit"
-                  className="btn-primary w-full h-14 bg-[var(--color-yellow)] text-ink border-ink shadow-hard hover:bg-[var(--color-lime)] flex items-center justify-center gap-2"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <AnimatedLoader className="w-5 h-5 text-ink" />
-                      <span>Signing in...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Let's Go!</span>
-                      <ArrowRight className="w-5 h-5" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+        {/* Right Side: Floating Login Glass Form */}
+        <GlassCard className="p-8 sm:p-10 shadow-2xl" glowColor="blue">
+          <div className="space-y-2 mb-8">
+            <span className="text-[11px] font-mono uppercase tracking-widest text-blue-500 font-semibold block">
+              Secure Access
+            </span>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Sign In to Portal
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+              Enter your credentials to manage volunteer badges and event rosters.
+            </p>
           </div>
-        </div>
 
+          <form onSubmit={handleLogin} className="space-y-5">
+            {/* Email Field */}
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="text-xs font-medium text-slate-700 dark:text-slate-300 block">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@company.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="text-xs font-medium text-slate-700 dark:text-slate-300 block">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 rounded-[16px] mt-4 text-[15px]"
+            >
+              {loading ? (
+                <>
+                  <AnimatedLoader className="w-4 h-4 text-white mr-2" />
+                  <span>Authenticating...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
+          </form>
+        </GlassCard>
       </div>
     </div>
   )

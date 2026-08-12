@@ -1,249 +1,322 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import dynamic from 'next/dynamic';
-import { createClient } from '@/lib/supabase/client';
+import React, { useState, useEffect } from 'react'
+import { GlassCard } from '@/components/ui/GlassCard'
+import dynamic from 'next/dynamic'
+import { createClient } from '@/lib/supabase/client'
+import { UserCheck, Camera, CheckCircle2, RefreshCw, QrCode, Sparkles } from 'lucide-react'
+import { toast } from 'sonner'
+import { motion } from 'framer-motion'
 
 const Scanner = dynamic(() => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner), {
   ssr: false,
-});
-import { toast } from 'sonner';
+})
 
 export function SpotRegistration() {
-  const [mode, setMode] = useState<'register' | 'attendance'>('register');
-  const [scannedId, setScannedId] = useState<string | null>(null);
-  const [scannedSerial, setScannedSerial] = useState<string | null>(null);
-  const [childData, setChildData] = useState<any>(null);
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const supabase = createClient();
+  const [mode, setMode] = useState<'register' | 'attendance'>('register')
+  const [scannedId, setScannedId] = useState<string | null>(null)
+  const [scannedSerial, setScannedSerial] = useState<string | null>(null)
+  const [childData, setChildData] = useState<any>(null)
+  const [sessions, setSessions] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const supabase = createClient()
 
   // Form State
-  const [name, setName] = useState('');
-  const [contact, setContact] = useState('');
-  const [sessionId, setSessionId] = useState('');
+  const [name, setName] = useState('')
+  const [contact, setContact] = useState('')
+  const [sessionId, setSessionId] = useState('')
 
   useEffect(() => {
-    fetchSessions();
-  }, []);
+    fetchSessions()
+  }, [])
 
   const fetchSessions = async () => {
-    const { data, error } = await supabase.from('sessions').select('*').order('date', { ascending: true });
+    const { data, error } = await supabase.from('sessions').select('*').order('date', { ascending: true })
     if (!error && data) {
-      setSessions(data);
+      setSessions(data)
     }
-  };
+  }
 
   const handleScan = async (result: string) => {
-    if (scannedId === result) return; // Prevent duplicate immediate scans
-    setScannedId(result);
-    setLoading(true);
+    if (scannedId === result) return
+    setScannedId(result)
+    setLoading(true)
 
     try {
       const { data: qrData } = await supabase
         .from('qr_codes')
         .select('serial_number')
         .eq('id', result)
-        .single();
-        
+        .single()
+
       if (qrData) {
-         setScannedSerial(`MSS-2027-${String(qrData.serial_number).padStart(3, '0')}`);
+        setScannedSerial(`MSS-2027-${String(qrData.serial_number).padStart(3, '0')}`)
       } else {
-         setScannedSerial(null);
+        setScannedSerial(null)
       }
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('children')
         .select('*, session:sessions(name)')
         .eq('qr_id', result)
-        .single();
+        .single()
 
       if (data) {
-        setChildData(data);
+        setChildData(data)
         if (mode === 'attendance') {
-          const currentStatus = data.status || 'Registered';
-          const newStatus = currentStatus === 'Checked In' ? 'Checked Out' : 'Checked In';
-          const now = new Date().toISOString();
-          
-          await supabase.from('children').update({
-            status: newStatus,
-            ...(newStatus === 'Checked In' ? { checked_in_at: now } : { checked_out_at: now })
-          }).eq('id', data.id);
-          
-          setChildData({ ...data, status: newStatus });
-          toast.success(`Successfully ${newStatus === 'Checked In' ? 'checked in' : 'checked out'} ${data.name}`);
-          
-          // Auto-reset after a few seconds in attendance mode for fast scanning
+          const currentStatus = data.status || 'Registered'
+          const newStatus = currentStatus === 'Checked In' ? 'Checked Out' : 'Checked In'
+          const now = new Date().toISOString()
+
+          await supabase
+            .from('children')
+            .update({
+              status: newStatus,
+              ...(newStatus === 'Checked In' ? { checked_in_at: now } : { checked_out_at: now }),
+            })
+            .eq('id', data.id)
+
+          setChildData({ ...data, status: newStatus })
+          toast.success(`Successfully ${newStatus === 'Checked In' ? 'checked in' : 'checked out'} ${data.name}`)
+
           setTimeout(() => {
-            setScannedId(null);
-            setScannedSerial(null);
-            setChildData(null);
-          }, 2000);
+            setScannedId(null)
+            setScannedSerial(null)
+            setChildData(null)
+          }, 2000)
         } else {
-          toast.info("Child already registered for this QR!");
+          toast.info('Child already registered for this QR code!')
         }
       } else {
         if (mode === 'attendance') {
-          toast.error("This QR code is not registered yet.");
-          setTimeout(() => setScannedId(null), 2000);
+          toast.error('This QR code is not registered yet.')
+          setTimeout(() => setScannedId(null), 2000)
         } else {
-          setChildData(null);
-          setName('');
-          setContact('');
-          setSessionId('');
-          toast.success("New QR Scanned. Please register the child.");
+          setChildData(null)
+          setName('')
+          setContact('')
+          setSessionId('')
+          toast.success('New QR Scanned. Please register the attendee details.')
         }
       }
-    } catch (err) {
-      toast.error("Invalid QR Code or Error fetching data");
-      setScannedId(null);
+    } catch (err: any) {
+      console.error(err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!scannedId || !name || !sessionId) {
-      toast.error("Please fill all required fields");
-      return;
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!scannedId || !name || !contact || !sessionId) {
+      toast.error('Please complete all required fields.')
+      return
     }
 
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('children')
-        .insert([{
-          qr_id: scannedId,
-          name: name,
-          contact_number: contact,
-          session_id: sessionId
-        }])
-        .select('*, session:sessions(name)')
-        .single();
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('children')
+      .insert({
+        name,
+        contact_number: contact,
+        session_id: sessionId,
+        qr_id: scannedId,
+        serial_number: scannedSerial || 'UNASSIGNED',
+        status: 'Registered',
+      })
+      .select('*, session:sessions(name)')
+      .single()
 
-      if (error) throw error;
-      
-      toast.success("Child successfully registered!");
-      setChildData(data);
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error.message || "Failed to register child");
-    } finally {
-      setLoading(false);
+    if (error) {
+      toast.error(error.message || 'Error registering child.')
+    } else {
+      toast.success(`Registered ${name} successfully!`)
+      setChildData(data)
     }
-  };
-
-  const resetScanner = () => {
-    setScannedId(null);
-    setScannedSerial(null);
-    setChildData(null);
-  };
+    setLoading(false)
+  }
 
   return (
-    <div className="container mx-auto py-8 max-w-2xl">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-            <div>
-              <CardTitle>Scanner Portal</CardTitle>
-              <CardDescription>Scan a sticker to register or manage attendance.</CardDescription>
+    <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Mode Selector Glass Pill */}
+      <GlassCard className="p-6" glowColor="blue">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500 mb-1">
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>On-Site Registration</span>
             </div>
-            <div className="flex gap-2 p-1 bg-muted rounded-lg">
-              <Button 
-                variant={mode === 'register' ? 'default' : 'ghost'} 
-                size="sm" 
-                onClick={() => { setMode('register'); resetScanner(); }}
-              >
-                Register Mode
-              </Button>
-              <Button 
-                variant={mode === 'attendance' ? 'default' : 'ghost'} 
-                size="sm" 
-                onClick={() => { setMode('attendance'); resetScanner(); }}
-              >
-                Attendance Mode
-              </Button>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Spot Registration & Quick Scanner
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Scan pre-printed QR badges to pair attendee details or check in attendees.
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          {!scannedId ? (
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="w-full max-w-sm aspect-square overflow-hidden rounded-lg border-2 border-dashed">
-                <Scanner
-                  onScan={(result) => handleScan(result[0].rawValue)}
-                  allowMultiple={false}
-                  scanDelay={1000}
+
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl glass-pill">
+            <button
+              onClick={() => setMode('register')}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                mode === 'register'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              Register Mode
+            </button>
+            <button
+              onClick={() => setMode('attendance')}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                mode === 'attendance'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              Attendance Scanner
+            </button>
+          </div>
+        </div>
+      </GlassCard>
+
+      {/* Grid: Camera Scanner + Form Card */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Camera Scanner View */}
+        <GlassCard className="p-6 flex flex-col justify-between" glowColor="purple">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-base text-slate-900 dark:text-white flex items-center gap-2">
+              <Camera className="w-4 h-4 text-purple-500" />
+              Live QR Scanner
+            </h3>
+            {scannedId && (
+              <button
+                onClick={() => {
+                  setScannedId(null)
+                  setScannedSerial(null)
+                  setChildData(null)
+                }}
+                className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+              >
+                <RefreshCw className="w-3 h-3" /> Rescan
+              </button>
+            )}
+          </div>
+
+          <div className="relative aspect-square w-full rounded-2xl overflow-hidden glass-panel border border-purple-500/30 flex items-center justify-center bg-black/40">
+            {!scannedId ? (
+              <Scanner
+                onScan={(results) => {
+                  if (results && results.length > 0) {
+                    handleScan(results[0].rawValue)
+                  }
+                }}
+              />
+            ) : (
+              <div className="p-6 text-center space-y-3">
+                <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto animate-bounce" />
+                <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                  Badge Scanned
+                </div>
+                <div className="text-xs font-mono px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-500 inline-block border border-blue-500/20">
+                  {scannedSerial || scannedId}
+                </div>
+              </div>
+            )}
+          </div>
+        </GlassCard>
+
+        {/* Form Registration View */}
+        <GlassCard className="p-6" glowColor="cyan">
+          <h3 className="font-semibold text-base text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <QrCode className="w-4 h-4 text-cyan-500" />
+            {mode === 'register' ? 'Attendee Information' : 'Check-In Result'}
+          </h3>
+
+          {childData ? (
+            <div className="space-y-4 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-slate-400 font-mono">
+                  Registered Name
+                </span>
+                <p className="text-lg font-bold text-slate-900 dark:text-white">{childData.name}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-slate-400">Contact:</span>
+                  <p className="font-medium text-slate-700 dark:text-slate-300">
+                    {childData.contact_number}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Status:</span>
+                  <p className="font-medium text-emerald-500">{childData.status}</p>
+                </div>
+              </div>
+            </div>
+          ) : mode === 'register' ? (
+            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1.5">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Aarav Sharma"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
-              <p className="text-sm text-muted-foreground">Point your camera at the QR code sticker</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-lg">
-                  QR Scanned: <span className="text-primary font-mono text-sm">{scannedSerial || `${scannedId.slice(0,8)}...`}</span>
-                </h3>
-                <Button variant="outline" size="sm" onClick={resetScanner}>Scan Another</Button>
+
+              <div>
+                <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1.5">
+                  Contact Number
+                </label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="+91 9876543210"
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                />
               </div>
 
-              {loading ? (
-                <div className="py-8 text-center text-muted-foreground">Checking database...</div>
-              ) : childData ? (
-                <Card className="bg-muted/50 border-primary/20">
-                  <CardHeader>
-                    <CardTitle className="text-xl">{childData.name}</CardTitle>
-                    <CardDescription>Already Registered</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div><span className="font-semibold">Contact:</span> {childData.contact_number || 'N/A'}</div>
-                    <div><span className="font-semibold">Session:</span> {childData.session?.name || 'Unknown'}</div>
-                    <div><span className="font-semibold">Registered:</span> {new Date(childData.created_at).toLocaleString()}</div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Child's Name <span className="text-red-500">*</span></Label>
-                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Enter full name" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="contact">Guardian Contact (Optional)</Label>
-                    <Input id="contact" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Phone number" />
-                  </div>
+              <div>
+                <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1.5">
+                  Event Session
+                </label>
+                <select
+                  required
+                  value={sessionId}
+                  onChange={(e) => setSessionId(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                >
+                  <option value="">Select a session slot...</option>
+                  {sessions.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="session">Assign Session <span className="text-red-500">*</span></Label>
-                    <Select value={sessionId} onValueChange={(val) => setSessionId(val || '')} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a session">
-                          {sessionId ? sessions.find(s => s.id === sessionId)?.name : "Select a session"}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sessions.map(s => (
-                          <SelectItem key={s.id} value={s.id}>{s.name} - {s.date}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Registering...' : 'Complete Registration'}
-                  </Button>
-                </form>
-              )}
+              <button
+                type="submit"
+                disabled={loading || !scannedId}
+                className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs sm:text-sm shadow-lg shadow-blue-500/25 transition-all disabled:opacity-50 mt-2"
+              >
+                {loading ? 'Registering...' : 'Complete Spot Registration'}
+              </button>
+            </form>
+          ) : (
+            <div className="text-center py-12 text-slate-400 text-xs">
+              Point the camera at an attendee badge to toggle attendance instantly.
             </div>
           )}
-        </CardContent>
-      </Card>
+        </GlassCard>
+      </div>
     </div>
-  );
+  )
 }

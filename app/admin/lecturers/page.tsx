@@ -8,13 +8,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, Plus, Edit, Trash2, KeyRound, Download, Eye, EyeOff } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, KeyRound, Download, Eye, EyeOff, CheckCircle, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { exportToPDF } from '@/lib/pdf'
 import { getLecturersAction, addLecturerAction, updateLecturerAction, deleteLecturerAction, resetLecturerPasswordAction } from '@/server/actions/lecturers'
 import Image from 'next/image'
 import { Users } from 'lucide-react'
+import { GlassCard } from '@/components/ui/GlassCard'
 import { LecturersTable } from './_components/LecturersTable'
 import { LecturersModals } from './_components/LecturersModals'
 
@@ -202,51 +203,58 @@ export default function LecturersPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf3] text-[#027a48] text-xs font-semibold tracking-wide uppercase">
-            <Users className="w-4 h-4 mr-2" /> Security
+      {/* Hero Banner */}
+      <GlassCard className="p-8 md:p-10 relative overflow-hidden" glowColor="purple">
+        <div className="relative z-10 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold tracking-wide uppercase border border-emerald-500/20">
+            <Users className="w-4 h-4" /> 
+            <span>Security</span>
           </div>
-          <div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">Security Management</h1>
-            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
-          </div>
-          <p className="font-sans text-slate-500 text-lg max-w-xl leading-relaxed">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Security Management
+          </h1>
+          <p className="font-sans text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl leading-relaxed">
             Manage security personnel who will conduct sessions and mark attendance.
           </p>
         </div>
-      </div>
+      </GlassCard>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-pink w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_users.png" alt="Users" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="blue">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Total Security</span>
+            <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+              <Users className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{lecturers.length}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Total Security</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{lecturers.length}</div>
           </div>
-        </div>
+        </GlassCard>
 
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-mint w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_check.png" alt="Active" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="cyan">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Active Security</span>
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{activeLecturers}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Active Security</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{activeLecturers}</div>
           </div>
-        </div>
+        </GlassCard>
 
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-peach w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_clock.png" alt="Inactive" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="purple">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Inactive Security</span>
+            <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+              <Clock className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{inactiveLecturers}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Inactive Security</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{inactiveLecturers}</div>
           </div>
-        </div>
+        </GlassCard>
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

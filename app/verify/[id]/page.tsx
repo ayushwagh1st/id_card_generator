@@ -1,23 +1,22 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle2, XCircle, AlertTriangle, Building, Users, Phone, Hash, ShieldAlert } from 'lucide-react'
+import { CheckCircle2, XCircle, AlertTriangle, Building, Users, Phone, Hash, ShieldAlert, Sparkles } from 'lucide-react'
 import Image from 'next/image'
+import { GlassCard } from '@/components/ui/GlassCard'
 
 export default async function VerifyPage({ params }: { params: Promise<{ id: string }> }) {
   const [resolvedParams, supabase] = await Promise.all([params, createClient()])
 
-  // Authentication Check (Block Outsiders)
   const { data: { user } } = await supabase.auth.getUser()
   if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 flex flex-col items-center text-center space-y-4">
-            <ShieldAlert className="w-16 h-16 text-primary" />
-            <h1 className="text-2xl font-bold font-display text-ink">Access Denied</h1>
-            <p className="text-muted-foreground">You do not have permission to view this volunteer's profile. Scanning must be performed by authorized staff.</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex items-center justify-center p-4">
+        <GlassCard className="max-w-md w-full p-8 text-center space-y-4" glowColor="purple">
+          <ShieldAlert className="w-14 h-14 text-rose-500 mx-auto" />
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Access Restricted</h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            You do not have authorization to view this profile. QR verification scanning is reserved for authorized staff.
+          </p>
+        </GlassCard>
       </div>
     )
   }
@@ -27,17 +26,17 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
 
   if (error || !volunteer) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 flex flex-col items-center text-center space-y-4">
-            <XCircle className="w-16 h-16 text-destructive" />
-            <h1 className="text-2xl font-bold font-display text-ink">Invalid ID Card</h1>
-            <p className="text-muted-foreground">This QR code does not match any registered volunteer in our system. It may be forged or deleted.</p>
-            <div className="mt-4 p-3 bg-destructive/10 text-destructive text-xs rounded-[10px] border-3 border-ink shadow-hard-xs break-all w-full text-left font-semibold">
-              <strong>ID Scanned:</strong> {error ? "Invalid Code" : resolvedParams.id.substring(0, 8) + '...'}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex items-center justify-center p-4">
+        <GlassCard className="max-w-md w-full p-8 text-center space-y-4" glowColor="purple">
+          <XCircle className="w-14 h-14 text-rose-500 mx-auto" />
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Invalid Badge</h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            This QR code does not match any registered attendee in our system. It may be expired or deleted.
+          </p>
+          <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500 text-xs font-mono break-all text-left">
+            <strong>ID Scanned:</strong> {error ? "Invalid Code" : resolvedParams.id.substring(0, 8) + '...'}
+          </div>
+        </GlassCard>
       </div>
     )
   }
@@ -46,60 +45,62 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
   const isPending = volunteer.status === 'Pending'
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="max-w-md w-full overflow-hidden">
-        <div className={`h-32 ${isApproved ? 'bg-emerald-500' : isPending ? 'bg-amber-500' : 'bg-destructive'} flex items-center justify-center border-b-3 border-ink`}>
-          {isApproved && <CheckCircle2 className="w-16 h-16 text-white" />}
-          {isPending && <AlertTriangle className="w-16 h-16 text-white" />}
-          {!isApproved && !isPending && <XCircle className="w-16 h-16 text-white" />}
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex items-center justify-center p-4 sm:p-6">
+      <GlassCard className="max-w-md w-full p-8 relative overflow-hidden" glowColor={isApproved ? 'blue' : 'purple'}>
+        {/* Status Top Banner */}
+        <div className={`py-2 px-4 rounded-2xl mb-6 text-center flex items-center justify-center gap-2 text-xs font-semibold ${
+          isApproved ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' :
+          isPending ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20' :
+          'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+        }`}>
+          {isApproved && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+          {isPending && <AlertTriangle className="w-4 h-4 text-amber-500" />}
+          {!isApproved && !isPending && <XCircle className="w-4 h-4 text-rose-500" />}
+          <span>{isApproved ? 'Official Verified Credential' : isPending ? 'Pending Verification' : 'Invalid Credential'}</span>
         </div>
 
-        <CardHeader className="text-center -mt-10 pb-2 relative z-10">
-          <div className="w-20 h-24 mx-auto rounded-[10px] overflow-hidden border-3 border-ink shadow-hard-xs bg-card flex items-center justify-center">
+        {/* Profile Avatar & Info */}
+        <div className="text-center space-y-3 mb-6">
+          <div className="w-24 h-28 mx-auto rounded-2xl overflow-hidden glass-panel border border-white/40 dark:border-slate-700/50 shadow-xl bg-slate-900 flex items-center justify-center">
             {volunteer.photo_url ? (
-              <Image src={volunteer.photo_url} alt={`${volunteer.full_name}'s profile photo`} width={80} height={96} unoptimized className="w-full h-full object-cover" />
+              <Image src={volunteer.photo_url} alt={`${volunteer.full_name}'s profile photo`} width={96} height={112} unoptimized className="w-full h-full object-cover" />
             ) : (
-              <span className="text-xs text-muted-foreground">No Photo</span>
+              <Sparkles className="w-8 h-8 text-blue-400" />
             )}
           </div>
-          <CardTitle className="mt-4 text-2xl font-bold font-display text-ink">{volunteer.full_name}</CardTitle>
-          <div className="inline-block px-3 py-1 mt-2 rounded-full text-sm font-bold tracking-wider uppercase bg-secondary text-secondary-foreground border-2 border-ink shadow-hard-xs">
+
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+            {volunteer.full_name}
+          </h2>
+
+          <div className="inline-block px-3 py-1 rounded-full text-xs font-mono font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20">
             {volunteer.snk_id || volunteer.id.substring(0, 8).toUpperCase()}
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="space-y-6 pt-4">
-          <div className={`p-4 rounded-xl border-3 border-ink shadow-hard-xs flex flex-col items-center justify-center text-center ${isApproved ? 'bg-emerald-50 text-emerald-800' :
-              isPending ? 'bg-amber-50 text-amber-800' :
-                'bg-rose-50 text-rose-800'
-            }`}>
-            <span className="text-xs font-bold uppercase opacity-70 mb-1">Current Status</span>
-            <span className="text-lg font-black uppercase tracking-widest">{volunteer.status}</span>
-            {isApproved && <span className="text-xs mt-1 font-semibold">Valid for 60th Nirankari Sant Samagam Maharashtra 2027</span>}
-            {isPending && <span className="text-xs mt-1 font-semibold">Card is currently pending approval.</span>}
-            {!isApproved && !isPending && <span className="text-xs mt-1 font-semibold">This card has been rejected or disabled.</span>}
+        {/* Attribute Details Grid */}
+        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200/50 dark:border-slate-800/60">
+          <div className="p-3 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/60">
+            <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400 block mb-0.5">Model Area</span>
+            <span className="text-xs font-semibold text-slate-900 dark:text-white truncate block">{volunteer.models?.name || 'Unassigned'}</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 pb-2">
-            <div className="flex flex-col gap-1 p-3 bg-card rounded-xl border-3 border-ink shadow-hard-xs">
-              <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase"><Building className="w-3.5 h-3.5" /> Model Area</span>
-              <span className="text-sm font-bold text-ink truncate">{volunteer.models?.name || 'Unassigned'}</span>
-            </div>
-            <div className="flex flex-col gap-1 p-3 bg-card rounded-xl border-3 border-ink shadow-hard-xs">
-              <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase"><Users className="w-3.5 h-3.5" /> Branch</span>
-              <span className="text-sm font-bold text-ink truncate">{volunteer.branch || 'N/A'}</span>
-            </div>
-            <div className="flex flex-col gap-1 p-3 bg-card rounded-xl border-3 border-ink shadow-hard-xs">
-              <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase"><Hash className="w-3.5 h-3.5" /> Designation</span>
-              <span className="text-sm font-bold text-ink truncate">{volunteer.designation || volunteer.role}</span>
-            </div>
-            <div className="flex flex-col gap-1 p-3 bg-card rounded-xl border-3 border-ink shadow-hard-xs">
-              <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase"><Phone className="w-3.5 h-3.5" /> Mobile</span>
-              <span className="text-sm font-bold text-ink truncate">{volunteer.mobile_number}</span>
-            </div>
+          <div className="p-3 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/60">
+            <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400 block mb-0.5">Branch</span>
+            <span className="text-xs font-semibold text-slate-900 dark:text-white truncate block">{volunteer.branch || 'N/A'}</span>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="p-3 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/60">
+            <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400 block mb-0.5">Role</span>
+            <span className="text-xs font-semibold text-slate-900 dark:text-white truncate block">{volunteer.designation || volunteer.role}</span>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/60">
+            <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400 block mb-0.5">Mobile</span>
+            <span className="text-xs font-semibold text-slate-900 dark:text-white truncate block">{volunteer.mobile_number}</span>
+          </div>
+        </div>
+      </GlassCard>
     </div>
   )
 }

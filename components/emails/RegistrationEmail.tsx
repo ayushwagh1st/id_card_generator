@@ -35,11 +35,6 @@ export const RegistrationEmail = ({
     <Html>
       <Head>
         <Font
-          fontFamily="Space Grotesk"
-          fallbackFontFamily="Helvetica"
-          fontWeight={700}
-        />
-        <Font
           fontFamily="Inter"
           fallbackFontFamily="Arial"
           fontWeight={400}
@@ -47,13 +42,12 @@ export const RegistrationEmail = ({
         <Font
           fontFamily="Inter"
           fallbackFontFamily="Arial"
-          fontWeight={700}
+          fontWeight={600}
         />
       </Head>
-      <Preview>Your account has been created successfully. Use the details below to sign in.</Preview>
+      <Preview>Your account has been created. Use the details below to sign in.</Preview>
       <Body style={main}>
         <Container style={container}>
-          {/* Main Neobrutalist Card */}
           <Section style={card}>
             <div style={headerDecor}>BAL PRADARSHANI</div>
             <Section style={innerContent}>
@@ -63,11 +57,11 @@ export const RegistrationEmail = ({
               <Text style={text}>
                 Hello {name},<br/><br/>
                 Welcome to <strong>Bal Pradarshani!</strong><br/><br/>
-                Your account has been successfully created by the organizing committee. You can now access the event portal using login details below.
+                Your account has been successfully created by the organizing committee. You can now access the event portal using the details below.
               </Text>
               
               <Section style={infoBox}>
-                <Text style={infoLabel}>Portal</Text>
+                <Text style={infoLabel}>Portal URL</Text>
                 <Link href={portalUrl} style={infoLink}>{portalUrl}</Link>
                 
                 <Hr style={infoHr} />
@@ -81,7 +75,6 @@ export const RegistrationEmail = ({
                 <Text style={infoValue}>{loginPass}</Text>
               </Section>
 
-              {/* Support Section */}
               <Heading style={supportHeading}>Need assistance?</Heading>
               
               <Text style={supportLabel}>Support:</Text>
@@ -90,10 +83,9 @@ export const RegistrationEmail = ({
               <Text style={supportLabel}>Website:</Text>
               <Link href={portalUrl} style={supportLink}>{portalUrl}</Link>
               
-              {/* Warning Box */}
               <Section style={warningBox}>
                 <Text style={warningText}>
-                  <strong>⚠️ NOTE:</strong> If you were not expecting this email, please contact the organizing committee immediately.
+                  <strong>Security Note:</strong> If you were not expecting this email, please contact the organizing committee immediately.
                 </Text>
               </Section>
               
@@ -105,7 +97,7 @@ export const RegistrationEmail = ({
               <Hr style={hr} />
               
               <Text style={footer}>
-                This is an Automated email regarding your Bal Pradarshani account.
+                This is an automated system notification regarding your Bal Pradarshani account.
               </Text>
             </Section>
           </Section>
@@ -117,160 +109,153 @@ export const RegistrationEmail = ({
 
 export default RegistrationEmail;
 
-/* Neobrutalism Styles */
+/* Premium Clean Email Styles */
 
 const main = {
-  backgroundColor: '#ECEBFC', // pastel bg
-  fontFamily: '"Inter", sans-serif',
-  padding: '60px 0',
+  backgroundColor: '#f8fafc',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  padding: '40px 0',
 };
 
 const container = {
   margin: '0 auto',
-  padding: '0 20px',
-  maxWidth: '600px',
+  padding: '0 16px',
+  maxWidth: '560px',
 };
 
 const card = {
-  backgroundColor: '#FFFFFF',
-  border: '3px solid #111111',
-  borderRadius: '0',
-  boxShadow: '8px 8px 0px 0px #111111',
+  backgroundColor: '#ffffff',
+  borderRadius: '24px',
+  border: '1px solid #e2e8f0',
+  boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.05)',
+  overflow: 'hidden',
 };
 
 const headerDecor = {
-  backgroundColor: '#D4F03B', // lime primary for welcome
-  borderBottom: '3px solid #111111',
-  padding: '16px 20px',
-  fontFamily: '"Space Grotesk", sans-serif',
+  backgroundColor: '#2563eb',
+  padding: '20px 24px',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   fontWeight: '700',
-  fontSize: '24px',
-  color: '#111111',
-  letterSpacing: '0.05em',
+  fontSize: '20px',
+  color: '#ffffff',
+  letterSpacing: '-0.02em',
   textAlign: 'center' as const,
 };
 
 const innerContent = {
-  padding: '30px 40px',
+  padding: '32px',
 };
 
 const tagline = {
-  fontFamily: '"Space Grotesk", sans-serif',
-  fontSize: '14px',
-  fontWeight: '700',
-  color: '#111111',
-  margin: '0 0 24px',
+  fontSize: '12px',
+  fontWeight: '600',
+  color: '#2563eb',
+  margin: '0 0 20px',
   textAlign: 'center' as const,
   textTransform: 'uppercase' as const,
-  letterSpacing: '0.05em',
+  letterSpacing: '0.1em',
 };
 
 const text = {
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#111111',
+  fontSize: '14px',
+  lineHeight: '22px',
+  color: '#334155',
   marginBottom: '24px',
 };
 
 const infoBox = {
-  border: '3px solid #111111',
+  border: '1px solid #e2e8f0',
+  borderRadius: '16px',
   padding: '20px',
-  marginBottom: '32px',
-  backgroundColor: '#f8f9fa',
+  marginBottom: '28px',
+  backgroundColor: '#f8fafc',
 };
 
 const infoLabel = {
-  fontFamily: '"Space Grotesk", sans-serif',
-  fontSize: '12px',
-  fontWeight: '700',
-  color: '#111111',
+  fontSize: '11px',
+  fontWeight: '600',
+  color: '#64748b',
   margin: '0 0 4px',
   letterSpacing: '0.05em',
   textTransform: 'uppercase' as const,
 };
 
 const infoValue = {
-  fontSize: '16px',
-  fontWeight: '700',
-  color: '#111111',
+  fontSize: '15px',
+  fontWeight: '600',
+  color: '#0f172a',
   margin: '0',
 };
 
 const infoLink = {
-  fontSize: '16px',
-  fontWeight: '700',
-  color: '#2CBCE9', // blue
-  textDecoration: 'underline',
+  fontSize: '15px',
+  fontWeight: '600',
+  color: '#2563eb',
+  textDecoration: 'none',
   margin: '0',
 };
 
 const infoHr = {
-  borderColor: '#111111',
-  borderTopWidth: '2px',
-  borderStyle: 'dashed',
-  margin: '16px 0',
+  borderColor: '#cbd5e1',
+  borderTopWidth: '1px',
+  borderStyle: 'solid',
+  margin: '14px 0',
 };
 
 const supportHeading = {
-  fontFamily: '"Space Grotesk", sans-serif',
-  fontSize: '18px',
+  fontSize: '16px',
   fontWeight: '700',
-  color: '#111111',
-  margin: '0 0 16px',
+  color: '#0f172a',
+  margin: '0 0 12px',
 };
 
 const supportLabel = {
-  fontSize: '14px',
-  fontWeight: '700',
-  color: '#111111',
-  margin: '0 0 4px',
+  fontSize: '13px',
+  fontWeight: '600',
+  color: '#475569',
+  margin: '0 0 2px',
 };
 
 const supportLink = {
   display: 'inline-block',
-  fontSize: '14px',
-  color: '#2CBCE9',
-  textDecoration: 'underline',
-  marginBottom: '16px',
+  fontSize: '13px',
+  color: '#2563eb',
+  textDecoration: 'none',
+  marginBottom: '12px',
 };
 
 const warningBox = {
-  backgroundColor: '#FF99C8', // pink accent
-  border: '3px solid #111111',
-  padding: '16px',
-  marginBottom: '32px',
-  boxShadow: '4px 4px 0px 0px #111111',
+  backgroundColor: '#eff6ff',
+  borderRadius: '12px',
+  border: '1px solid #bfdbfe',
+  padding: '14px 16px',
+  marginBottom: '24px',
 };
 
 const warningText = {
-  fontFamily: '"Space Grotesk", sans-serif',
-  color: '#111111',
-  fontSize: '14px',
-  lineHeight: '22px',
+  color: '#1e40af',
+  fontSize: '13px',
+  lineHeight: '20px',
   margin: '0',
-  fontWeight: 'bold',
-  letterSpacing: '0.02em',
 };
 
 const signOff = {
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#111111',
+  fontSize: '14px',
+  lineHeight: '22px',
+  color: '#334155',
   marginBottom: '24px',
 };
 
 const hr = {
-  borderColor: '#111111',
-  borderTopWidth: '3px',
-  margin: '0 0 24px',
+  borderColor: '#e2e8f0',
+  borderTopWidth: '1px',
+  margin: '0 0 20px',
 };
 
 const footer = {
-  fontFamily: '"Space Grotesk", sans-serif',
-  color: 'rgba(17,17,17,0.7)',
-  fontSize: '12px',
-  lineHeight: '18px',
+  color: '#94a3b8',
+  fontSize: '11px',
+  lineHeight: '16px',
   textAlign: 'center' as const,
   margin: '0',
-  letterSpacing: '0.02em',
 };

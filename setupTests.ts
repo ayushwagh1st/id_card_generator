@@ -66,6 +66,8 @@ vi.mock('@/lib/supabase/server', () => {
 })
 
 // Provide a mock for jsPDF
+const mockSave = vi.fn()
+
 vi.mock('jspdf', () => {
   return {
     default: class {
@@ -80,7 +82,7 @@ vi.mock('jspdf', () => {
       setDrawColor = vi.fn()
       setLineWidth = vi.fn()
       roundedRect = vi.fn()
-      save = vi.fn()
+      save = mockSave
       internal = {
         getNumberOfPages: vi.fn().mockReturnValue(1),
         pageSize: { width: 297, height: 210 },

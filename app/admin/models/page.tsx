@@ -20,10 +20,11 @@ import {
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Plus, Search, Edit, Trash2, Database, Shield, Layers, HelpCircle, Loader2, FileText, Download } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Database, Shield, Layers, HelpCircle, Loader2, FileText, Download, CheckCircle, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { exportToPDF } from '@/lib/pdf'
 import { formatHeadLabel } from '@/lib/formatters'
+import { GlassCard } from '@/components/ui/GlassCard'
 import Image from 'next/image'
 import { getHeadsDataAction, getModelsDataAction, createModelAction, updateModelAction, deleteModelAction } from './actions.server'
 
@@ -186,53 +187,59 @@ export default function ModelsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Redesigned Colorful Header Banner */}
-      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf3] text-[#027a48] text-xs font-semibold tracking-wide uppercase">
-            <Database className="w-4 h-4 mr-2" /> Divisions
+      {/* Hero Banner */}
+      <GlassCard className="p-8 md:p-10 relative overflow-hidden" glowColor="blue">
+        <div className="relative z-10 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold tracking-wide uppercase border border-emerald-500/20">
+            <Database className="w-4 h-4" /> 
+            <span>Divisions</span>
           </div>
-          <div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">Models & Heads</h1>
-            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
-          </div>
-          <p className="font-sans text-slate-500 text-lg max-w-xl leading-relaxed">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Models & Heads
+          </h1>
+          <p className="font-sans text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl leading-relaxed">
             Configure various samagam models, assign supervisors, and manage active exhibition categories.
           </p>
         </div>
-      </div>
+      </GlassCard>
 
       {/* Modern Analytics Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-yellow w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_database.png" alt="Models" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="blue">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Total Models</span>
+            <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+              <Database className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{state.models.length}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Total Models</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{state.models.length}</div>
           </div>
-        </div>
+        </GlassCard>
 
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-mint w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_check.png" alt="Active" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="cyan">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Active Divisions</span>
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{activeModelsCount}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Active Divisions</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{activeModelsCount}</div>
           </div>
-        </div>
+        </GlassCard>
 
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-pink w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_users.png" alt="Heads" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="purple">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Assigned Heads</span>
+            <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+              <Users className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{assignedHeadsCount} / {state.heads.length}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Assigned Heads</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{assignedHeadsCount} / {state.heads.length}</div>
           </div>
-        </div>
+        </GlassCard>
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -259,9 +266,11 @@ export default function ModelsPage() {
 
           {/* Add Model Dialog */}
           <Dialog open={state.isAddOpen} onOpenChange={(val) => val ? dispatch({ type: 'OPEN_ADD' }) : dispatch({ type: 'CLOSE_ADD' })}>
-            <DialogTrigger render={<Button className="w-full sm:w-auto px-5 gap-2" />}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Exhibition Model
+            <DialogTrigger className="w-full sm:w-auto">
+              <span className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25 px-5 h-10 text-xs sm:text-sm font-semibold cursor-pointer transition-all">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Exhibition Model
+              </span>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md rounded-xl">
             <DialogHeader>
@@ -376,7 +385,7 @@ export default function ModelsPage() {
       </Dialog>
 
       {/* Models Glassmorphism Table */}
-      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+      <GlassCard className="p-0 overflow-hidden" glowColor="blue">
         <div className="p-0">
           {state.loading ? (
             <div className="p-4 space-y-4">
@@ -446,8 +455,10 @@ export default function ModelsPage() {
                           <Edit className="h-4 w-4" />
                         </Button>
                         <AlertDialog>
-                          <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" />}>
-                            <Trash2 className="h-4 w-4" />
+                          <AlertDialogTrigger>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent className="rounded-xl">
                             <AlertDialogHeader>
@@ -487,7 +498,7 @@ export default function ModelsPage() {
             </Table>
           )}
         </div>
-      </div>
+      </GlassCard>
     </div>
   )
 }

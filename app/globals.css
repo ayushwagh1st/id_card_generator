@@ -4,6 +4,61 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* === Apple Liquid Glass Theme (Global Default) === */
+:root {
+  /* Apple iOS Soft Silver-White Background */
+  --background: #F2F2F7;
+  /* Deep Gray Text */
+  --foreground: #3C3C43;
+  --card: #FFFFFF;
+  --card-foreground: #000000;
+  --popover: #FFFFFF;
+  --popover-foreground: #000000;
+
+  /* Primary Blue Accent */
+  --primary: #007AFF;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E5E5EA;
+  --secondary-foreground: #000000;
+  
+  --muted: #E5E5EA;
+  --muted-foreground: #8E8E93;
+  --accent: #E5E5EA;
+  --accent-foreground: #000000;
+  
+  --destructive: #FF3B30;
+  --border: #E5E5EA;
+  --input: #E5E5EA;
+  --ring: #007AFF;
+  
+  --radius: 20px;
+}
+
+.dark {
+  /* High-End Obsidian & Deep Midnight Theme */
+  --background: #05070e;
+  --foreground: #f8fafc;
+  --card: #0c101d;
+  --card-foreground: #f8fafc;
+  --popover: #0c101d;
+  --popover-foreground: #f8fafc;
+  
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #182035;
+  --secondary-foreground: #f8fafc;
+  
+  --muted: #182035;
+  --muted-foreground: #94a3b8;
+  --accent: #182035;
+  --accent-foreground: #f8fafc;
+  
+  --destructive: #f43f5e;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #6366f1;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -24,37 +79,31 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ink: var(--ink);
-
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-
-  --radius-lg: var(--radius);
-  --radius-md: var(--radius);
-  --radius-sm: var(--radius);
-
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-space-grotesk);
-  --font-mono: var(--font-mono);
-
-  /* Playful-Flat Brand Tokens */
-  --color-bg-pastel: #ECEBFC;
-  --color-lime: #D4F03B;
-  --color-lavender: #BCA6FF;
-  --color-pink: #FF99C8;
-  --color-mint: #20E3B2;
-  --color-peach: #FF8E72;
-  --color-yellow: #FFD23F;
-  --color-blue: #2CBCE9;
-  --color-on-ink: #FFFFFF;
+  
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-:root {
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: #000000;
+  }
+}
+
+/* === ISOLATED NEUBRUTALISM THEME (For Landing Page Only) === */
+.theme-neubrutalism {
   /* Surfaces */
   --background: #ECEBFC;
   --foreground: #111111;
@@ -69,226 +118,98 @@
   --secondary: #D4F03B;
   --secondary-foreground: #111111;
 
-  /* Muted / Accent */
-  --muted: #DCD9F8;
-  --muted-foreground: rgba(17,17,17,0.6);
-  --accent: #D4F03B;
-  --accent-foreground: #111111;
-
-  /* System */
-  --destructive: #EF4444;
-  --border: #111111;
-  --input: #111111;
-  --ring: #BCA6FF;
+  /* Playful-Flat Brand Tokens */
+  --color-bg-pastel: #ECEBFC;
+  --color-lime: #D4F03B;
+  --color-lavender: #BCA6FF;
+  --color-pink: #FF99C8;
+  --color-mint: #20E3B2;
+  --color-peach: #FF8E72;
+  --color-yellow: #FFD23F;
+  --color-blue: #2CBCE9;
+  --color-on-ink: #FFFFFF;
   --ink: #111111;
 
-  /* Border radius */
-  --radius: 0;
-
-  /* Sidebar — white sidebar */
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: #BCA6FF;
-  --sidebar-primary-foreground: #111111;
-  --sidebar-accent: #ECEBFC;
-  --sidebar-accent-foreground: #111111;
-  --sidebar-border: #111111;
-  --sidebar-ring: #BCA6FF;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
-@layer base {
-  * {
-    box-sizing: border-box;
-  }
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-sans), 'Inter', sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display), 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    color: var(--foreground);
-  }
+.theme-neubrutalism h1, .theme-neubrutalism h2, .theme-neubrutalism h3, .theme-neubrutalism h4, .theme-neubrutalism h5, .theme-neubrutalism h6 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--foreground);
 }
 
-/* ─── Playful-Flat Utilities ──────────────────────────────────────────────── */
-
-@utility pattern-dots {
-  background-image: radial-gradient(#111111 2px, transparent 2px);
-  background-size: 24px 24px;
-}
-
-@utility pattern-grid {
-  background-size: 40px 40px;
-  background-image: linear-gradient(to right, rgba(17,17,17,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(17,17,17,0.1) 1px, transparent 1px);
-}
-
-@utility shadow-hard {
-  box-shadow: 8px 8px 0px 0px #111111;
-}
-
-@utility shadow-hard-sm {
-  box-shadow: 5px 5px 0px 0px #111111;
-}
-
-@utility shadow-hard-xs {
-  box-shadow: 3px 3px 0px 0px #111111;
-}
-
-@utility border-ink {
-  border: 3px solid #111111;
-}
-
-@utility border-ink-2 {
-  border: 2px solid #111111;
-}
-
-@utility font-display {
-  font-family: var(--font-display), 'Space Grotesk', sans-serif;
-}
-
-/* ─── Global Component Classes ───────────────────────────────────────────── */
-
+/* ─── Playful-Flat Utilities (Scoped to theme-neubrutalism) ─── */
 @layer components {
-  /* Primary orange button — tactile press-down */
-  /* Primary button — tactile press-down */
-  .btn-primary {
+  .theme-neubrutalism .shadow-hard {
+    box-shadow: 8px 8px 0px 0px #111111;
+  }
+  
+  .theme-neubrutalism .shadow-hard-sm {
+    box-shadow: 5px 5px 0px 0px #111111;
+  }
+  
+  .theme-neubrutalism .border-ink {
+    border: 3px solid #111111;
+  }
+  
+  .theme-neubrutalism .font-display {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  
+  .theme-neubrutalism .btn-primary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     background-color: var(--primary);
     color: var(--primary-foreground);
-    font-family: var(--font-display), 'Space Grotesk', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 1.125rem;
     font-weight: 700;
     padding: 0.625rem 1.5rem;
-    border-radius: 0;
     border: 3px solid #111111;
     box-shadow: 5px 5px 0px 0px #111111;
-    cursor: pointer;
-    text-decoration: none;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
-  .btn-primary:hover {
+  .theme-neubrutalism .btn-primary:hover {
     transform: translate(-2px, -2px);
     box-shadow: 7px 7px 0px 0px #111111;
   }
-  .btn-primary:active {
+  .theme-neubrutalism .btn-primary:active {
     transform: translate(3px, 3px);
     box-shadow: 0px 0px 0px 0px #111111;
   }
-
-  /* Secondary white button */
-  .btn-secondary {
+  
+  .theme-neubrutalism .btn-secondary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     background-color: #FFFFFF;
     color: #111111;
-    font-family: var(--font-display), 'Space Grotesk', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 1.125rem;
     font-weight: 700;
     padding: 0.625rem 1.5rem;
-    border-radius: 0;
     border: 3px solid #111111;
     box-shadow: 5px 5px 0px 0px #111111;
-    cursor: pointer;
-    text-decoration: none;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
-  .btn-secondary:hover {
+  .theme-neubrutalism .btn-secondary:hover {
     transform: translate(-2px, -2px);
     box-shadow: 7px 7px 0px 0px #111111;
   }
-  .btn-secondary:active {
-    transform: translate(3px, 3px);
-    box-shadow: 0px 0px 0px 0px #111111;
-  }
-
-  /* Hard-offset card */
-  .card-flat {
-    background-color: #FFFFFF;
-    border: 3px solid #111111;
-    border-radius: 0;
-    box-shadow: 5px 5px 0px 0px #111111;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-  .card-flat:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 7px 7px 0px 0px #111111;
-  }
-
-  /* Bento cells */
-  .bento-white {
-    background-color: #FFFFFF;
-    border: 3px solid #111111;
-    border-radius: 0;
-    padding: 2rem;
-  }
-  .bento-lavender {
-    background-color: var(--color-lavender);
-    color: #111111;
-    border: 3px solid #111111;
-    border-radius: 0;
-    padding: 2rem;
-  }
-  .bento-lime {
-    background-color: var(--color-lime);
-    color: #111111;
-    border: 3px solid #111111;
-    border-radius: 0;
-    padding: 2rem;
-  }
-  .bento-pink {
-    background-color: var(--color-pink);
-    color: #111111;
-    border: 3px solid #111111;
-    border-radius: 0;
-    padding: 2rem;
-  }
-  .bento-mint {
-    background-color: var(--color-mint);
-    color: #111111;
-    border: 3px solid #111111;
-    border-radius: 0;
-    padding: 2rem;
-  }
-  .bento-peach {
-    background-color: var(--color-peach);
-    color: #111111;
-    border: 3px solid #111111;
-    border-radius: 0;
-    padding: 2rem;
-  }
-  .bento-yellow {
-    background-color: var(--color-yellow);
-    color: #111111;
-    border: 3px solid #111111;
-    border-radius: 0;
-    padding: 2rem;
-  }
-  .bento-blue {
-    background-color: var(--color-blue);
-    color: #111111;
-    border: 3px solid #111111;
-    border-radius: 0;
-    padding: 2rem;
-  }
-  .bento-pastel {
-    background-color: var(--background);
-    border: 3px dashed #111111;
-    border-radius: 0;
-    padding: 2rem;
-  }
-
-  /* Eyebrow / label */
-  .eyebrow {
+  
+  .theme-neubrutalism .bento-white { background-color: #FFFFFF; border: 3px solid #111111; padding: 2rem; }
+  .theme-neubrutalism .bento-lavender { background-color: var(--color-lavender); color: #111111; border: 3px solid #111111; padding: 2rem; }
+  .theme-neubrutalism .bento-lime { background-color: var(--color-lime); color: #111111; border: 3px solid #111111; padding: 2rem; }
+  .theme-neubrutalism .bento-pastel { background-color: var(--background); border: 3px dashed #111111; padding: 2rem; }
+  
+  .theme-neubrutalism .eyebrow {
     display: block;
-    font-family: var(--font-display), 'Space Grotesk', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 0.875rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -296,67 +217,78 @@
     color: rgba(17,17,17,0.6);
     margin-bottom: 0.5rem;
   }
-
-  /* Badge pill */
-  .badge-flat {
+  
+  .theme-neubrutalism .badge-flat {
     display: inline-flex;
     align-items: center;
     background-color: var(--secondary);
     color: var(--secondary-foreground);
-    font-family: var(--font-display), 'Space Grotesk', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 0.875rem;
     font-weight: 600;
     padding: 0.25rem 0.875rem;
-    border-radius: 0;
     border: 2px solid #111111;
     box-shadow: 3px 3px 0px 0px #111111;
   }
-
-  /* Icon tile */
-  .icon-tile {
+  
+  .theme-neubrutalism .icon-tile {
     width: 3.5rem;
     height: 3.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0;
     border: 3px solid #111111;
     flex-shrink: 0;
   }
-  .icon-tile-lavender {
-    background-color: var(--color-lavender);
-    color: #111111;
+  .theme-neubrutalism .icon-tile-ink { background-color: #111111; color: #FFFFFF; }
+}
+
+/* === Apple UI Utilities === */
+@layer utilities {
+  .apple-glass {
+    @apply bg-white/70 backdrop-blur-3xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.04)];
   }
-  .icon-tile-lime {
-    background-color: var(--color-lime);
-    color: #111111;
+  .apple-card {
+    @apply bg-white rounded-[20px] border border-black/[0.05] shadow-[0_8px_30px_rgb(0,0,0,0.04)];
   }
-  .icon-tile-pink {
-    background-color: var(--color-pink);
-    color: #111111;
+
+  /* Liquid Glass Utilities */
+  .glass-panel {
+    @apply bg-white/70 dark:bg-[#0c101d]/75 backdrop-blur-[40px] saturate-[1.8] border border-white/50 dark:border-white/[0.09] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)];
   }
-  .icon-tile-peach {
-    background-color: var(--color-peach);
-    color: #111111;
+
+  .glass-edge-light {
+    position: relative;
   }
-  .icon-tile-mint {
-    background-color: var(--color-mint);
-    color: #111111;
+  .glass-edge-light::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
   }
-  .icon-tile-yellow {
-    background-color: var(--color-yellow);
-    color: #111111;
+
+  .animate-aurora-1 {
+    animation: aurora-1 15s ease-in-out infinite alternate;
   }
-  .icon-tile-blue {
-    background-color: var(--color-blue);
-    color: #111111;
+  .animate-aurora-2 {
+    animation: aurora-2 20s ease-in-out infinite alternate;
   }
-  .icon-tile-ink {
-    background-color: #111111;
-    color: #FFFFFF;
-  }
-  .icon-tile-white {
-    background-color: #FFFFFF;
-    color: #111111;
-  }
+}
+
+@keyframes aurora-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, 50px) scale(1.1); }
+  100% { transform: translate(-50px, -50px) scale(0.9); }
+}
+@keyframes aurora-2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-50px, 50px) scale(1.2); }
+  100% { transform: translate(50px, -50px) scale(0.8); }
 }

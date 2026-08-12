@@ -1,3 +1,18 @@
+export interface PDFSummaryStat {
+  label: string
+  value: string | number
+}
+
+export interface PDFOptions {
+  title: string
+  subtitle?: string
+  filename: string
+  headers: string[]
+  data: (string | number)[][]
+  themeColor?: [number, number, number] // RGB
+  summaryStats?: PDFSummaryStat[]
+}
+
 export async function exportToPDF({
   title,
   subtitle,
@@ -55,7 +70,7 @@ export async function exportToPDF({
     const boxHeight = 22;
     const gap = 5;
 
-    summaryStats.forEach((stat, i) => {
+    summaryStats.forEach((stat: PDFSummaryStat, i: number) => {
       // If we run out of horizontal space, could wrap, but typically max 5-6 stats
       const x = marginX + (boxWidth + gap) * i;
       
@@ -107,7 +122,7 @@ export async function exportToPDF({
       overflow: 'linebreak',
       cellPadding: 4
     },
-    didDrawPage: function (data) {
+    didDrawPage: function (data: any) {
       // Footer
       const str = `Page ${(doc as any).internal.getNumberOfPages()}`
       doc.setFontSize(8)

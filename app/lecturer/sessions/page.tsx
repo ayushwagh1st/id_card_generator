@@ -13,6 +13,7 @@ import { getSessionsAction, getSessionEnrollmentsAction } from '@/server/actions
 import { bulkCheckoutAllAction } from '@/server/actions/attendance'
 import { getCurrentUserAction } from '@/server/actions/auth'
 import { useRouter } from 'next/navigation'
+import { GlassCard } from '@/components/ui/GlassCard'
 
 const handleBulkCheckout = async (sessionId: string) => {
     if (!confirm('Are you sure you want to check out everyone who has checked in for this session?')) return;
@@ -107,20 +108,21 @@ export default function LecturerSessionsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf3] text-[#027a48] text-xs font-semibold tracking-wide uppercase">
-            <ScanLine className="w-4 h-4 mr-2" /> Scanner
+      {/* Hero Banner */}
+      <GlassCard className="p-8 md:p-10 relative overflow-hidden" glowColor="blue">
+        <div className="relative z-10 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold tracking-wide uppercase border border-emerald-500/20">
+            <ScanLine className="w-4 h-4" /> 
+            <span>Scanner</span>
           </div>
-          <div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">All Sessions</h1>
-            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
-          </div>
-          <p className="font-sans text-slate-500 text-lg max-w-xl leading-relaxed">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+            All Sessions
+          </h1>
+          <p className="font-sans text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl leading-relaxed">
             View your assigned sessions and scan QR codes for attendance.
           </p>
         </div>
-      </div>
+      </GlassCard>
 
       <div className="flex items-center gap-4">
         <div className="relative w-full sm:w-64">
@@ -135,7 +137,7 @@ export default function LecturerSessionsPage() {
         </div>
       </div>
 
-      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0">
+      <GlassCard className="p-0 overflow-hidden" glowColor="purple">
         <div className="p-0">
           {loading ? (
             <div className="p-4 space-y-4">
@@ -220,7 +222,7 @@ export default function LecturerSessionsPage() {
           </Table>
           )}
         </div>
-      </div>
+      </GlassCard>
 
       <Dialog open={viewEnrollmentsOpen} onOpenChange={setViewEnrollmentsOpen}>
           <DialogContent className="sm:max-w-2xl rounded-xl max-h-[90vh] overflow-y-auto">

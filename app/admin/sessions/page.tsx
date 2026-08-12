@@ -8,10 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, Plus, Edit, Trash2, FileText, Download, Database } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, FileText, Download, Database, Clock, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { exportToPDF } from '@/lib/pdf'
+import { GlassCard } from '@/components/ui/GlassCard'
 import Image from 'next/image'
 import { getSessionsAction, addSessionAction, updateSessionAction, deleteSessionAction } from '@/server/actions/sessions'
 export default function SessionsPage() {
@@ -198,51 +199,58 @@ export default function SessionsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf3] text-[#027a48] text-xs font-semibold tracking-wide uppercase">
-            <Database className="w-4 h-4 mr-2" /> Sessions
+      {/* Hero Banner */}
+      <GlassCard className="p-8 md:p-10 relative overflow-hidden" glowColor="indigo">
+        <div className="relative z-10 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold tracking-wide uppercase border border-emerald-500/20">
+            <Database className="w-4 h-4" /> 
+            <span>Sessions</span>
           </div>
-          <div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">Session Management</h1>
-            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
-          </div>
-          <p className="font-sans text-slate-500 text-lg max-w-xl leading-relaxed">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Session Management
+          </h1>
+          <p className="font-sans text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl leading-relaxed">
             Create and manage training sessions or workshops.
           </p>
         </div>
-      </div>
+      </GlassCard>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-pink w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_database.png" alt="Sessions" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="blue">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Total Sessions</span>
+            <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+              <Database className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{sessions.length}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Total Sessions</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{sessions.length}</div>
           </div>
-        </div>
+        </GlassCard>
 
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-mint w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_clock.png" alt="Active" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="cyan">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Active / Scheduled</span>
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center">
+              <Clock className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{activeSessions}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Active / Scheduled</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{activeSessions}</div>
           </div>
-        </div>
+        </GlassCard>
 
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-blue w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_check.png" alt="Completed" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="purple">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Completed Sessions</span>
+            <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{completedSessions}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Completed Sessions</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{completedSessions}</div>
           </div>
-        </div>
+        </GlassCard>
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -265,11 +273,11 @@ export default function SessionsPage() {
             <Download className="w-4 h-4" /> Export PDF
           </Button>
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger render={
+            <DialogTrigger>
               <Button onClick={resetForm} className="w-full sm:w-auto text-white px-5 gap-2">
                 <Plus className="h-4 w-4" /> Create Session
               </Button>
-            } />
+            </DialogTrigger>
           <DialogContent className="sm:max-w-2xl rounded-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Session</DialogTitle>
@@ -421,7 +429,7 @@ export default function SessionsPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+      <GlassCard className="p-0 overflow-hidden" glowColor="blue">
         <div className="p-0">
           {loading ? (
             <div className="p-4 space-y-4">
@@ -513,7 +521,7 @@ export default function SessionsPage() {
           </Table>
           )}
         </div>
-      </div>
+      </GlassCard>
     </div>
   )
 }

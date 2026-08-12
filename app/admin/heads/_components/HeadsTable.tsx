@@ -17,7 +17,7 @@ export function HeadsTable({
   getSupervisedModelsStr: (id: string) => string 
 }) {
   return (
-    <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+    <div className="glass-panel overflow-hidden rounded-3xl border border-white/40 dark:border-slate-800/80 shadow-xl">
       <div className="p-0">
         {state.loading ? (
           <div className="p-4 space-y-4">

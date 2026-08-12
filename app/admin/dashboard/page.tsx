@@ -2,15 +2,31 @@
 
 import { useEffect, useReducer } from 'react'
 import dynamic from 'next/dynamic'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Users, Database, CheckCircle, Clock, BarChart2, Activity, TrendingUp, ScanLine } from 'lucide-react'
+import {
+  Users,
+  Database,
+  CheckCircle2,
+  Clock,
+  BarChart2,
+  Activity,
+  TrendingUp,
+  ScanLine,
+  Sparkles,
+  ShieldCheck,
+  Printer,
+  Calendar,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { getDashboardStatsAction } from '@/server/actions/dashboard'
 import { QRScannerDialog } from '@/components/QRScannerDialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import Image from 'next/image'
+import { GlassCard } from '@/components/ui/GlassCard'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
 
-const VolunteersChart = dynamic(() => import('@/components/dashboard/VolunteersChart'), { ssr: false })
+const VolunteersChart = dynamic(() => import('@/components/dashboard/VolunteersChart'), {
+  ssr: false,
+})
 
 export default function AdminDashboard() {
   const [state, dispatch] = useReducer(
@@ -22,7 +38,7 @@ export default function AdminDashboard() {
             stats: action.payload.stats,
             chartData: action.payload.chartData,
             activities: action.payload.activities,
-            loading: false
+            loading: false,
           }
         case 'SET_SCANNER_OPEN':
           return { ...state, scannerOpen: action.payload }
@@ -44,11 +60,11 @@ export default function AdminDashboard() {
         todaySessions: 0,
         attendancePercentage: 0,
         totalChildren: 0,
-        checkedInChildren: 0
+        checkedInChildren: 0,
       },
       chartData: [],
       activities: [],
-      scannerOpen: false
+      scannerOpen: false,
     }
   )
 
@@ -68,160 +84,234 @@ export default function AdminDashboard() {
   }, [])
 
   const statItems = [
-    { title: 'Total Registered Children', value: state.stats.totalChildren.toLocaleString(), iconSrc: '/images/icons/icon_users.png', tileClass: 'icon-tile-lavender' },
-    { title: 'Children Checked In', value: state.stats.checkedInChildren.toLocaleString(), iconSrc: '/images/icons/icon_check.png', tileClass: 'icon-tile-lime' },
-    { title: 'Total Volunteers', value: state.stats.totalVolunteers.toLocaleString(), iconSrc: '/images/icons/icon_users.png', tileClass: 'icon-tile-lime' },
-    { title: 'Exhibition Models', value: state.stats.totalModels.toString(), iconSrc: '/images/icons/icon_database.png', tileClass: 'icon-tile-lavender' },
-    { title: 'Total Sessions', value: state.stats.totalSessions.toString(), iconSrc: '/images/icons/icon_check.png', tileClass: 'icon-tile-ink' },
-    { title: "Today's Sessions", value: state.stats.todaySessions.toString(), iconSrc: '/images/icons/icon_clock.png', tileClass: 'icon-tile-lime' },
-    { title: 'Total Security Personnel', value: state.stats.totalLecturers.toLocaleString(), iconSrc: '/images/icons/icon_users.png', tileClass: 'icon-tile-lavender' },
-    { title: 'Attendance %', value: `${state.stats.attendancePercentage}%`, iconSrc: '/images/icons/icon_chart.png', tileClass: 'icon-tile-ink' },
+    {
+      title: 'Registered Children',
+      value: state.stats.totalChildren.toLocaleString(),
+      icon: Users,
+      glow: 'blue' as const,
+      badge: '+12% this week',
+    },
+    {
+      title: 'Children Checked In',
+      value: state.stats.checkedInChildren.toLocaleString(),
+      icon: CheckCircle2,
+      glow: 'purple' as const,
+      badge: 'Live Status',
+    },
+    {
+      title: 'Active Volunteers',
+      value: state.stats.totalVolunteers.toLocaleString(),
+      icon: ShieldCheck,
+      glow: 'cyan' as const,
+      badge: 'Verified',
+    },
+    {
+      title: 'Exhibition Models',
+      value: state.stats.totalModels.toString(),
+      icon: Database,
+      glow: 'indigo' as const,
+      badge: 'Active Slots',
+    },
+    {
+      title: 'Total Sessions',
+      value: state.stats.totalSessions.toString(),
+      icon: Calendar,
+      glow: 'blue' as const,
+      badge: 'Scheduled',
+    },
+    {
+      title: 'Attendance Rate',
+      value: `${state.stats.attendancePercentage}%`,
+      icon: TrendingUp,
+      glow: 'purple' as const,
+      badge: 'Optimal',
+    },
   ]
 
   if (state.loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-32 w-full rounded-2xl" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+        <Skeleton className="h-44 w-full rounded-3xl" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-28 w-full rounded-xl" />
+            <Skeleton key={i} className="h-32 w-full rounded-3xl" />
           ))}
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Skeleton className="col-span-4 h-[400px] rounded-xl" />
-          <Skeleton className="col-span-3 h-[400px] rounded-xl" />
+          <Skeleton className="col-span-4 h-[380px] rounded-3xl" />
+          <Skeleton className="col-span-3 h-[380px] rounded-3xl" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-8">
+      {/* Keynote Hero Banner */}
+      <GlassCard className="p-8 md:p-10 relative overflow-hidden" glowColor="blue">
+        {/* Background Ambient Glow */}
+        <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-gradient-to-bl from-blue-500/20 via-indigo-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-      {/* Banner */}
-      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden group flex flex-col md:flex-row items-center justify-between gap-8">
-        
-        <div className="relative z-10 space-y-6 max-w-xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf3] text-[#027a48] text-xs font-semibold tracking-wide uppercase">
-            <span className="w-2 h-2 rounded-full bg-[#12b76a]"></span> System Online
-          </div>
-          
-          <div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">
-              Super Admin <span className="text-[#8C6DFD]">Hub</span>
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+          <div className="space-y-4 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Real-Time Spatial Mesh Active</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Super Admin <span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 bg-clip-text text-transparent">Control Center</span>
             </h1>
-            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
+
+            <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+              Unified command portal for volunteer credentials, real-time security tracking, and batch badge operations across all event divisions.
+            </p>
+
+            <div className="flex flex-wrap gap-4 pt-2">
+              <button
+                type="button"
+                onClick={() => dispatch({ type: 'SET_SCANNER_OPEN', payload: true })}
+                className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs sm:text-sm shadow-lg shadow-blue-500/25 transition-all flex items-center gap-2"
+              >
+                <ScanLine className="w-4 h-4" />
+                Quick Scan ID
+              </button>
+
+              <Link
+                href="/admin/print"
+                className="px-5 py-2.5 rounded-2xl glass-pill text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 hover:text-blue-600 transition-colors flex items-center gap-2"
+              >
+                <Printer className="w-4 h-4 text-blue-500" />
+                Print Studio
+              </Link>
+            </div>
           </div>
-          
-          <p className="font-sans text-slate-500 text-lg max-w-md leading-relaxed">
-            Live overview of volunteer networks, approval statistics, and division allocations.
-          </p>
-          
-          <button
-            type="button"
-            onClick={() => dispatch({ type: 'SET_SCANNER_OPEN', payload: true })}
-            className="inline-flex items-center justify-center gap-2 bg-[#8C6DFD] hover:bg-[#795de6] text-white px-6 py-3 rounded-xl font-medium transition-colors w-full sm:w-auto shadow-sm"
-          >
-            <ScanLine className="w-5 h-5" />
-            Quick Scan ID
-          </button>
-        </div>
 
-        <div className="hidden md:block relative z-10 w-full max-w-[350px] aspect-square transition-transform duration-500 group-hover:scale-105">
-          <Image 
-            src="/images/admin_dashboard_illustration.png" 
-            alt="Control Center" 
-            fill
-            priority
-            className="object-contain drop-shadow-xl"
-            sizes="(max-width: 768px) 100vw, 350px"
-          />
+          {/* Metric Pill Badge */}
+          <div className="hidden lg:flex flex-col items-center justify-center p-6 rounded-3xl glass-panel border border-white/40 dark:border-slate-700/50 shadow-xl space-y-2 min-w-[200px]">
+            <Sparkles className="w-8 h-8 text-blue-500 animate-bounce" />
+            <div className="text-2xl font-bold text-slate-900 dark:text-white">
+              {state.stats.totalVolunteers + state.stats.totalChildren}
+            </div>
+            <div className="text-[11px] font-mono text-slate-500 uppercase tracking-widest text-center">
+              Total Managed Entities
+            </div>
+          </div>
         </div>
-      </div>
+      </GlassCard>
 
-      {/* Stat Cards */}
+      {/* Grid of Stat Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {statItems.map((item) => (
-          <div
-            key={item.title}
-            className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl"
-          >
-            <div className={`icon-tile ${item.tileClass} w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white`}>
-              <Image src={item.iconSrc} alt={item.title} width={56} height={56} className="object-cover" />
-            </div>
-            <div className="mt-2">
-              <div className="font-display font-bold text-3xl text-ink leading-none">{item.value}</div>
-              <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">{item.title}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Chart + Activity */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        {/* Bar Chart */}
-        <div
-          className="col-span-4 bg-card rounded-2xl overflow-hidden"
-          style={{ border: '3px solid #111111', boxShadow: '8px 8px 0 #111111' }}
-        >
-          <div className="flex items-center justify-between p-5" style={{ borderBottom: '3px solid #111111' }}>
-            <div>
-              <div className="font-display font-bold text-lg text-foreground">Volunteers per Model</div>
-              <div className="font-display text-xs text-foreground/50 mt-0.5">Live volunteer count per exhibition model</div>
-            </div>
-            <div className="icon-tile icon-tile-lime w-10 h-10">
-              <BarChart2 className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="p-5">
-            <div className="h-[280px] w-full">
-              <VolunteersChart data={state.chartData} />
-            </div>
-          </div>
-        </div>
-
-        {/* Activity Feed */}
-        <div
-          className="col-span-3 bg-card rounded-2xl overflow-hidden"
-          style={{ border: '3px solid #111111', boxShadow: '8px 8px 0 #111111' }}
-        >
-          <div className="flex items-center justify-between p-5" style={{ borderBottom: '3px solid #111111' }}>
-            <div>
-              <div className="font-display font-bold text-lg text-foreground">Activity Feed</div>
-              <div className="font-display text-xs text-foreground/50 mt-0.5">Latest database actions</div>
-            </div>
-            <div className="icon-tile icon-tile-lavender w-10 h-10">
-              <Activity className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="p-5">
-            <div className="space-y-5">
-              {state.activities.length === 0 ? (
-                <div className="text-center text-sm py-12 text-foreground/40 font-display">
-                  No recent activities logged.
-                </div>
-              ) : (
-                state.activities.map((activity: any) => (
-                  <div key={activity.id} className="flex items-start gap-3">
-                    <div className="icon-tile icon-tile-lime w-9 h-9 shrink-0">
-                      <TrendingUp className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-display font-bold text-sm text-foreground leading-snug truncate">{activity.action}</p>
-                      <p className="font-display text-xs text-foreground/50 mt-0.5">{activity.user}</p>
-                    </div>
-                    <div className="font-display text-[11px] font-semibold text-foreground/40 whitespace-nowrap shrink-0">
-                      {activity.time}
-                    </div>
+        {statItems.map((item, idx) => {
+          const Icon = item.icon
+          return (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05, duration: 0.4 }}
+            >
+              <GlassCard className="p-5" glowColor={item.glow}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20">
+                    <Icon className="w-5 h-5" />
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-200/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400">
+                    {item.badge}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                    {item.value}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                    {item.title}
+                  </div>
+                </div>
+              </GlassCard>
+            </motion.div>
+          )
+        })}
       </div>
 
-      <QRScannerDialog open={state.scannerOpen} onOpenChange={(val) => dispatch({ type: 'SET_SCANNER_OPEN', payload: val })} />
+      {/* Chart & Activity Feed Row */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+        {/* Volunteers Per Model Chart */}
+        <GlassCard className="col-span-4 p-6" glowColor="indigo">
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200/50 dark:border-slate-800/60">
+            <div>
+              <h3 className="font-semibold text-base text-slate-900 dark:text-white">
+                Volunteers Allocation Per Model
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Distribution of assigned workforce across active models
+              </p>
+            </div>
+            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500">
+              <BarChart2 className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="h-[280px] w-full pt-2">
+            <VolunteersChart data={state.chartData} />
+          </div>
+        </GlassCard>
+
+        {/* Live Activity Feed */}
+        <GlassCard className="col-span-3 p-6" glowColor="purple">
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200/50 dark:border-slate-800/60">
+            <div>
+              <h3 className="font-semibold text-base text-slate-900 dark:text-white">
+                Spatial Activity Feed
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Live audit trail of check-ins and admin updates
+              </p>
+            </div>
+            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500">
+              <Activity className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="space-y-4 max-h-[280px] overflow-y-auto pr-1">
+            {state.activities.length === 0 ? (
+              <div className="text-center text-xs py-12 text-slate-400">
+                No recent activity events logged.
+              </div>
+            ) : (
+              state.activities.map((activity: any) => (
+                <div
+                  key={activity.id}
+                  className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors"
+                >
+                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 shrink-0 mt-0.5">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-slate-900 dark:text-slate-100 leading-snug truncate">
+                      {activity.action}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      {activity.user}
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                    {activity.time}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </GlassCard>
+      </div>
+
+      <QRScannerDialog
+        isOpen={state.scannerOpen}
+        onClose={() => dispatch({ type: 'SET_SCANNER_OPEN', payload: false })}
+        onScanSuccess={(decodedText) => {
+          toast.success(`Scanned QR: ${decodedText}`)
+          dispatch({ type: 'SET_SCANNER_OPEN', payload: false })
+        }}
+      />
     </div>
   )
 }

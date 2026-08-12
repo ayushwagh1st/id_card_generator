@@ -9,13 +9,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Search, Trash2, Users, ChevronLeft, ChevronRight, CheckSquare } from 'lucide-react'
+import { Search, Trash2, Users, ChevronLeft, ChevronRight, CheckSquare, User } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getSessionsAction, getSessionEnrollmentsAction, enrollVolunteersAction, removeEnrollmentAction } from '@/server/actions/sessions'
 import { getVolunteersAction } from '@/server/actions/volunteers'
 import { getModelsDataAction } from '@/app/admin/models/actions.server'
 import { formatSessionLabel, formatModelLabel, formatVolunteerLabel } from '@/lib/formatters'
+import { GlassCard } from '@/components/ui/GlassCard'
 
 export default function SessionEnrollmentPage() {
   const [state, dispatch] = React.useReducer(
@@ -185,238 +186,277 @@ export default function SessionEnrollmentPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf3] text-[#027a48] text-xs font-semibold tracking-wide uppercase">
-            <Users className="w-4 h-4 mr-2" /> Enrollment
+      {/* Hero Banner */}
+      <GlassCard className="p-8 md:p-10 relative overflow-hidden" glowColor="rose">
+        <div className="relative z-10 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold tracking-wide uppercase border border-emerald-500/20">
+            <Users className="w-4 h-4" /> 
+            <span>Enrollment</span>
           </div>
-          <div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">Session Enrollment</h1>
-            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
-          </div>
-          <p className="font-sans text-slate-500 text-lg max-w-xl leading-relaxed">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Session Enrollment
+          </h1>
+          <p className="font-sans text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl leading-relaxed">
             Assign volunteers to sessions to enable attendance tracking.
           </p>
         </div>
-      </div>
+      </GlassCard>
 
-      <div className="bento-white flex flex-col sm:flex-row gap-4 items-center">
-        <Label className="font-bold whitespace-nowrap">Select Session:</Label>
-        <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
-          <SelectTrigger className="w-full sm:w-[400px]">
-            <span data-slot="select-value" className="flex flex-1 text-left truncate">
-              {selectedSessionId !== 'none' && sessions.length > 0
-                ? formatSessionLabel(sessions.find((s: any) => s.id === selectedSessionId))
-                : "Choose a session"}
-            </span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">-- Select a Session --</SelectItem>
-            {sessions.map((s: any) => (
-                <SelectItem key={s.id} value={s.id} label={formatSessionLabel(s)}>{formatSessionLabel(s)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <GlassCard className="p-6" glowColor="blue">
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <Label className="font-semibold text-xs uppercase tracking-wider text-slate-400 shrink-0">Select Session:</Label>
+          <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
+            <SelectTrigger className="w-full sm:w-[400px]">
+              <span data-slot="select-value" className="flex flex-1 text-left truncate">
+                {selectedSessionId !== 'none' && sessions.length > 0
+                  ? formatSessionLabel(sessions.find((s: any) => s.id === selectedSessionId))
+                  : "Choose a session"}
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">-- Select a Session --</SelectItem>
+              {sessions.map((s: any) => (
+                  <SelectItem key={s.id} value={s.id}>{formatSessionLabel(s)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </GlassCard>
 
       {selectedSessionId !== 'none' && (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-              <div className="md:col-span-5 space-y-4">
-                  <div className="bento-white flex flex-col h-[700px] !p-0">
-                      <CardHeader className="pb-3 border-b border-ink/10 bg-muted/20">
-                          <CardTitle className="text-lg flex justify-between items-center">
-                            <span>Add Volunteers</span>
-                            {selectedVolunteers.length > 0 && (
-                                <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
-                                    {selectedVolunteers.length} Selected
-                                </span>
-                            )}
-                          </CardTitle>
-                          <CardDescription>Select volunteers to assign.</CardDescription>
-                          
-                          <div className="flex flex-col gap-3 mt-2">
-                              <div className="relative">
-                                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                  <Input 
-                                    placeholder="Search name, SNK ID..." 
-                                    className="pl-9"
-                                    value={searchVol}
-                                    onChange={e => setSearchVol(e.target.value)}
-                                  />
-                              </div>
-                              <Select value={modelFilter} onValueChange={(val: any) => setModelFilter(val)}>
-                                  <SelectTrigger>
-                                      <span data-slot="select-value" className="flex flex-1 text-left truncate">
-                                        {modelFilter !== 'all' && models.length > 0
-                                          ? formatModelLabel(models.find((m: any) => m.id === modelFilter))
-                                          : "All Models"}
-                                      </span>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      <SelectItem value="all">All Models</SelectItem>
-                                      {models.map((m: any) => (
-                                          <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
-                                      ))}
-                                  </SelectContent>
-                              </Select>
-                              
-                              <div className="flex items-center justify-between pt-2">
-                                  <Button variant="ghost" size="sm" onClick={handleSelectAllVisible} className="h-8 px-2 text-xs">
-                                      <CheckSquare className="w-4 h-4 mr-2" />
-                                      {(() => {
-                                        const selectedSet = new Set(selectedVolunteers)
-                                        return volunteers.length > 0 && volunteers.every((v: any) => selectedSet.has(v.id)) 
-                                          ? "Deselect All Visible" 
-                                          : "Select All Visible"
-                                      })()}
-                                  </Button>
-                                  
-                                  <Button 
-                                    size="sm" 
-                                    onClick={handleBulkEnroll} 
-                                    disabled={selectedVolunteers.length === 0}
-                                    className="h-8"
-                                  >
-                                      Enroll Selected
-                                  </Button>
-                              </div>
-                          </div>
-                      </CardHeader>
-                      <CardContent className="flex-1 overflow-y-auto p-4">
-                          {loadingVols ? (
-                              <div className="space-y-3">
-                                  {[1,2,3,4].map(i => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
-                              </div>
-                          ) : (
-                              <div className="space-y-2">
-                                  {(() => {
-                                    const selectedSet = new Set(selectedVolunteers)
-                                    return volunteers.map((v: any) => (
-                                      <label 
-                                        key={v.id} 
-                                        htmlFor={`checkbox-${v.id}`}
-                                        className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
-                                          selectedSet.has(v.id) ? 'border-primary bg-primary/5' : 'bg-card hover:bg-muted/40'
-                                        }`}
-                                      >
-                                          <Checkbox 
-                                            id={`checkbox-${v.id}`}
-                                            checked={selectedSet.has(v.id)} 
-                                            onCheckedChange={() => handleToggleVolunteer(v.id)}
-                                          />
-                                          <div className="flex flex-col flex-1">
-                                              <span className="font-semibold text-sm">{formatVolunteerLabel(v)}</span>
-                                              <span className="text-xs text-muted-foreground">{v.models?.name ? formatModelLabel(v.models) : 'No Model'}</span>
-                                          </div>
-                                      </label>
-                                    ))
-                                  })()}
-                                  {!loadingVols && volunteers.length === 0 && (
-                                      <div className="text-center py-8 text-muted-foreground flex flex-col items-center">
-                                        <Users className="h-8 w-8 mb-2 opacity-20" />
-                                        <p className="text-sm">No available volunteers found.</p>
-                                      </div>
-                                  )}
-                              </div>
-                          )}
-                      </CardContent>
-                      <div className="p-3 flex justify-between items-center bg-muted/20 border-t border-ink/10">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            disabled={page === 1}
-                            onClick={() => setPage((p: any) => Math.max(1, p - 1))}
-                          >
-                            <ChevronLeft className="w-4 h-4" />
-                          </Button>
-                          <span className="text-xs text-muted-foreground font-medium">
-                            Page {page} of {Math.max(1, totalPages)}
-                          </span>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            disabled={page >= totalPages}
-                            onClick={() => setPage((p: any) => p + 1)}
-                          >
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
-                      </div>
-                  </div>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Left Panel: Available Volunteers */}
+          <div className="md:col-span-5 flex flex-col">
+            <GlassCard className="flex flex-col h-[720px] p-0 overflow-hidden" glowColor="cyan">
+              <CardHeader className="p-5 sm:p-6 pb-4 border-b border-slate-200/60 dark:border-slate-800/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                    Add Volunteers
+                  </CardTitle>
+                  {selectedVolunteers.length > 0 && (
+                    <span className="bg-blue-600 text-white text-[11px] font-semibold font-mono px-2.5 py-0.5 rounded-full shadow-sm">
+                      {selectedVolunteers.length} Selected
+                    </span>
+                  )}
+                </div>
+                <CardDescription className="text-xs text-slate-500 dark:text-slate-400">
+                  Select volunteers to assign to this duty session.
+                </CardDescription>
 
-              <div className="md:col-span-7">
-                  <div className="bento-white h-[700px] flex flex-col !p-0">
-                      <CardHeader className="flex flex-row items-center justify-between pb-4 shrink-0 border-b border-ink/10 bg-muted/20">
-                          <div>
-                              <CardTitle className="text-lg">Enrolled Volunteers</CardTitle>
-                              <CardDescription>Total: {enrollments.length}</CardDescription>
-                          </div>
-                          <Users className="w-5 h-5 text-muted-foreground" />
-                      </CardHeader>
-                       <CardContent className="p-0 flex-1 overflow-auto">
-                           {loading ? (
-                              <div className="p-4 space-y-4">
-                                <div className="rounded-md border">
-                                  <div className="border-b px-4 py-3 flex gap-4 bg-muted/40">
-                                    <Skeleton className="h-4 w-12" />
-                                    <Skeleton className="h-4 w-24" />
-                                    <Skeleton className="h-4 w-40" />
-                                    <Skeleton className="h-4 w-16 ml-auto" />
-                                  </div>
-                                  {[1, 2, 3, 4].map((i) => (
-                                    <div key={i} className="px-4 py-4 flex items-center gap-4 border-b last:border-0">
-                                      <Skeleton className="h-8 w-8 rounded-full" />
-                                      <Skeleton className="h-4 w-24" />
-                                      <Skeleton className="h-4 w-40" />
-                                      <Skeleton className="h-8 w-8 rounded-lg ml-auto" />
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                           ) : (
-                           <Table>
-                            <TableHeader className="bg-muted/40 sticky top-0 z-10">
-                            <TableRow>
-                                <TableHead>Photo</TableHead>
-                                <TableHead>SNK ID</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead className="text-right">Action</TableHead>
-                            </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                            {enrollments.map((e: any) => (
-                                <TableRow key={e.id}>
-                                    <TableCell>
-                                        <div className="w-8 h-8 rounded-full bg-muted overflow-hidden">
-                                            {e.volunteer?.photo_url && (
-                                                <Image src={e.volunteer.photo_url} alt={`${e.volunteer.full_name || 'Volunteer'}'s avatar`} width={32} height={32} unoptimized className="w-full h-full object-cover" />
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="font-medium text-xs">{e.volunteer?.snk_id || 'Pending'}</TableCell>
-                                    <TableCell>{e.volunteer?.full_name}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => handleRemove(e.id)} className="text-destructive">
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {!loading && enrollments.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="text-center py-16 text-muted-foreground">
-                                        <Users className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                                        No volunteers enrolled yet.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                            </TableBody>
-                        </Table>
-                        )}
-                      </CardContent>
+                <div className="flex flex-col gap-2.5 pt-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <Input 
+                      placeholder="Search name, SNK ID..." 
+                      className="pl-9 text-xs sm:text-sm h-9"
+                      value={searchVol}
+                      onChange={e => setSearchVol(e.target.value)}
+                    />
                   </div>
+                  <Select value={modelFilter} onValueChange={(val: any) => setModelFilter(val)}>
+                    <SelectTrigger className="h-9 text-xs sm:text-sm">
+                      <span data-slot="select-value" className="flex flex-1 text-left truncate">
+                        {modelFilter !== 'all' && models.length > 0
+                          ? formatModelLabel(models.find((m: any) => m.id === modelFilter))
+                          : "All Models"}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Models</SelectItem>
+                      {models.map((m: any) => (
+                        <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>{formatModelLabel(m)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <Button variant="ghost" size="sm" onClick={handleSelectAllVisible} className="h-8 px-2.5 text-xs text-slate-600 dark:text-slate-300">
+                      <CheckSquare className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
+                      {(() => {
+                        const selectedSet = new Set(selectedVolunteers)
+                        return volunteers.length > 0 && volunteers.every((v: any) => selectedSet.has(v.id)) 
+                          ? "Deselect All" 
+                          : "Select All Visible"
+                      })()}
+                    </Button>
+
+                    <Button 
+                      size="sm" 
+                      onClick={handleBulkEnroll} 
+                      disabled={selectedVolunteers.length === 0}
+                      className="h-8 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20"
+                    >
+                      Enroll Selected
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-2">
+                {loadingVols ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {(() => {
+                      const selectedSet = new Set(selectedVolunteers)
+                      return volunteers.map((v: any) => (
+                        <label 
+                          key={v.id} 
+                          htmlFor={`checkbox-${v.id}`}
+                          className={`flex items-center gap-3.5 p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer ${
+                            selectedSet.has(v.id) 
+                              ? 'border-blue-500/60 bg-blue-500/10 dark:bg-blue-500/20 shadow-sm' 
+                              : 'border-slate-200/60 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/40 hover:bg-slate-100/60 dark:hover:bg-slate-800/60'
+                          }`}
+                        >
+                          <Checkbox 
+                            id={`checkbox-${v.id}`}
+                            checked={selectedSet.has(v.id)} 
+                            onCheckedChange={() => handleToggleVolunteer(v.id)}
+                          />
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                              {formatVolunteerLabel(v)}
+                            </span>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                              {v.models?.name ? formatModelLabel(v.models) : 'No Model Assigned'}
+                            </span>
+                          </div>
+                        </label>
+                      ))
+                    })()}
+                    {!loadingVols && volunteers.length === 0 && (
+                      <div className="text-center py-12 text-slate-400 flex flex-col items-center">
+                        <Users className="h-10 w-10 mb-2 opacity-30 text-blue-500" />
+                        <p className="text-xs sm:text-sm font-medium">No available volunteers found.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+
+              <div className="p-3.5 px-5 flex justify-between items-center border-t border-slate-200/60 dark:border-slate-800/80 shrink-0">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={page === 1}
+                  onClick={() => setPage((p: any) => Math.max(1, p - 1))}
+                  className="h-8"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-xs text-slate-600 dark:text-slate-400 font-semibold font-mono">
+                  Page {page} of {Math.max(1, totalPages)}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p: any) => p + 1)}
+                  className="h-8"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
               </div>
+            </GlassCard>
           </div>
+
+          {/* Right Panel: Enrolled Volunteers List */}
+          <div className="md:col-span-7 flex flex-col">
+            <GlassCard className="h-[720px] flex flex-col p-0 overflow-hidden" glowColor="purple">
+              <CardHeader className="p-5 sm:p-6 pb-4 flex flex-row items-center justify-between shrink-0 border-b border-slate-200/60 dark:border-slate-800/80">
+                <div>
+                  <CardTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                    Enrolled Volunteers
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    Total Enrolled: {enrollments.length}
+                  </CardDescription>
+                </div>
+                <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/20">
+                  <Users className="w-5 h-5" />
+                </div>
+              </CardHeader>
+
+              <CardContent className="p-0 flex-1 overflow-auto">
+                {loading ? (
+                  <div className="p-4 space-y-4">
+                    <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/80 overflow-hidden">
+                      <div className="border-b px-4 py-3 flex gap-4 bg-muted/40">
+                        <Skeleton className="h-4 w-12" />
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-4 w-16 ml-auto" />
+                      </div>
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="px-4 py-4 flex items-center gap-4 border-b last:border-0">
+                          <Skeleton className="h-8 w-8 rounded-full" />
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-4 w-40" />
+                          <Skeleton className="h-8 w-8 rounded-lg ml-auto" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader className="bg-slate-100/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/80 sticky top-0 z-10">
+                      <TableRow>
+                        <TableHead className="w-14">Photo</TableHead>
+                        <TableHead className="w-36">SNK ID</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead className="text-right w-20">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {enrollments.map((e: any) => (
+                        <TableRow key={e.id} className="hover:bg-blue-500/5 transition-colors">
+                          <TableCell>
+                            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200/60 dark:border-slate-700/60 shrink-0">
+                              {e.volunteer?.photo_url ? (
+                                <Image src={e.volunteer.photo_url} alt={`${e.volunteer.full_name || 'Volunteer'}'s avatar`} width={32} height={32} unoptimized className="w-full h-full object-cover" />
+                              ) : (
+                                <User className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-mono text-xs font-semibold text-blue-600 dark:text-blue-400">
+                            {e.volunteer?.snk_id || 'Pending'}
+                          </TableCell>
+                          <TableCell className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white">
+                            {e.volunteer?.full_name}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="icon-sm" 
+                              onClick={() => handleRemove(e.id)} 
+                              className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                              aria-label="Remove enrollment"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {!loading && enrollments.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-20 text-slate-400">
+                            <Users className="w-12 h-12 mx-auto mb-3 opacity-25 text-blue-500" />
+                            <p className="text-sm font-medium">No volunteers enrolled yet.</p>
+                            <p className="text-xs text-slate-400 mt-1">Select volunteers on the left panel to enroll them.</p>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </GlassCard>
+          </div>
+        </div>
       )}
     </div>
   )

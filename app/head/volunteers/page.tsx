@@ -20,6 +20,7 @@ import { CSVUpload } from '@/components/volunteers/CSVUpload'
 import ImageCropperDialog from '@/components/volunteers/ImageCropperDialog'
 import { toast } from 'sonner'
 import { exportToPDF } from '@/lib/pdf'
+import { GlassCard } from '@/components/ui/GlassCard'
 import { getHeadVolunteersDataAction, createVolunteerAction, updateVolunteerAction, bulkImportVolunteersAction, uploadVolunteerPhotoAction } from './actions.server'
 
 type State = {
@@ -290,17 +291,20 @@ export default function HeadVolunteersPage() {
         onCropComplete={handleCropComplete}
       />
       {/* Header */}
-      <div className="rounded-[32px] bg-secondary p-6 md:p-10 text-secondary-foreground border-ink shadow-hard pattern-boxes relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="relative z-10 space-y-3">
-          <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
-            <Users className="w-4 h-4 mr-2" /> Volunteers
+      <GlassCard className="p-6 md:p-8" glowColor="blue">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500 mb-1">
+            <Users className="w-3.5 h-3.5" />
+            <span>Supervised Volunteers</span>
           </div>
-          <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight">Supervised Volunteers</h1>
-          <p className="font-sans font-medium text-ink/80 text-lg max-w-xl">
+          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Model Head Volunteer Roster
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl">
             Register and manage volunteers allocated to your supervised Samagam models. Add photo assets and submit for approval.
           </p>
         </div>
-      </div>
+      </GlassCard>
 
       {state.myModels.length === 0 ? (
         <Card className="bg-card p-12 text-center">
@@ -384,16 +388,16 @@ export default function HeadVolunteersPage() {
 
                 {/* Add Trigger */}
                 <Dialog open={state.isAddOpen} onOpenChange={(val) => dispatch({ type: 'SET_STATE', field: 'isAddOpen', payload: val })}>
-                  <DialogTrigger render={
+                  <DialogTrigger>
                     <Button
                       className="w-full sm:w-auto px-5 gap-2"
                       onClick={() => {
                         dispatch({ type: 'RESET_FORM' });
                       }}
-                    />
-                  }>
-                    <Plus className="h-4 w-4" />
-                    Add Volunteer
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Volunteer
+                    </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-xl rounded-xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
@@ -630,7 +634,7 @@ export default function HeadVolunteersPage() {
             </Dialog>
 
             {/* List */}
-            <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+            <div className="glass-panel overflow-hidden rounded-3xl border border-white/40 dark:border-slate-800/80 shadow-xl">
               <div className="p-0">
                 {state.loading ? (
                   <div className="p-4 space-y-4">

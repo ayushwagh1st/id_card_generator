@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Calendar, Activity } from 'lucide-react'
+import { Calendar, Activity, ShieldCheck, Database, Clock } from 'lucide-react'
 import { getLecturerStatsAction } from '@/server/actions/attendance'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import Image from 'next/image'
+import { GlassCard } from '@/components/ui/GlassCard'
 
 export default function LecturerDashboard() {
   const [loading, setLoading] = useState(true)
@@ -31,67 +32,66 @@ export default function LecturerDashboard() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-32 w-full rounded-2xl" />
+        <Skeleton className="h-36 w-full rounded-3xl" />
         <div className="grid gap-4 md:grid-cols-2">
-          {[1, 2].map((i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
+          {[1, 2].map((i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}
         </div>
       </div>
     )
   }
 
   const statItems = [
-    { title: 'Total Scheduled Sessions', value: stats.totalAssigned, iconSrc: '/images/icons/icon_database.png', tileClass: 'icon-tile-peach' },
-    { title: "Today's Sessions", value: stats.todaySessions, iconSrc: '/images/icons/icon_clock.png', tileClass: 'icon-tile-pink' },
+    { title: 'Total Scheduled Sessions', value: stats.totalAssigned, icon: Database, glow: 'blue' as const },
+    { title: "Today's Sessions", value: stats.todaySessions, icon: Clock, glow: 'cyan' as const },
   ]
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-
+    <div className="space-y-6">
       {/* Banner */}
-      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        
-        <div className="relative z-10 space-y-4 max-w-xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf3] text-[#027a48] text-xs font-semibold tracking-wide uppercase">
-            <Activity className="w-4 h-4 mr-2" /> Security Mode
-          </div>
-          <div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">
-            Security <span className="text-white" style={{ textShadow: '2px 2px 0 #111111' }}>Dashboard</span>
-          </h1>
-            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
-          </div>
-          <p className="font-sans text-slate-500 text-lg max-w-xl leading-relaxed">
-            Welcome back! Here is an overview of all scheduled sessions and today's schedule.
-          </p>
-        </div>
-
-        <div className="hidden md:block relative z-10 w-full max-w-[280px] aspect-square transform transition-transform duration-500 group-hover:scale-105 group-hover:-rotate-3">
-          <Image 
-            src="/images/lecturer_dashboard_illustration.png" 
-            alt="Lecturer Dashboard" 
-            fill
-            className="object-contain drop-shadow-[8px_8px_0_rgba(17,17,17,1)]"
-            sizes="(max-width: 768px) 100vw, 280px"
-          />
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statItems.map((stat) => (
-          <div
-            key={stat.title}
-            className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl"
-          >
-            <div className={`icon-tile ${stat.tileClass} w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white`}>
-              <Image src={stat.iconSrc} alt={stat.title} width={56} height={56} className="object-cover" />
+      <GlassCard className="p-8 sm:p-10" glowColor="blue">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-xl">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500">
+              <ShieldCheck className="w-4 h-4" />
+              <span>Security Access Portal</span>
             </div>
-            <div className="mt-2">
-              <div className="font-display font-bold text-3xl text-ink leading-none">{stat.value}</div>
-              <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">{stat.title}</div>
-            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Security Dashboard
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Welcome back! Live overview of all scheduled duty shifts and active venue check-in counters.
+            </p>
           </div>
-        ))}
+
+          <div className="hidden md:block relative w-48 h-48 shrink-0">
+            <Image 
+              src="/images/lecturer_dashboard_illustration.png" 
+              alt="Security Dashboard" 
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
+      </GlassCard>
+
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {statItems.map((stat) => {
+          const Icon = stat.icon
+          return (
+            <GlassCard key={stat.title} className="p-6" glowColor={stat.glow}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">{stat.title}</span>
+                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                  <Icon className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{stat.value}</div>
+              </div>
+            </GlassCard>
+          )
+        })}
       </div>
     </div>
   )

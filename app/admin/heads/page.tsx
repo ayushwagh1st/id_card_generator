@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Plus, Search, Shield, Users, Database, Download, Edit, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react'
+import { Plus, Search, Shield, Users, Database, Download, Edit, Trash2, KeyRound, Eye, EyeOff, CheckCircle, Clock } from 'lucide-react'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { createModelHeadAction, updateModelHeadAction, resetModelHeadPasswordAction, deleteModelHeadAction, getHeadsDataAction, getModelsDataAction } from '../models/actions.server'
 import Image from 'next/image'
+import { GlassCard } from '@/components/ui/GlassCard'
 import { HeadsTable } from './_components/HeadsTable'
 import { HeadsModals } from './_components/HeadsModals'
 
@@ -212,53 +213,59 @@ export default function HeadsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Dynamic Header Banner */}
-      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf3] text-[#027a48] text-xs font-semibold tracking-wide uppercase">
-            <Users className="w-4 h-4 mr-2" /> Model Heads
+      {/* Hero Banner */}
+      <GlassCard className="p-8 md:p-10 relative overflow-hidden" glowColor="cyan">
+        <div className="relative z-10 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold tracking-wide uppercase border border-emerald-500/20">
+            <Users className="w-4 h-4" /> 
+            <span>Model Heads</span>
           </div>
-          <div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">Supervisor Directory</h1>
-            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
-          </div>
-          <p className="font-sans text-slate-500 text-lg max-w-xl leading-relaxed">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Supervisor Directory
+          </h1>
+          <p className="font-sans text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl leading-relaxed">
             Register and manage accounts for exhibition supervisors. Assign them to specific models to grant access.
           </p>
         </div>
-      </div>
+      </GlassCard>
 
       {/* Analytics Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-pink w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_users.png" alt="Users" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="blue">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Total Model Heads</span>
+            <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+              <Users className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{totalHeadsCount}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Total Model Heads</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{totalHeadsCount}</div>
           </div>
-        </div>
+        </GlassCard>
 
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-yellow w-14 h-14 shadow-hard-xs transform -rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_check.png" alt="Active" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="cyan">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Active Assignments</span>
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{assignedHeadsCount}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Active Assignments</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{assignedHeadsCount}</div>
           </div>
-        </div>
+        </GlassCard>
 
-        <div className="bento-white flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-150 shadow-hard-sm !p-5 !rounded-2xl">
-          <div className="icon-tile icon-tile-peach w-14 h-14 shadow-hard-xs transform rotate-2 overflow-hidden bg-white">
-            <Image src="/images/icons/icon_clock.png" alt="Unassigned" width={56} height={56} className="object-cover" />
+        <GlassCard className="p-6" glowColor="purple">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Unassigned Heads</span>
+            <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+              <Clock className="w-5 h-5" />
+            </div>
           </div>
-          <div className="mt-2">
-            <div className="font-display font-bold text-3xl text-ink leading-none">{unassignedHeadsCount}</div>
-            <div className="font-display text-xs font-bold uppercase tracking-wider text-ink/60 mt-1.5">Unassigned Heads</div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{unassignedHeadsCount}</div>
           </div>
-        </div>
+        </GlassCard>
       </div>
 
       {/* Actions & Filters */}

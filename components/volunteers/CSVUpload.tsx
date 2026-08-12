@@ -1,14 +1,15 @@
 'use client'
 
-import React, { useState, useReducer } from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { UploadCloud, CheckCircle2, AlertCircle, Download, Loader2 } from 'lucide-react'
+import { UploadCloud, CheckCircle2, AlertCircle, Download, Loader2, FileSpreadsheet } from 'lucide-react'
 import Papa from 'papaparse'
 import { toast } from 'sonner'
 import { bulkImportVolunteersAction } from '@/server/actions/volunteers'
 import { getModelsDataAction } from '@/app/admin/models/actions.server'
+import { GlassCard } from '@/components/ui/GlassCard'
 
 const downloadTemplate = () => {
   const headers = "Full Name,Mobile Number,Gender,Age,Model Name,Emergency Contact,Designation,Team,Address,Remarks"
@@ -56,8 +57,6 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
     }
   }
 
-
-
   const previewCSV = async () => {
     if (!file) return
 
@@ -70,7 +69,6 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
         const invalid: any[] = []
         const errors: string[] = []
         
-        // Fetch models to map names
         const modelsData = await getModelsDataAction()
         const modelMap: Record<string, string> = {}
         if (modelsData) {
@@ -98,187 +96,172 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
               emergency_contact: row['Emergency Contact'] || row['Emergency'] || '',
               address: row['Address'] || '',
               role: row['Role'] || row['Designation'] || 'Volunteer',
-              designation: row['Role'] || row['Designation'] || 'Volunteer',
-              branch: row['Branch'] || '',
-              accommodation: ['yes', 'true', '1'].includes(String(row['Accommodation'] || '').toLowerCase().trim()),
-              remarks: row['Remarks'] || '',
-              status: 'Pending',
               model_id: matchedModelId,
-              original_model_name: rowModelName
+              original_model_name: rowModelName,
+              status: 'Approved',
+              accommodation: (row['Accommodation'] || '').toLowerCase() === 'yes' || (row['Accommodation'] || '').toLowerCase() === 'true',
+              branch: row['Branch'] || row['City'] || 'General'
             })
           }
         })
 
+        setParsedData(valid)
         setValidationResults({ valid, invalid, errors })
-        setParsedData(data)
       },
-      error: (err: any) => {
-        setError(err.message)
+      error: (err) => {
+        setError(`CSV Parsing Failed: ${err.message}`)
       }
     })
   }
 
   const confirmImport = async () => {
     if (!validationResults || validationResults.valid.length === 0) return
-    
     setImporting(true)
+    
     try {
-      // Strip original_model_name before insert
-      const payload = validationResults.valid.map((v: any) => {
-        const { original_model_name, ...rest } = v
-        return rest
-      })
-
-      const res = await bulkImportVolunteersAction(payload)
-      if (res.error) throw new Error(res.error)
-
-      setResults({ successful: res.count ?? 0, duplicates: res.duplicates ?? 0 })
-      if (onUploadSuccess) onUploadSuccess([])
-      toast.success(`Successfully imported ${res.count} records. Skipped ${res.duplicates} duplicates.`)
-      
-      // Cleanup states
-      setFile(null)
-      setValidationResults(null)
+      const res = await bulkImportVolunteersAction(validationResults.valid)
+      if (res.error) {
+        toast.error(res.error)
+      } else {
+        setResults(res)
+        const importedCount = (res as any).count ?? (res as any).successful ?? validationResults.valid.length
+        toast.success(`Imported ${importedCount} volunteers`)
+        if (onUploadSuccess) onUploadSuccess(validationResults.valid)
+      }
     } catch (err: any) {
-      toast.error(err.message || 'Import failed')
-      setError(err.message)
+      toast.error(err.message || 'Bulk import failed')
     } finally {
       setImporting(false)
     }
   }
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Bulk Import Data</CardTitle>
-            <CardDescription>Upload CSV to add volunteers. You will preview before importing.</CardDescription>
+    <GlassCard className="p-6 md:p-8" glowColor="purple">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-200/50 dark:border-slate-800/60">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-purple-500 mb-1">
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>CSV Batch Import</span>
           </div>
-          <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-2">
-            <Download className="w-4 h-4" /> Download Template
-          </Button>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Bulk Import Volunteer Records
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Upload CSV datasets to batch register volunteers and allocate model assignments.
+          </p>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {!validationResults && !results && (
-            <div className="flex items-center justify-center w-full">
-              <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-lg cursor-pointer bg-muted/20 border-muted-foreground/25 hover:bg-muted/50 transition-colors">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <UploadCloud className="w-8 h-8 mb-4 text-muted-foreground" />
-                  <p className="mb-2 text-sm text-muted-foreground">
-                    <span className="font-semibold text-primary">Click to upload</span> or drag and drop
-                  </p>
-                  <p className="text-xs text-muted-foreground">CSV (MAX. 10MB)</p>
-                </div>
-                <input id="dropzone-file" type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-              </label>
-            </div>
-          )}
-          
-          {file && !validationResults && !results && (
-            <div className="flex items-center justify-between p-3 bg-muted rounded-md">
-              <span className="text-sm font-medium truncate max-w-[200px]">{file.name}</span>
-              <Button size="sm" onClick={previewCSV}>Preview Data</Button>
-            </div>
-          )}
+        <Button variant="outline" onClick={downloadTemplate} className="gap-2 shrink-0">
+          <Download className="w-3.5 h-3.5" />
+          Download Sample Template
+        </Button>
+      </div>
 
-          {error && (
-            <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/10 rounded-md">
-              <AlertCircle className="h-4 w-4" />
-              {error}
-            </div>
-          )}
-
-          {/* Validation Preview Phase */}
-          {validationResults && !results && (
-            <div className="space-y-4 animate-in fade-in">
-              <div className="flex items-center gap-4 text-sm font-semibold">
-                <div className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
-                  {validationResults.valid.length} Valid Records
-                </div>
-                {validationResults.invalid.length > 0 && (
-                  <div className="px-3 py-1 bg-rose-50 text-rose-700 rounded-full border border-rose-200">
-                    {validationResults.invalid.length} Invalid Records
-                  </div>
-                )}
+      <div className="space-y-6 pt-6">
+        {!validationResults && !results && (
+          <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center hover:border-blue-500/50 transition-colors relative bg-white/40 dark:bg-slate-900/40">
+            <input 
+              type="file" 
+              accept=".csv" 
+              onChange={handleFileUpload} 
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            />
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                <UploadCloud className="w-6 h-6" />
               </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {file ? file.name : 'Drop your CSV file here or click to browse'}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">Supports UTF-8 formatted .csv files</p>
+              </div>
+              {file && (
+                <Button onClick={(e) => { e.stopPropagation(); previewCSV() }} className="mt-2 z-20">
+                  Parse & Validate Dataset
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
-              {validationResults.errors.length > 0 && (
-                <div className="text-xs text-red-500 max-h-24 overflow-y-auto space-y-1 bg-red-50 p-2 rounded border border-red-200">
-                  {validationResults.errors.map((err: any) => <div key={err}>{err}</div>)}
+        {error && (
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs">
+            {error}
+          </div>
+        )}
+
+        {validationResults && !results && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 font-semibold text-emerald-500">
+                <CheckCircle2 className="w-4 h-4" />
+                {validationResults.valid.length} Valid Records Ready
+              </div>
+              {validationResults.invalid.length > 0 && (
+                <div className="px-3 py-1 bg-rose-500/10 text-rose-500 rounded-full border border-rose-500/20 font-medium">
+                  {validationResults.invalid.length} Invalid Records
                 </div>
               )}
-
-              <div className="border rounded-lg overflow-hidden max-h-[300px] overflow-y-auto">
-                <Table>
-                  <TableHeader className="bg-muted sticky top-0">
-                    <TableRow>
-                      <TableHead className="text-xs">Name</TableHead>
-                      <TableHead className="text-xs">Mobile</TableHead>
-                      <TableHead className="text-xs">Model Area</TableHead>
-                      <TableHead className="font-bold text-xs uppercase text-muted-foreground min-w-[100px]">Branch</TableHead>
-                      <TableHead className="font-bold text-xs uppercase text-muted-foreground min-w-[80px]">Accomm.</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {validationResults.valid.slice(0, 50).map((row: any) => (
-                      <TableRow key={`${row.full_name}-${row.mobile_number}`}>
-                        <TableCell className="text-xs font-medium">{row.full_name}</TableCell>
-                        <TableCell className="text-xs">{row.mobile_number}</TableCell>
-                        <TableCell className="text-xs">{row.original_model_name || 'None'}</TableCell>
-                        <TableCell className="text-xs">{row.branch}</TableCell>
-                        <TableCell className="text-xs font-semibold">{row.accommodation ? 'Yes' : 'No'}</TableCell>
-                        <TableCell className="text-xs text-emerald-600 font-semibold">Valid</TableCell>
-                      </TableRow>
-                    ))}
-                    {validationResults.valid.length > 50 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-2">
-                          ... and {validationResults.valid.length - 50} more valid records
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => { setFile(null); setValidationResults(null) }}>Cancel</Button>
-                <Button 
-                  onClick={confirmImport} 
-                  disabled={importing || validationResults.valid.length === 0}
-                  className="gap-2"
-                >
-                  {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                  Confirm Import {validationResults.valid.length} Records
-                </Button>
-              </div>
             </div>
-          )}
 
-          {/* Success Results Phase */}
-          {results && (
-            <div className="space-y-3 p-4 border rounded-md bg-emerald-50/50">
-              <h4 className="font-medium text-sm">Import Completed</h4>
-              <div className="flex gap-4 text-sm">
-                <div className="flex items-center gap-1 text-emerald-700 font-bold">
-                  <CheckCircle2 className="h-4 w-4" />
-                  {results.successful} Inserted
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Mobile</TableHead>
+                  <TableHead>Model Area</TableHead>
+                  <TableHead>Branch</TableHead>
+                  <TableHead>Accomm.</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {validationResults.valid.slice(0, 50).map((row: any) => (
+                  <TableRow key={`${row.full_name}-${row.mobile_number}`}>
+                    <TableCell className="font-semibold">{row.full_name}</TableCell>
+                    <TableCell className="text-slate-500">{row.mobile_number}</TableCell>
+                    <TableCell>{row.original_model_name || 'None'}</TableCell>
+                    <TableCell>{row.branch}</TableCell>
+                    <TableCell className="font-medium text-emerald-500">{row.accommodation ? 'Yes' : 'No'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setFile(null); setValidationResults(null) }}>Cancel</Button>
+              <Button 
+                onClick={confirmImport} 
+                disabled={importing || validationResults.valid.length === 0}
+                className="gap-2"
+              >
+                {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                Confirm Import {validationResults.valid.length} Records
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {results && (
+          <div className="space-y-3 p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+            <h4 className="font-semibold text-sm text-slate-900 dark:text-white">Import Completed Successfully</h4>
+            <div className="flex gap-4 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4" />
+                {results.successful} Inserted
+              </div>
+              {results.duplicates > 0 && (
+                <div className="flex items-center gap-1.5 text-amber-500">
+                  <AlertCircle className="h-4 w-4" />
+                  {results.duplicates} Skipped (Duplicates)
                 </div>
-                {results.duplicates > 0 && (
-                  <div className="flex items-center gap-1 text-amber-600 font-bold">
-                    <AlertCircle className="h-4 w-4" />
-                    {results.duplicates} Skipped (Duplicates)
-                  </div>
-                )}
-              </div>
-              <Button size="sm" variant="outline" className="mt-2" onClick={() => { setFile(null); setResults(null) }}>Upload Another</Button>
+              )}
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            <Button size="sm" variant="outline" className="mt-2" onClick={() => { setFile(null); setResults(null) }}>
+              Upload Another File
+            </Button>
+          </div>
+        )}
+      </div>
+    </GlassCard>
   )
 }

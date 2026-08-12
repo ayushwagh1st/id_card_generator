@@ -71,10 +71,10 @@ export function LecturersModals({
         setIsAddOpen(open)
         if (!open) setShowPassword(false)
       }}>
-        <DialogTrigger
-          render={<Button className="w-full sm:w-auto px-5 gap-2 shadow-hard-xs font-bold" />}
-        >
-          <Plus className="h-4 w-4" /> Add Security
+        <DialogTrigger className="w-full sm:w-auto">
+          <span className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25 px-5 h-10 text-xs sm:text-sm font-semibold cursor-pointer transition-all">
+            <Plus className="h-4 w-4 mr-2" /> Add Security
+          </span>
         </DialogTrigger>
         <DialogContent className="sm:max-w-lg rounded-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>

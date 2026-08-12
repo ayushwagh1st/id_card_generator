@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { GlassCard } from '@/components/ui/GlassCard'
 
 interface VolunteersTableProps {
   volunteers: any[]
@@ -42,7 +43,7 @@ export function VolunteersTable({
 }: VolunteersTableProps) {
   if (loading) {
     return (
-      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+      <GlassCard className="p-0 overflow-hidden" glowColor="blue">
         <div className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <Skeleton className="h-8 w-[200px]" />
@@ -75,12 +76,12 @@ export function VolunteersTable({
             ))}
           </div>
         </div>
-      </div>
+      </GlassCard>
     )
   }
 
   return (
-    <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
+    <GlassCard className="p-0 overflow-hidden" glowColor="blue">
       <div className="p-0">
         <div className="overflow-x-auto">
           <Table>
@@ -243,17 +244,16 @@ export function VolunteersTable({
         </div>
 
         {totalCount > 0 && (
-          <div className="border-t border-ink/10 p-4 flex items-center justify-between bg-muted/20">
+          <div className="border-t border-slate-200/50 dark:border-slate-800/60 p-4 flex items-center justify-between">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onPageChange((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="font-bold border-ink shadow-hard-xs hover:-translate-y-0.5 transition-transform"
             >
               <ChevronLeft className="w-4 h-4 mr-1" /> Previous
             </Button>
-            <div className="text-sm font-semibold text-muted-foreground bg-white px-3 py-1 rounded-full border border-ink shadow-hard-xs">
+            <div className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400">
               Page {page} of {Math.max(1, totalPages)}
             </div>
             <Button
@@ -261,13 +261,12 @@ export function VolunteersTable({
               size="sm"
               onClick={() => onPageChange((p) => p + 1)}
               disabled={page >= totalPages}
-              className="font-bold border-ink shadow-hard-xs hover:-translate-y-0.5 transition-transform"
             >
               Next <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
         )}
       </div>
-    </div>
+    </GlassCard>
   )
 }

@@ -12,50 +12,22 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
       icons={{
-        success: (
-          <CircleCheckIcon className="size-4" />
-        ),
-        info: (
-          <InfoIcon className="size-4" />
-        ),
-        warning: (
-          <TriangleAlertIcon className="size-4" />
-        ),
-        error: (
-          <OctagonXIcon className="size-4" />
-        ),
-        loading: (
-          <Loader2Icon className="size-4 animate-spin" />
-        ),
+        success: <CircleCheckIcon className="size-4 text-emerald-500" />,
+        info: <InfoIcon className="size-4 text-blue-500" />,
+        warning: <TriangleAlertIcon className="size-4 text-amber-500" />,
+        error: <OctagonXIcon className="size-4 text-rose-500" />,
+        loading: <Loader2Icon className="size-4 animate-spin text-blue-500" />,
       }}
-      style={
-        {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "#111111",
-          "--border-radius": "12px",
-          "--toast-icon-margin-start": "-3px",
-          "--toast-icon-margin-end": "4px",
-          "--toast-svg-margin-start": "-1px",
-          "--toast-svg-margin-end": "0px",
-          "--toast-button-margin-start": "auto",
-          "--toast-button-margin-end": "0",
-          "--toast-close-button-start": "0",
-          "--toast-close-button-end": "-16px",
-          "--toast-close-button-transform": "translate(-35%, -35%)",
-        } as React.CSSProperties
-      }
       toastOptions={{
         classNames: {
-          toast: "group toast flex gap-3 px-4 py-3 font-display font-medium text-base border-[3px] border-ink shadow-[4px_4px_0_#111111] rounded-xl bg-white text-ink w-full items-center",
-          description: "group-[.toast]:text-ink/80 text-sm font-sans font-medium",
-          actionButton: "group-[.toast]:bg-ink group-[.toast]:text-white font-bold px-3 py-1.5 rounded-lg border-2 border-transparent hover:scale-[1.02] transition-transform",
-          cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-ink font-bold px-3 py-1.5 rounded-lg border-2 border-transparent hover:bg-muted/80",
-          success: "group-[.toaster]:bg-[#D1FAE5] group-[.toaster]:text-[#065F46] group-[.toaster]:border-ink group-[.toaster]:shadow-[4px_4px_0_#065F46]",
-          error: "group-[.toaster]:bg-[#FEE2E2] group-[.toaster]:text-[#991B1B] group-[.toaster]:border-ink group-[.toaster]:shadow-[4px_4px_0_#991B1B]",
-          info: "group-[.toaster]:bg-[#DBEAFE] group-[.toaster]:text-[#1E40AF] group-[.toaster]:border-ink group-[.toaster]:shadow-[4px_4px_0_#1E40AF]",
-          warning: "group-[.toaster]:bg-[#FEF3C7] group-[.toaster]:text-[#92400E] group-[.toaster]:border-ink group-[.toaster]:shadow-[4px_4px_0_#92400E]",
-          icon: "group-data-[type=error]:text-[#991B1B] group-data-[type=success]:text-[#065F46] group-data-[type=warning]:text-[#92400E] group-data-[type=info]:text-[#1E40AF]",
+          toast: "group toast flex gap-3 px-4 py-3 text-xs sm:text-sm font-medium border border-white/40 dark:border-slate-800/80 rounded-2xl glass-panel shadow-2xl text-slate-900 dark:text-slate-100 w-full items-center",
+          description: "text-slate-500 dark:text-slate-400 text-xs font-normal",
+          actionButton: "bg-blue-600 text-white font-medium text-xs px-3 py-1.5 rounded-xl shadow-md hover:bg-blue-500 transition-colors",
+          cancelButton: "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium px-3 py-1.5 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-700",
+          success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+          error: "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300",
+          info: "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+          warning: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
         },
       }}
       {...props}

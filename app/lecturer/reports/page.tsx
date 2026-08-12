@@ -1,253 +1,239 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { FileText, Download, CheckCircle, Clock, XCircle } from 'lucide-react'
-import { toast } from 'sonner'
+import { FileText, Download, Activity, CheckCircle, Clock } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getSessionsAction } from '@/server/actions/sessions'
-import { formatSessionLabel } from '@/lib/formatters'
-import { getSessionAttendanceAction } from '@/server/actions/attendance'
-import { getCurrentUserAction } from '@/server/actions/auth'
+import { toast } from 'sonner'
 import { exportToPDF } from '@/lib/pdf'
+import { getSessionAttendanceAction } from '@/server/actions/attendance'
+import { getSessionsAction } from '@/server/actions/sessions'
+import { GlassCard } from '@/components/ui/GlassCard'
 
 export default function LecturerReportsPage() {
+  const [loading, setLoading] = useState(false)
   const [sessions, setSessions] = useState<any[]>([])
   const [selectedSessionId, setSelectedSessionId] = useState<string>('none')
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
 
-  const fetchSessions = useCallback(async () => {
-    try {
-      const user = await getCurrentUserAction()
-      if (!user) return
-      const role = user.user_metadata?.role
-      const lecturerFilter = role === 'LECTURER' ? user.id : 'all'
-      const res = await getSessionsAction(1, 100, '', 'all', lecturerFilter)
-      setSessions(res.data || [])
-    } catch (err: any) {
-      toast.error('Failed to load sessions')
+  useEffect(() => {
+    async function loadSessions() {
+      try {
+        const data = await getSessionsAction()
+        setSessions(data || [])
+        if (data && data.length > 0) {
+            setSelectedSessionId(data[0].id)
+        }
+      } catch (err: any) {
+        toast.error('Failed to load sessions list')
+      }
     }
+    loadSessions()
   }, [])
 
-  const fetchAttendance = useCallback(async () => {
-    if (selectedSessionId === 'none') {
-        setAttendanceRecords([])
-        return
-    }
-    setLoading(true)
-    try {
-      const res = await getSessionAttendanceAction(selectedSessionId)
-      setAttendanceRecords(res.data || [])
-    } catch (err: any) {
-      toast.error('Failed to load attendance')
-    } finally {
-      setLoading(false)
-    }
-  }, [selectedSessionId])
+  const fetchAttendance = useCallback(async (sessionId: string) => {
+      if (sessionId === 'none') {
+          setAttendanceRecords([])
+          return
+      }
+      setLoading(true)
+      try {
+          const res = await getSessionAttendanceAction(sessionId)
+          setAttendanceRecords(res.data || [])
+      } catch (err: any) {
+          toast.error('Failed to load attendance logs')
+      } finally {
+          setLoading(false)
+      }
+  }, [])
 
   useEffect(() => {
-    fetchSessions()
-  }, [fetchSessions])
+      if (selectedSessionId !== 'none') {
+          fetchAttendance(selectedSessionId)
+      }
+  }, [selectedSessionId, fetchAttendance])
 
-  useEffect(() => {
-    fetchAttendance()
-  }, [fetchAttendance])
+  const formatSessionLabel = (s: any) => {
+    if (!s) return ''
+    const parts = [s.title || s.name]
+    if (s.date) parts.push(s.date)
+    if (s.models?.name) parts.push(`(${s.models.name})`)
+    return parts.join(' - ')
+  }
 
   const handleExportCSV = () => {
-      if (attendanceRecords.length === 0) return
-      
-      const session = sessions.find(s => s.id === selectedSessionId)
-      const sessionName = session ? session.name : 'Session'
-      
-      const headers = ['SNK ID', 'Name', 'Mobile', 'Status', 'Date', 'Check-In', 'Check-Out']
-      const rows = attendanceRecords.map(r => [
-          r.volunteer?.snk_id || 'Pending',
-          r.volunteer?.full_name || 'N/A',
-          r.volunteer?.mobile_number || 'N/A',
-          r.attendance_status || 'N/A',
-          r.attendance_date || 'N/A',
-          r.check_in_time ? new Date(r.check_in_time).toLocaleTimeString() : 'N/A',
-          r.check_out_time ? new Date(r.check_out_time).toLocaleTimeString() : 'N/A'
-      ])
+    if (attendanceRecords.length === 0) return
+    
+    const session = sessions.find(s => s.id === selectedSessionId)
+    const sessionName = session ? (session.title || session.name) : 'Session'
 
-      const csvContent = "data:text/csv;charset=utf-8," 
-        + [headers.join(','), ...rows.map(e => e.join(','))].join("\n")
+    const headers = ['SNK ID', 'Volunteer Name', 'Check In Time', 'Status']
+    const rows = attendanceRecords.map(r => [
+        r.volunteer?.snk_id || '',
+        r.volunteer?.full_name || '',
+        r.created_at ? new Date(r.created_at).toLocaleString() : '',
+        r.status || 'Present'
+    ])
 
-      const encodedUri = encodeURI(csvContent)
-      const link = document.createElement("a")
-      link.setAttribute("href", encodedUri)
-      link.setAttribute("download", `${sessionName.replace(/\s+/g, '_')}_Attendance.csv`)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(','), ...rows.map(e => `"${e.join('","')}"`)].join("\n")
+
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `${sessionName.replace(/\s+/g, '_')}_Attendance.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   const handleExportPDF = () => {
-      if (attendanceRecords.length === 0) return
-      
-      const session = sessions.find(s => s.id === selectedSessionId)
-      const sessionName = session ? session.name : 'Session'
-      
-      const headers = ['SNK ID', 'Name', 'Mobile', 'Status', 'Date', 'Check-In', 'Check-Out']
-      const rows = attendanceRecords.map(r => [
-          r.volunteer?.snk_id || 'Pending',
-          r.volunteer?.full_name || 'N/A',
-          r.volunteer?.mobile_number || 'N/A',
-          r.attendance_status || 'N/A',
-          r.attendance_date || 'N/A',
-          r.check_in_time ? new Date(r.check_in_time).toLocaleTimeString() : 'N/A',
-          r.check_out_time ? new Date(r.check_out_time).toLocaleTimeString() : 'N/A'
-      ])
+    if (attendanceRecords.length === 0) return
 
-      exportToPDF({
-        title: `${sessionName} Attendance Report`,
-        subtitle: 'Official attendance records for this session',
+    const session = sessions.find(s => s.id === selectedSessionId)
+    const sessionName = session ? (session.title || session.name) : 'Session'
+
+    const headers = ['SNK ID', 'Volunteer Name', 'Check In Time', 'Status']
+    const rows = attendanceRecords.map(r => [
+        r.volunteer?.snk_id || '',
+        r.volunteer?.full_name || '',
+        r.created_at ? new Date(r.created_at).toLocaleString() : '',
+        r.status || 'Present'
+    ])
+
+    exportToPDF({
+        title: `Attendance: ${sessionName}`,
+        subtitle: `Official attendance records logged for ${session?.date || 'Session'}`,
         filename: `${sessionName.replace(/\s+/g, '_')}_Attendance.pdf`,
         headers,
         data: rows,
-        themeColor: [13, 148, 136] // Teal theme for Lecturer
+        themeColor: [59, 130, 246]
       })
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="rounded-[32px] bg-[var(--color-blue)] p-6 md:p-10 text-white border-ink shadow-hard pattern-grid relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="relative z-10 flex flex-col md:flex-row justify-between w-full md:items-end gap-4">
-          <div className="space-y-3">
-            <div className="inline-flex badge-flat bg-white text-ink border-ink transform -rotate-2">
-              <FileText className="w-4 h-4 mr-2 text-ink" /> Reports
+    <div className="space-y-6">
+      <GlassCard className="p-8 sm:p-10" glowColor="blue">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500">
+              <FileText className="w-4 h-4" />
+              <span>Attendance Reports</span>
             </div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-white">Attendance Reports</h1>
-            <p className="font-sans font-medium text-white/80 text-lg max-w-xl">
-              View and export attendance records for your assigned sessions.
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Security Attendance Logs
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl">
+              View and export attendance logs for your assigned venue security shifts.
             </p>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex items-center gap-2 shrink-0">
             <Button 
               onClick={handleExportCSV} 
               disabled={attendanceRecords.length === 0}
-              className="bg-white text-ink border-ink shadow-hard-xs hover:bg-muted font-bold h-11 px-5 rounded-xl transform transition-transform hover:-translate-y-1"
+              variant="outline"
+              className="gap-2"
             >
-              <FileText className="w-4 h-4 mr-2" />
+              <FileText className="w-4 h-4" />
               Export CSV
             </Button>
             <Button 
               onClick={handleExportPDF} 
               disabled={attendanceRecords.length === 0}
-              className="bg-white text-ink border-ink shadow-hard-xs hover:bg-muted font-bold h-11 px-5 rounded-xl transform transition-transform hover:-translate-y-1"
+              className="gap-2 shadow-lg shadow-blue-500/20"
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4" />
               Export PDF
             </Button>
           </div>
         </div>
-      </div>
+      </GlassCard>
 
-      <div className="bento-white p-4 rounded-[20px] border-ink shadow-hard flex flex-col sm:flex-row gap-4 items-center">
-        <Label className="font-bold whitespace-nowrap text-ink">Select Session:</Label>
-        <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
-          <SelectTrigger className="w-full sm:w-[400px] border-ink shadow-hard-xs bg-white text-ink font-semibold rounded-xl">
-            <span data-slot="select-value" className="flex flex-1 text-left truncate">
-              {selectedSessionId !== 'none' && sessions.length > 0
-                ? formatSessionLabel(sessions.find(s => s.id === selectedSessionId))
-                : "-- Select a Session --"}
-            </span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">-- Select a Session --</SelectItem>
-            {sessions.map(s => (
-                <SelectItem key={s.id} value={s.id} label={formatSessionLabel(s)}>{formatSessionLabel(s)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <GlassCard className="p-6" glowColor="cyan">
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <Label className="font-semibold text-xs uppercase tracking-wider text-slate-400 shrink-0">Select Active Session:</Label>
+          <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
+            <SelectTrigger className="w-full sm:w-[400px]">
+              <span data-slot="select-value" className="flex flex-1 text-left truncate">
+                {selectedSessionId !== 'none' && sessions.length > 0
+                  ? formatSessionLabel(sessions.find(s => s.id === selectedSessionId))
+                  : "-- Select a Session --"}
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">-- Select a Session --</SelectItem>
+              {sessions.map(s => (
+                  <SelectItem key={s.id} value={s.id}>{formatSessionLabel(s)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </GlassCard>
 
       {selectedSessionId !== 'none' && (
-          <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0">
-              <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-ink/10 bg-muted/20">
-                  <div>
-                      <CardTitle className="text-lg font-bold text-ink">Attendance Log</CardTitle>
-                      <CardDescription>Records for selected session.</CardDescription>
-                  </div>
-                  <FileText className="w-5 h-5 text-blue-500" />
-              </CardHeader>
-              <CardContent className="p-0">
-                  {loading ? (
-                    <div className="p-4 space-y-4">
-                      <div className="rounded-md border">
-                        <div className="border-b px-4 py-3 flex gap-4 bg-muted/40">
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-4 w-40" />
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-4 w-24" />
-                        </div>
-                        {[1, 2, 3, 4].map((i) => (
-                          <div key={i} className="px-4 py-4 flex items-center gap-4 border-b last:border-0">
-                            <Skeleton className="h-4 w-24" />
-                            <Skeleton className="h-4 w-40" />
-                            <Skeleton className="h-6 w-24 rounded-full" />
-                            <Skeleton className="h-4 w-24" />
-                            <Skeleton className="h-4 w-24" />
-                            <Skeleton className="h-4 w-24" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                  <Table>
-                      <TableHeader className="bg-muted/40">
-                          <TableRow>
-                              <TableHead>SNK ID</TableHead>
-                              <TableHead>Volunteer Name</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Date</TableHead>
-                              <TableHead>Check-In</TableHead>
-                              <TableHead>Check-Out</TableHead>
-                          </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                          {attendanceRecords.map(rec => (
-                              <TableRow key={rec.id}>
-                                  <TableCell className="font-bold text-xs">{rec.volunteer?.snk_id || 'Pending'}</TableCell>
-                                  <TableCell className="font-semibold text-ink">{rec.volunteer?.full_name}</TableCell>
-                                  <TableCell>
-                                      <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider w-fit border ${
-                                          rec.attendance_status === 'Present' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                          rec.attendance_status === 'Late' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                          'bg-rose-50 text-rose-700 border-rose-200'
-                                      }`}>
-                                          {rec.attendance_status === 'Present' && <CheckCircle className="w-3.5 h-3.5" />}
-                                          {rec.attendance_status === 'Late' && <Clock className="w-3.5 h-3.5" />}
-                                          {rec.attendance_status === 'Absent' && <XCircle className="w-3.5 h-3.5" />}
-                                          {rec.attendance_status}
-                                      </div>
-                                  </TableCell>
-                                  <TableCell className="text-sm font-medium">{rec.attendance_date}</TableCell>
-                                  <TableCell className="text-sm font-medium">
-                                      {rec.check_in_time ? new Date(rec.check_in_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}
-                                  </TableCell>
-                                  <TableCell className="text-sm font-medium">
-                                      {rec.check_out_time ? new Date(rec.check_out_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}
-                                  </TableCell>
-                              </TableRow>
-                          ))}
-                          {!loading && attendanceRecords.length === 0 && (
-                              <TableRow>
-                                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground font-semibold">No attendance records found.</TableCell>
-                              </TableRow>
-                          )}
-                      </TableBody>
-                  </Table>
-                  )}
-              </CardContent>
+        <GlassCard className="p-0 overflow-hidden" glowColor="purple">
+          <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/60 flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white tracking-tight">Attendance Check-in Log</h3>
+              <p className="text-xs text-slate-400">Scanned attendee check-ins</p>
+            </div>
+            <FileText className="w-5 h-5 text-blue-500" />
           </div>
+
+          <div className="p-0">
+            {loading ? (
+              <div className="p-6 space-y-4">
+                <Skeleton className="h-10 w-full rounded-2xl" />
+                <Skeleton className="h-10 w-full rounded-2xl" />
+                <Skeleton className="h-10 w-full rounded-2xl" />
+              </div>
+            ) : attendanceRecords.length === 0 ? (
+              <div className="text-center py-16 px-4">
+                <div className="mx-auto w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-3">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">No Check-in Scans Logged</h3>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">No volunteers have checked in for this session yet.</p>
+              </div>
+            ) : (
+              <div className="max-h-[500px] overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>SNK ID</TableHead>
+                      <TableHead>Volunteer Name</TableHead>
+                      <TableHead>Check In Time</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {attendanceRecords.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell className="font-mono text-xs font-semibold text-blue-500">
+                          {record.volunteer?.snk_id || 'Pending'}
+                        </TableCell>
+                        <TableCell className="font-semibold text-slate-900 dark:text-white">{record.volunteer?.full_name}</TableCell>
+                        <TableCell className="text-slate-400 text-xs font-mono">
+                          {record.created_at ? new Date(record.created_at).toLocaleString() : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                            {record.status || 'Present'}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </GlassCard>
       )}
     </div>
   )

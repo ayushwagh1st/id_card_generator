@@ -16,6 +16,7 @@ import { getSessionsAction } from '@/server/actions/sessions'
 import { formatSessionLabel } from '@/lib/formatters'
 import { recordAttendanceAction, bulkSyncAttendanceAction } from '@/server/actions/attendance'
 import { getCurrentUserAction } from '@/server/actions/auth'
+import { GlassCard } from '@/components/ui/GlassCard'
 
 // Audio fallback if file isn't present
 const playBeep = () => {
@@ -242,93 +243,89 @@ function ScannerContent() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="rounded-[24px] bg-gradient-to-r from-[#fcfaff] to-[#f6f4ff] p-8 md:p-12 border border-[#f0ebff] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="relative z-10 flex flex-col md:flex-row gap-4 justify-between w-full md:items-end">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-                {isOnline ? (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 text-emerald-950 rounded-full text-xs font-bold backdrop-blur-md border border-emerald-400/20">
-                        <Wifi className="w-3.5 h-3.5" /> ONLINE
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-500/20 text-rose-950 rounded-full text-xs font-bold backdrop-blur-md border border-rose-400/20">
-                        <WifiOff className="w-3.5 h-3.5" /> OFFLINE
-                    </div>
-                )}
-                {pendingScans.length > 0 && (
-                    <button type="button" className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-950 rounded-full text-xs font-bold backdrop-blur-md border border-amber-400/20 cursor-pointer" onClick={syncPendingScans}>
-                        <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} /> {pendingScans.length} PENDING SYNC
-                    </button>
-                )}
+      <GlassCard className="p-6 md:p-8" glowColor="blue">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500">
+              <Camera className="w-4 h-4" />
+              <span>Security Access Control</span>
+              {pendingScans.length > 0 && (
+                <button 
+                  onClick={() => isOnline && syncPendingScans()} 
+                  disabled={!isOnline || isSyncing}
+                  className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[11px] font-mono font-semibold flex items-center gap-1"
+                >
+                  <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} /> {pendingScans.length} PENDING
+                </button>
+              )}
             </div>
-            <div>
-            <h1 className="font-display font-bold text-4xl md:text-5xl leading-tight text-slate-900">QR Attendance Scanner</h1>
-            <div className="w-12 h-1 bg-[#8C6DFD] rounded-full mt-4 opacity-80"></div>
-          </div>
-            <p className="font-sans text-slate-500 text-lg max-w-xl leading-relaxed">
-              Scan volunteer ID cards to record attendance. {isOnline ? 'Data saved in real-time.' : 'Data saved locally.'}
+            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+              QR Attendance Scanner
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl">
+              Scan volunteer ID cards to log venue entry. {isOnline ? 'Real-time synchronization active.' : 'Offline mode active - scans saved locally.'}
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 bg-white/50 border border-ink p-2 rounded-xl backdrop-blur-md shadow-hard-xs">
+
+          <div className="flex flex-col sm:flex-row gap-2 shrink-0">
             <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
-                <SelectTrigger className="w-full sm:w-[250px] bg-white text-zinc-900 border-none font-semibold">
-                    <span data-slot="select-value" className="flex flex-1 text-left truncate">
-                      {selectedSessionId !== 'none' && sessions.length > 0
-                        ? formatSessionLabel(sessions.find((s: any) => s.id === selectedSessionId))
-                        : "-- Select Session --"}
-                    </span>
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="none">-- Select Session --</SelectItem>
-                    {sessions.map((s: any) => (
-                        <SelectItem key={s.id} value={s.id} label={formatSessionLabel(s)}>{formatSessionLabel(s)}</SelectItem>
-                    ))}
-                </SelectContent>
+              <SelectTrigger className="w-full sm:w-[250px]">
+                <span data-slot="select-value" className="flex flex-1 text-left truncate">
+                  {selectedSessionId !== 'none' && sessions.length > 0
+                    ? formatSessionLabel(sessions.find((s: any) => s.id === selectedSessionId))
+                    : "-- Select Session --"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">-- Select Session --</SelectItem>
+                {sessions.map((s: any) => (
+                  <SelectItem key={s.id} value={s.id}>{formatSessionLabel(s)}</SelectItem>
+                ))}
+              </SelectContent>
             </Select>
+
             <Select value={mode} onValueChange={(val: any) => setMode(val)}>
-                <SelectTrigger className="w-full sm:w-[150px] bg-white text-zinc-900 border-none font-semibold">
-                    <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="check-in">
-                        <div className="flex items-center gap-2"><LogIn className="w-4 h-4 text-emerald-500"/> Check-In</div>
-                    </SelectItem>
-                    <SelectItem value="check-out">
-                        <div className="flex items-center gap-2"><LogOut className="w-4 h-4 text-rose-500"/> Check-Out</div>
-                    </SelectItem>
-                </SelectContent>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="check-in">
+                  <div className="flex items-center gap-2"><LogIn className="w-4 h-4 text-emerald-500"/> Check-In</div>
+                </SelectItem>
+                <SelectItem value="check-out">
+                  <div className="flex items-center gap-2"><LogOut className="w-4 h-4 text-rose-500"/> Check-Out</div>
+                </SelectItem>
+              </SelectContent>
             </Select>
           </div>
         </div>
-      </div>
+      </GlassCard>
 
       {selectedSessionId === 'none' ? (
-          <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0">
-              <CardContent className="flex flex-col items-center justify-center py-24 text-center">
-                  <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                      <Camera className="w-8 h-8 text-blue-500" />
-                  </div>
-                  <h3 className="text-lg font-bold text-ink">Please select a session</h3>
-                  <p className="text-muted-foreground mt-2 max-w-sm font-medium">
-                      You must select an active session from the top menu before you can start scanning ID cards.
-                  </p>
-              </CardContent>
+        <GlassCard className="p-12 text-center" glowColor="purple">
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center mx-auto mb-3">
+            <Camera className="w-6 h-6" />
           </div>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">Select a Duty Session</h3>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
+            Choose an active duty session from the top menu before scanning volunteer ID credentials.
+          </p>
+        </GlassCard>
       ) : (
           <div className="grid md:grid-cols-2 gap-6">
-              <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard !p-0 relative flex flex-col">
-                  <CardHeader className="bg-muted/30 pb-4 border-b border-ink/10 flex flex-row items-center justify-between">
+              <GlassCard className="p-0 overflow-hidden relative flex flex-col" glowColor="blue">
+                  <div className="p-4 border-b border-slate-200/50 dark:border-slate-800/60 flex flex-row items-center justify-between">
                       <div>
-                          <CardTitle className="flex items-center gap-2 text-lg">
-                              <Camera className="w-5 h-5 text-indigo-500" /> Live Scanner
-                          </CardTitle>
-                          <CardDescription>Position the QR code inside the frame</CardDescription>
+                          <h3 className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white">
+                              <Camera className="w-5 h-5 text-blue-500" /> Live Optical Scanner
+                          </h3>
+                          <p className="text-xs text-slate-400">Position the QR code inside the viewfinder</p>
                       </div>
-                      <div className="flex items-center gap-2 bg-card px-3 py-1.5 rounded-lg border">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50">
                           <Switch id="bulk-mode" checked={isBulkMode} onCheckedChange={setIsBulkMode} />
-                          <Label htmlFor="bulk-mode" className="font-bold cursor-pointer">Bulk Mode</Label>
+                          <Label htmlFor="bulk-mode" className="text-xs font-semibold cursor-pointer">Bulk Mode</Label>
                       </div>
-                  </CardHeader>
+                  </div>
                   <CardContent className="p-0 bg-black flex-1 min-h-[400px] relative flex items-center justify-center">
                       {(!isProcessing || isBulkMode) ? (
                           <Scanner 
@@ -350,8 +347,8 @@ function ScannerContent() {
                           />
                       ) : (
                           <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white z-10 backdrop-blur-sm">
-                              <div className="w-12 h-12 rounded-full border-4 border-t-indigo-500 border-indigo-200 animate-spin mb-4" />
-                              <p className="font-bold tracking-widest uppercase">Processing...</p>
+                              <div className="w-12 h-12 rounded-full border-4 border-t-blue-500 border-blue-200 animate-spin mb-4" />
+                              <p className="font-semibold text-xs tracking-widest uppercase">Processing Scan...</p>
                           </div>
                       )}
 
@@ -377,7 +374,7 @@ function ScannerContent() {
                                   
                                   <div className="flex flex-col">
                                       {lastScanResult.volunteer?.name && (
-                                          <span className="text-xl font-extrabold tracking-tight drop-shadow-sm">
+                                          <span className="text-xl font-bold tracking-tight drop-shadow-sm">
                                               {lastScanResult.volunteer.name}
                                           </span>
                                       )}
@@ -387,66 +384,64 @@ function ScannerContent() {
                           </div>
                       )}
                   </CardContent>
-              </div>
+              </GlassCard>
 
               <div className="space-y-6 flex flex-col">
                   {/* Recent Scans in Bulk Mode */}
                   {isBulkMode && (
-                      <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard flex-1 flex flex-col max-h-[300px]">
-                          <CardHeader className="py-4">
-                              <CardTitle className="text-sm flex items-center gap-2">
-                                  <Activity className="w-4 h-4 text-indigo-500" /> Recent Scans
-                              </CardTitle>
-                          </CardHeader>
-                          <CardContent className="flex-1 overflow-y-auto pt-0">
+                      <GlassCard className="p-4 flex-1 flex flex-col max-h-[300px]" glowColor="cyan">
+                          <div className="pb-3 mb-2 border-b border-slate-200/50 dark:border-slate-800/60">
+                              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                                  <Activity className="w-4 h-4 text-blue-500" /> Recent Scans
+                              </h4>
+                          </div>
+                          <div className="flex-1 overflow-y-auto pt-0">
                               {recentScans.length === 0 ? (
-                                  <p className="text-sm text-muted-foreground text-center py-8">Waiting for scans...</p>
+                                  <p className="text-xs text-slate-400 text-center py-8">Waiting for scans...</p>
                               ) : (
                                   <div className="space-y-2">
                                       {recentScans.map((r: any, i: number) => (
-                                          <div key={r.time.getTime() + '-' + i} className={`text-xs p-2 rounded-lg border flex justify-between items-center ${
-                                              r.status === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-900' :
-                                              r.status === 'late' ? 'bg-amber-50 border-amber-100 text-amber-900' :
-                                              r.status === 'offline' ? 'bg-zinc-100 border-zinc-200 text-zinc-900' :
-                                              'bg-rose-50 border-rose-100 text-rose-900'
+                                          <div key={r.time.getTime() + '-' + i} className={`text-xs p-2.5 rounded-xl border flex justify-between items-center ${
+                                              r.status === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' :
+                                              r.status === 'late' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
+                                              r.status === 'offline' ? 'bg-slate-500/10 border-slate-500/20 text-slate-400' :
+                                              'bg-rose-500/10 border-rose-500/20 text-rose-500'
                                           }`}>
-                                              <span className="font-bold truncate max-w-[150px]">{r.id || 'Unknown Volunteer'}</span>
-                                              <span className="font-semibold">{r.msg}</span>
+                                              <span className="font-semibold truncate max-w-[150px]">{r.id || 'Unknown Volunteer'}</span>
+                                              <span className="font-medium text-[11px]">{r.msg}</span>
                                           </div>
                                       ))}
                                   </div>
                               )}
-                          </CardContent>
-                      </div>
+                          </div>
+                      </GlassCard>
                   )}
 
-                  <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard">
-                      <CardHeader>
-                          <CardTitle className="text-lg">Manual Entry</CardTitle>
-                          <CardDescription>If the QR code cannot be scanned.</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                          <form onSubmit={handleManualEntry} className="flex gap-2">
-                              <Input 
-                                placeholder="Enter Volunteer ID (SNK ID)" 
-                                value={manualId}
-                                onChange={(e) => setManualId(e.target.value)}
-                                disabled={isProcessing && !isBulkMode}
-                              />
-                              <Button type="submit" disabled={!manualId || (isProcessing && !isBulkMode)}>Submit</Button>
-                          </form>
-                      </CardContent>
+                  <GlassCard className="p-6" glowColor="purple">
+                      <div className="mb-4">
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white">Manual ID Entry</h4>
+                          <p className="text-xs text-slate-400 mt-0.5">Use manual entry if the QR code is damaged or unreadable.</p>
                       </div>
+                      <form onSubmit={handleManualEntry} className="flex gap-2">
+                          <Input 
+                            placeholder="Enter Volunteer ID (SNK ID)" 
+                            value={manualId}
+                            onChange={(e) => setManualId(e.target.value)}
+                            disabled={isProcessing && !isBulkMode}
+                          />
+                          <Button type="submit" disabled={!manualId || (isProcessing && !isBulkMode)}>Submit</Button>
+                      </form>
+                  </GlassCard>
 
-                  <div className="bento-white overflow-hidden rounded-[32px] border-ink shadow-hard flex-1">
-                      <CardHeader className="border-b border-ink/10">
-                          <CardTitle className="text-lg">Instructions</CardTitle>
-                      </CardHeader>
-                      <CardContent className="text-sm text-ink space-y-2 p-5 font-medium">
-                          <p><strong>Bulk Mode:</strong> Enable to scan multiple people rapidly without pausing the camera.</p>
-                          <p><strong>Offline Mode:</strong> If you lose connection, scans are saved to your device. Keep this page open. They will sync automatically when connection restores.</p>
-                      </CardContent>
-                  </div>
+                  <GlassCard className="p-6 flex-1" glowColor="blue">
+                      <div className="pb-3 mb-3 border-b border-slate-200/50 dark:border-slate-800/60">
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white">Duty Instructions</h4>
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 space-y-2 font-normal leading-relaxed">
+                          <p><strong className="text-slate-900 dark:text-white font-semibold">Bulk Mode:</strong> Enable to scan multiple people rapidly without pausing the camera viewfinder.</p>
+                          <p><strong className="text-slate-900 dark:text-white font-semibold">Offline Mode:</strong> If internet connectivity is interrupted, scans are stored locally and synced automatically once connection restores.</p>
+                      </div>
+                  </GlassCard>
               </div>
           </div>
       )}

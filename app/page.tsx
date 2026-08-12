@@ -44,7 +44,7 @@ const stats = [
 export default function Home() {
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="theme-neubrutalism bg-background min-h-screen text-foreground">
 
       {/* ── Navbar ── */}
       <nav className="sticky top-0 z-[100] bg-card border-ink border-b-[3px] px-6 py-4">
