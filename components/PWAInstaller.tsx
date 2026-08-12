@@ -4,14 +4,15 @@ import { useEffect } from 'react'
 
 export function PWAInstaller() {
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      const handleLoad = () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => {
-          console.error('Service Worker registration failed:', err)
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((reg) => {
+          console.log('[PWA] Service Worker registered:', reg.scope)
         })
-      }
-      window.addEventListener('load', handleLoad)
-      return () => window.removeEventListener('load', handleLoad)
+        .catch((err) => {
+          console.error('[PWA] Service Worker registration failed:', err)
+        })
     }
   }, [])
   return null

@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { UserCheck, Camera, CheckCircle2, RefreshCw, QrCode, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
+import { useSyncManager } from '@/components/SyncProvider'
 
 const Scanner = dynamic(() => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner), {
   ssr: false,
@@ -20,6 +21,7 @@ export function SpotRegistration() {
   const [sessions, setSessions] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
+  const { syncManager } = useSyncManager()
 
   // Form State
   const [name, setName] = useState('')
@@ -68,13 +70,22 @@ export function SpotRegistration() {
           const newStatus = currentStatus === 'Checked In' ? 'Checked Out' : 'Checked In'
           const now = new Date().toISOString()
 
-          await supabase
-            .from('children')
-            .update({
+          if (syncManager) {
+            await syncManager.mutate('children', 'UPDATE', {
+              id: data.id,
+              qr_id: data.qr_id,
               status: newStatus,
               ...(newStatus === 'Checked In' ? { checked_in_at: now } : { checked_out_at: now }),
             })
-            .eq('id', data.id)
+          } else {
+            await supabase
+              .from('children')
+              .update({
+                status: newStatus,
+                ...(newStatus === 'Checked In' ? { checked_in_at: now } : { checked_out_at: now }),
+              })
+              .eq('id', data.id)
+          }
 
           setChildData({ ...data, status: newStatus })
           toast.success(`Successfully ${newStatus === 'Checked In' ? 'checked in' : 'checked out'} ${data.name}`)
@@ -114,24 +125,32 @@ export function SpotRegistration() {
     }
 
     setLoading(true)
-    const { data, error } = await supabase
-      .from('children')
-      .insert({
-        name,
-        contact_number: contact,
-        session_id: sessionId,
-        qr_id: scannedId,
-        serial_number: scannedSerial || 'UNASSIGNED',
-        status: 'Registered',
-      })
-      .select('*, session:sessions(name)')
-      .single()
+    const payload = {
+      name,
+      contact_number: contact,
+      session_id: sessionId,
+      qr_id: scannedId,
+      serial_number: scannedSerial || 'UNASSIGNED',
+      status: 'Registered',
+    }
 
-    if (error) {
-      toast.error(error.message || 'Error registering child.')
+    if (syncManager) {
+      await syncManager.mutate('children', 'CREATE', payload)
+      toast.success(`Registered ${name} successfully (Synced/Queued)!`)
+      setChildData({ ...payload, session: { name: sessions.find(s => s.id === sessionId)?.name || '' } })
     } else {
-      toast.success(`Registered ${name} successfully!`)
-      setChildData(data)
+      const { data, error } = await supabase
+        .from('children')
+        .insert(payload)
+        .select('*, session:sessions(name)')
+        .single()
+
+      if (error) {
+        toast.error(error.message || 'Error registering child.')
+      } else {
+        toast.success(`Registered ${name} successfully!`)
+        setChildData(data)
+      }
     }
     setLoading(false)
   }

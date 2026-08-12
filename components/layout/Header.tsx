@@ -6,6 +6,8 @@ import { getCurrentUserAction, logoutAction } from '@/server/actions/auth'
 import { CommandPalette } from '@/components/layout/CommandPalette'
 import { useTheme } from 'next-themes'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSyncManager } from '@/components/SyncProvider'
+import { NetworkSyncStatus } from '@/web_offline_p2p_sync/components/NetworkSyncStatus'
 
 interface HeaderProps {
   userName?: string
@@ -18,6 +20,7 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { theme, setTheme } = useTheme()
+  const { syncManager, openModal } = useSyncManager()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -121,8 +124,12 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
         {/* Center: Command Palette Trigger */}
         <CommandPalette />
 
-        {/* Right Side: Theme Switcher & User Profile Dropdown */}
+        {/* Right Side: Theme Switcher, Offline Sync Badge & User Profile Dropdown */}
         <div className="flex items-center gap-3">
+          {mounted && syncManager && (
+            <NetworkSyncStatus syncManager={syncManager} onOpenModal={openModal} />
+          )}
+
           {/* Theme Toggle Button */}
           {mounted && (
             <button

@@ -23,10 +23,11 @@ export default function LecturerReportsPage() {
   useEffect(() => {
     async function loadSessions() {
       try {
-        const data = await getSessionsAction()
-        setSessions(data || [])
-        if (data && data.length > 0) {
-            setSelectedSessionId(data[0].id)
+        const result = await getSessionsAction()
+        const sessionList = Array.isArray(result) ? result : (result?.data || [])
+        setSessions(sessionList)
+        if (sessionList.length > 0) {
+          setSelectedSessionId(sessionList[0].id)
         }
       } catch (err: any) {
         toast.error('Failed to load sessions list')

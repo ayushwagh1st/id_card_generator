@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { PWAInstaller } from "@/components/PWAInstaller";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { SyncProvider } from "@/components/SyncProvider";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -64,10 +65,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <PWAInstaller />
-          {children}
-          <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem={false}>
+          <SyncProvider>
+            <PWAInstaller />
+            {children}
+            <Toaster />
+          </SyncProvider>
         </ThemeProvider>
       </body>
     </html>

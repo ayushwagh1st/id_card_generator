@@ -4,7 +4,26 @@ export function createClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project-id.supabase.co'
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'mock-supabase-anon-key-placeholder-12345'
   
-  return createBrowserClient(url, key)
+  return createBrowserClient(url, key, {
+    global: {
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (typeof window !== 'undefined' && !navigator.onLine) {
+          return new Response(
+            JSON.stringify({ error: 'Offline mode active' }),
+            { status: 503, statusText: 'Offline', headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+        try {
+          return await fetch(input, init);
+        } catch (err) {
+          return new Response(
+            JSON.stringify({ error: 'Network unavailable' }),
+            { status: 503, statusText: 'Offline', headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+      },
+    },
+  })
 }
 
 export async function logoutUser() {
