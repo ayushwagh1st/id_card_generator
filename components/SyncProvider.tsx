@@ -4,13 +4,17 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { SyncManager, SyncState } from '@/web_offline_p2p_sync/core/SyncManager';
 import { SyncProgressModal } from '@/web_offline_p2p_sync/components/SyncProgressModal';
 import { createClient } from '@/lib/supabase/client';
+import { P2PBridgeModal } from '@/web_offline_p2p_sync/components/P2PBridgeModal';
 
 interface SyncContextType {
   syncManager: SyncManager | null;
   state: SyncState;
   isModalOpen: boolean;
+  isBridgeModalOpen: boolean;
   openModal: () => void;
   closeModal: () => void;
+  openBridgeModal: () => void;
+  closeBridgeModal: () => void;
 }
 
 const defaultState: SyncState = {
@@ -25,14 +29,18 @@ const SyncContext = createContext<SyncContextType>({
   syncManager: null,
   state: defaultState,
   isModalOpen: false,
+  isBridgeModalOpen: false,
   openModal: () => {},
   closeModal: () => {},
+  openBridgeModal: () => {},
+  closeBridgeModal: () => {},
 });
 
 export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const syncManagerRef = useRef<SyncManager | null>(null);
   const [state, setState] = useState<SyncState>(defaultState);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBridgeModalOpen, setIsBridgeModalOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   if (!syncManagerRef.current && typeof window !== 'undefined') {
@@ -94,6 +102,8 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+  const openBridgeModal = () => setIsBridgeModalOpen(true);
+  const closeBridgeModal = () => setIsBridgeModalOpen(false);
 
   return (
     <SyncContext.Provider
@@ -101,17 +111,27 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
         syncManager: syncManagerRef.current,
         state,
         isModalOpen,
+        isBridgeModalOpen,
         openModal,
         closeModal,
+        openBridgeModal,
+        closeBridgeModal,
       }}
     >
       {children}
       {syncManagerRef.current && (
-        <SyncProgressModal
-          syncManager={syncManagerRef.current}
-          isOpen={isModalOpen}
-          onClose={closeModal}
-        />
+        <>
+          <SyncProgressModal
+            syncManager={syncManagerRef.current}
+            isOpen={isModalOpen}
+            onClose={closeModal}
+          />
+          <P2PBridgeModal
+            syncManager={syncManagerRef.current}
+            isOpen={isBridgeModalOpen}
+            onClose={closeBridgeModal}
+          />
+        </>
       )}
     </SyncContext.Provider>
   );

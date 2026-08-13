@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { User, Menu, LogOut, Sun, Moon, Sparkles } from 'lucide-react'
+import { User, Menu, LogOut, Sun, Moon, Sparkles, Link as LinkIcon } from 'lucide-react'
 import { getCurrentUserAction, logoutAction } from '@/server/actions/auth'
 import { CommandPalette } from '@/components/layout/CommandPalette'
 import { useTheme } from 'next-themes'
@@ -20,7 +20,7 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { theme, setTheme } = useTheme()
-  const { syncManager, openModal } = useSyncManager()
+  const { syncManager, openModal, openBridgeModal } = useSyncManager()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -127,7 +127,16 @@ export function Header({ userName = 'User', roleName = 'Role', onToggleSidebar }
         {/* Right Side: Theme Switcher, Offline Sync Badge & User Profile Dropdown */}
         <div className="flex items-center gap-3">
           {mounted && syncManager && (
-            <NetworkSyncStatus syncManager={syncManager} onOpenModal={openModal} />
+            <>
+              <button 
+                onClick={openBridgeModal}
+                className="p-2 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 border border-slate-300/40 dark:border-slate-700/40 transition-colors flex items-center justify-center w-8 h-8"
+                title="Bridge Offline Devices"
+              >
+                <LinkIcon className="w-4 h-4" />
+              </button>
+              <NetworkSyncStatus syncManager={syncManager} onOpenModal={openModal} />
+            </>
           )}
 
           {/* Theme Toggle Button */}

@@ -43,6 +43,10 @@ export class SyncManager {
     this.mesh = new P2PMeshEngine(options?.channelName);
   }
 
+  public getMeshEngine(): P2PMeshEngine {
+    return this.mesh;
+  }
+
   public async init(): Promise<void> {
     await this.store.init();
     this.mesh.init();

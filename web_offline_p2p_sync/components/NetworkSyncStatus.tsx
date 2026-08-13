@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SyncManager, SyncState } from '../core/SyncManager';
+import { Wifi, WifiOff, HardDrive, RefreshCw, Network } from 'lucide-react';
 
 interface NetworkSyncStatusProps {
   syncManager: SyncManager;
@@ -24,49 +25,61 @@ export const NetworkSyncStatus: React.FC<NetworkSyncStatusProps> = ({ syncManage
 
   if (!mounted) return null;
 
-  const getStatusBadge = () => {
+  const getStatusContent = () => {
     if (state.isSyncing) {
-      return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 shadow-sm animate-pulse">
-          <span className="w-2 h-2 mr-2 bg-amber-500 rounded-full animate-ping"></span>
-          Syncing ({state.pendingCount} pending)...
-        </span>
-      );
+      return {
+        icon: <RefreshCw className="w-4 h-4 animate-spin text-amber-500" />,
+        text: state.pendingCount > 0 ? `${state.pendingCount} left` : 'Syncing',
+        styles: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20',
+        pulse: true
+      };
     }
 
     if (state.isOnline) {
-      return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm">
-          <span className="w-2 h-2 mr-2 bg-emerald-500 rounded-full"></span>
-          Online & Synced
-        </span>
-      );
+      return {
+        icon: <Wifi className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />,
+        text: 'Online',
+        styles: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-700/50',
+        pulse: false
+      };
     }
 
     if (state.peerCount > 0) {
-      return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-300 shadow-sm">
-          <span className="w-2 h-2 mr-2 bg-sky-500 rounded-full"></span>
-          Offline (P2P Mesh Active • {state.peerCount} Peers)
-        </span>
-      );
+      return {
+        icon: <Network className="w-4 h-4 text-sky-500 dark:text-sky-400" />,
+        text: `${state.peerCount} Peer${state.peerCount > 1 ? 's' : ''}`,
+        styles: 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/20',
+        pulse: false
+      };
     }
 
-    return (
-      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-300 shadow-sm">
-        <span className="w-2 h-2 mr-2 bg-rose-500 rounded-full"></span>
-        Offline ({state.pendingCount} Saved Locally)
-      </span>
-    );
+    return {
+      icon: <WifiOff className="w-4 h-4 text-rose-500 dark:text-rose-400" />,
+      text: state.pendingCount > 0 ? `${state.pendingCount} Saved` : 'Offline',
+      styles: 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/20',
+      pulse: false
+    };
   };
+
+  const content = getStatusContent();
 
   return (
     <div
       onClick={onOpenModal}
-      className="cursor-pointer transition-all hover:opacity-90 inline-block"
-      title="Click to view offline queue & sync details"
+      className={`group cursor-pointer transition-all duration-200 ease-in-out hover:scale-105 inline-flex items-center h-8 px-3 rounded-full border shadow-sm backdrop-blur-sm ${content.styles}`}
+      title="View Sync Queue & Offline Details"
     >
-      {getStatusBadge()}
+      <div className="flex items-center gap-2">
+        <div className="relative flex items-center justify-center">
+          {content.pulse && (
+            <span className="absolute w-full h-full rounded-full bg-current opacity-20 animate-ping"></span>
+          )}
+          {content.icon}
+        </div>
+        <span className="text-xs font-semibold tracking-tight whitespace-nowrap">
+          {content.text}
+        </span>
+      </div>
     </div>
   );
 };

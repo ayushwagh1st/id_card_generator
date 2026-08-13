@@ -44,7 +44,7 @@ self.addEventListener('fetch', (event) => {
   // Bypass API routes, Next.js internal HMR, and Supabase calls
   if (
     url.pathname.startsWith('/api/') ||
-    url.pathname.startsWith('/_next/') ||
+    url.pathname.startsWith('/_next/webpack-hmr') ||
     url.hostname.includes('supabase.co')
   ) {
     return;
