@@ -29,6 +29,8 @@ export default function LiveAttendancePage() {
 
     initFeed()
 
+    if (typeof window !== 'undefined' && !navigator.onLine) return
+
     const supabase = createClient()
     const channel = supabase
       .channel('realtime_attendance')

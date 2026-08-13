@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { SyncManager, SyncState } from '@/web_offline_p2p_sync/core/SyncManager';
 import { SyncProgressModal } from '@/web_offline_p2p_sync/components/SyncProgressModal';
+import { createClient } from '@/lib/supabase/client';
 
 interface SyncContextType {
   syncManager: SyncManager | null;
@@ -49,6 +50,13 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set server upload handler
     manager.setServerUploadHandler(async (batch) => {
       try {
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          throw new Error('AUTH_EXPIRED');
+        }
+
         const response = await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

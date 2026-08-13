@@ -44,6 +44,7 @@ export async function setupGlobalNotifications(tableName: string): Promise<(() =
     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
     
   if (isMockMode) return undefined
+  if (typeof window !== 'undefined' && !navigator.onLine) return undefined
 
   try {
     const supabase = createClient()
@@ -83,6 +84,7 @@ export async function setupLiveAttendanceNotifications(onUpdate: (payload: any) 
     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
     
   if (isMockMode) return undefined
+  if (typeof window !== 'undefined' && !navigator.onLine) return undefined
 
   try {
     const supabase = createClient()

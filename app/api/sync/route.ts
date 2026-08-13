@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { OutboxItem } from '@/web_offline_p2p_sync/core/OfflineStore';
 
+// Helper for Last-Write-Wins (LWW) Conflict Resolution
+async function performLwwUpdate(supabase: any, table: string, payload: any, matchColumn: string, matchValue: any) {
+  const { data: existing, error: fetchErr } = await supabase.from(table).select('updated_at').eq(matchColumn, matchValue).single();
+  if (!fetchErr && existing?.updated_at && payload.updated_at && new Date(payload.updated_at) < new Date(existing.updated_at)) {
+    console.log(`[Sync API] Skipped older UPDATE for ${table} ${matchValue}`);
+    return null; // Skip without error
+  }
+  const { error } = await supabase.from(table).update(payload).eq(matchColumn, matchValue);
+  return error;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -33,11 +44,9 @@ export async function POST(request: Request) {
           } else if (action === 'UPDATE') {
             const targetId = payload.id;
             if (targetId) {
-              const { error: updateErr } = await supabase.from('children').update(payload).eq('id', targetId);
-              error = updateErr;
+              error = await performLwwUpdate(supabase, 'children', payload, 'id', targetId);
             } else if (payload.qr_id) {
-              const { error: updateErr } = await supabase.from('children').update(payload).eq('qr_id', payload.qr_id);
-              error = updateErr;
+              error = await performLwwUpdate(supabase, 'children', payload, 'qr_id', payload.qr_id);
             }
           } else if (action === 'DELETE') {
             const { error: deleteErr } = await supabase.from('children').delete().eq('id', payload.id);
@@ -48,16 +57,14 @@ export async function POST(request: Request) {
             const { error: insertErr } = await supabase.from('attendance').insert(payload);
             error = insertErr;
           } else if (action === 'UPDATE') {
-            const { error: updateErr } = await supabase.from('attendance').update(payload).eq('id', payload.id);
-            error = updateErr;
+            error = await performLwwUpdate(supabase, 'attendance', payload, 'id', payload.id);
           }
         } else if (entity === 'volunteers') {
           if (action === 'CREATE') {
             const { error: insertErr } = await supabase.from('volunteers').upsert(payload, { onConflict: 'snk_id' });
             error = insertErr;
           } else if (action === 'UPDATE') {
-            const { error: updateErr } = await supabase.from('volunteers').update(payload).eq('id', payload.id);
-            error = updateErr;
+            error = await performLwwUpdate(supabase, 'volunteers', payload, 'id', payload.id);
           } else if (action === 'DELETE') {
             const { error: deleteErr } = await supabase.from('volunteers').delete().eq('id', payload.id);
             error = deleteErr;
@@ -68,8 +75,7 @@ export async function POST(request: Request) {
             const { error: insertErr } = await supabase.from(entity).insert(payload);
             error = insertErr;
           } else if (action === 'UPDATE' && payload.id) {
-            const { error: updateErr } = await supabase.from(entity).update(payload).eq('id', payload.id);
-            error = updateErr;
+            error = await performLwwUpdate(supabase, entity, payload, 'id', payload.id);
           } else if (action === 'DELETE' && payload.id) {
             const { error: deleteErr } = await supabase.from(entity).delete().eq('id', payload.id);
             error = deleteErr;

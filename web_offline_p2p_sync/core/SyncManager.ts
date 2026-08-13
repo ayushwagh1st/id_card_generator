@@ -84,7 +84,13 @@ export class SyncManager {
    * If online: attempts immediate server upload (with offline fallback if request fails).
    */
   public async mutate<T>(entity: string, action: 'CREATE' | 'UPDATE' | 'DELETE', payload: T): Promise<OutboxItem<T>> {
-    const item = await this.store.enqueue(entity, action, payload);
+    // Inject client-side timestamp for Last-Write-Wins (LWW) conflict resolution
+    const timestampedPayload = {
+      ...(payload as any),
+      updated_at: (payload as any).updated_at || new Date().toISOString(),
+    };
+    
+    const item = await this.store.enqueue(entity, action, timestampedPayload as T);
 
     if (!this.state.isOnline) {
       // Offline path: broadcast to nearby P2P mesh
@@ -115,22 +121,28 @@ export class SyncManager {
     this.notifyState();
 
     try {
-      // Mark items as syncing
-      for (const item of pending) {
-        await this.store.markStatus(item.id, 'syncing');
-      }
+      // Chunk processing to avoid 413 Payload Too Large limits
+      const CHUNK_SIZE = 5;
+      for (let i = 0; i < pending.length; i += CHUNK_SIZE) {
+        const batch = pending.slice(i, i + CHUNK_SIZE);
 
-      const result = await this.serverHandler(pending);
+        // Mark chunk items as syncing
+        for (const item of batch) {
+          await this.store.markStatus(item.id, 'syncing');
+        }
 
-      // Process successful uploads
-      for (const id of result.successIds) {
-        await this.store.markStatus(id, 'synced');
-      }
+        const result = await this.serverHandler(batch);
 
-      // Process failed uploads
-      if (result.failedIds) {
-        for (const failure of result.failedIds) {
-          await this.store.markStatus(failure.id, 'failed', failure.error);
+        // Process successful uploads
+        for (const id of result.successIds) {
+          await this.store.markStatus(id, 'synced');
+        }
+
+        // Process failed uploads
+        if (result.failedIds) {
+          for (const failure of result.failedIds) {
+            await this.store.markStatus(failure.id, 'failed', failure.error);
+          }
         }
       }
 

@@ -41,13 +41,36 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Bypass API routes, Next.js internal HMR/RSC, and Supabase calls
+  // Bypass API routes, Next.js internal HMR, and Supabase calls
   if (
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/_next/') ||
-    url.search.includes('_rsc=') ||
     url.hostname.includes('supabase.co')
   ) {
+    return;
+  }
+
+  // RSC Handling (Stale-While-Revalidate/Network-First Cache-Fallback pattern)
+  if (url.search.includes('_rsc=')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cachedResponse = await caches.match(request);
+          if (cachedResponse) return cachedResponse;
+          
+          return new Response('Offline RSC Fallback', {
+            status: 503,
+            headers: new Headers({ 'Content-Type': 'text/x-component' }),
+          });
+        })
+    );
     return;
   }
 
