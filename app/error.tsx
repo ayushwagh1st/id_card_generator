@@ -17,13 +17,21 @@ export default function GlobalError({
     if (error.message === 'NEXT_DEVTOOLS_SIMULATED_ERROR') return;
 
     // In production, this would securely ship logs to Datadog / Sentry
-    console.error('[PROD_LOG] Global Error Caught:', {
-      message: error.message,
-      stack: error.stack,
-      digest: error.digest,
-      timestamp: new Date().toISOString()
-    })
+    if (navigator.onLine) {
+      console.error('[PROD_LOG] Global Error Caught:', {
+        message: error.message,
+        stack: error.stack,
+        digest: error.digest,
+        timestamp: new Date().toISOString()
+      })
+    }
   }, [error])
+
+  const isOfflineError = typeof navigator !== 'undefined' && !navigator.onLine;
+  const displayTitle = isOfflineError ? 'Not Available Offline' : 'System Error Occurred';
+  const displayMessage = isOfflineError 
+    ? 'This specific page was not saved to your offline cache. Please reconnect to the internet to view it.'
+    : 'Our automated monitoring has logged this issue. Please try refreshing or return to the dashboard.';
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center bg-zinc-950 text-white p-4">
@@ -32,9 +40,9 @@ export default function GlobalError({
           <AlertTriangle className="w-10 h-10 text-rose-500" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-black tracking-tight">System Error Occurred</h1>
+          <h1 className="text-3xl font-black tracking-tight">{displayTitle}</h1>
           <p className="text-zinc-400 text-sm">
-            Our automated monitoring has logged this issue. Please try refreshing or return to the dashboard.
+            {displayMessage}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">

@@ -65,10 +65,7 @@ self.addEventListener('fetch', (event) => {
           const cachedResponse = await caches.match(request);
           if (cachedResponse) return cachedResponse;
           
-          return new Response('Offline RSC Fallback', {
-            status: 503,
-            headers: new Headers({ 'Content-Type': 'text/x-component' }),
-          });
+          return Response.error();
         })
     );
     return;

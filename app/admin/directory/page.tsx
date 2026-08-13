@@ -9,10 +9,11 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getSessionsAction } from '@/server/actions/sessions'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { Search, LogOut, Loader2, Users, Filter, CheckCircle2, UserCheck, Shield } from 'lucide-react'
+import { Search, LogOut, Loader2, Users, Filter, CheckCircle2, UserCheck, Shield, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSyncManager } from '@/components/SyncProvider'
 
 export default function DirectoryPage() {
   const [children, setChildren] = useState<any[]>([])
@@ -24,32 +25,92 @@ export default function DirectoryPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
 
+  const { syncManager } = useSyncManager()
+
+  const mergeOfflineData = async (serverData: any[]) => {
+    if (!syncManager) return serverData;
+    let merged = [...serverData];
+    
+    try {
+      const pending = await syncManager.getPendingItemsByEntity('children');
+      
+      // Handle CREATEs (append new records)
+      const creates = pending.filter(p => p.action === 'CREATE').map(p => {
+        const payload = p.payload as any;
+        return {
+          ...payload,
+          session_name: sessions.find(s => s.id === payload.session_id)?.name || 'Offline Session',
+          isOfflineNode: true
+        };
+      });
+      merged = [...creates, ...merged];
+      
+      // Handle UPDATEs (modify existing records)
+      const updates = pending.filter(p => p.action === 'UPDATE');
+      for (const update of updates) {
+        const payload = update.payload as any;
+        const index = merged.findIndex(c => (c.id && c.id === payload.id) || (c.qr_id && c.qr_id === payload.qr_id));
+        if (index !== -1) {
+          merged[index] = { ...merged[index], ...payload, isOfflineNode: true };
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to merge offline data', e);
+    }
+    return merged;
+  }
+
   const fetchData = async () => {
     setLoading(true)
-    const [childrenRes, sessionsRes] = await Promise.all([
-      getChildrenDirectoryAction(),
-      getSessionsAction(1, 100),
-    ])
+    let childrenData: any[] = []
+    let sessionData: any[] = []
 
-    if (childrenRes.error) toast.error(childrenRes.error)
-    else setChildren(childrenRes.data || [])
+    try {
+      const [childrenRes, sessionsRes] = await Promise.all([
+        getChildrenDirectoryAction(),
+        getSessionsAction(1, 100),
+      ])
+      
+      if (sessionsRes.data) sessionData = sessionsRes.data
+      setSessions(sessionData)
 
-    if (sessionsRes.data) {
-      setSessions(sessionsRes.data)
+      if (childrenRes.error) {
+        // Continue, offline fallback
+      } else {
+        childrenData = childrenRes.data || []
+      }
+    } catch (e) {
+      // Offline fallback
     }
+
+    const merged = await mergeOfflineData(childrenData)
+    setChildren(merged)
     setLoading(false)
   }
 
   const fetchChildren = async () => {
     setLoading(true)
-    const res = await getChildrenDirectoryAction()
-    if (res.error) {
-      toast.error(res.error)
-    } else {
-      setChildren(res.data || [])
-    }
+    let childrenData: any[] = []
+    try {
+      const res = await getChildrenDirectoryAction()
+      if (!res.error) childrenData = res.data || []
+    } catch (e) {}
+
+    const merged = await mergeOfflineData(childrenData)
+    setChildren(merged)
     setLoading(false)
   }
+
+  // Subscribe to sync manager state to auto-refresh UI when offline mesh packets arrive
+  useEffect(() => {
+    if (syncManager) {
+      const unsub = syncManager.subscribeState(() => {
+        // Light refresh from offline store when state changes
+        fetchChildren();
+      });
+      return unsub;
+    }
+  }, [syncManager, sessions])
 
   useEffect(() => {
     fetchData()
@@ -189,6 +250,16 @@ export default function DirectoryPage() {
                 </option>
               ))}
             </select>
+            
+            {/* Refresh Button */}
+            <button
+              onClick={fetchData}
+              disabled={loading}
+              className="p-2 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:text-blue-600 transition-colors disabled:opacity-50"
+              title="Refresh Directory"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
         </div>
       </GlassCard>

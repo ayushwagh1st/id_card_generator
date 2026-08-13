@@ -57,11 +57,26 @@ export function SpotRegistration() {
         setScannedSerial(null)
       }
 
-      const { data } = await supabase
-        .from('children')
-        .select('*, session:sessions(name)')
-        .eq('qr_id', result)
-        .single()
+      let data: any = null;
+      
+      try {
+        const { data: serverData } = await supabase
+          .from('children')
+          .select('*, session:sessions(name)')
+          .eq('qr_id', result)
+          .single()
+        data = serverData;
+      } catch (e) {
+        // Fallback to local outbox in next block
+      }
+
+      if (!data && syncManager) {
+        data = await syncManager.findPendingItem('children', 'qr_id', result);
+        if (data && !data.session) {
+          // Mock session name for offline display
+          data.session = { name: sessions.find(s => s.id === data.session_id)?.name || 'Offline Session' };
+        }
+      }
 
       if (data) {
         setChildData(data)
@@ -126,6 +141,7 @@ export function SpotRegistration() {
 
     setLoading(true)
     const payload = {
+      id: crypto.randomUUID(),
       name,
       contact_number: contact,
       session_id: sessionId,

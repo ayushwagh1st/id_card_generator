@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
         if (entity === 'children') {
           if (action === 'CREATE') {
-            const { error: insertErr } = await supabase.from('children').upsert(payload, { onConflict: 'qr_id' });
+            const { error: insertErr } = await supabase.from('children').upsert(payload, { onConflict: 'id' });
             error = insertErr;
           } else if (action === 'UPDATE') {
             const targetId = payload.id;

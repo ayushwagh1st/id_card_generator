@@ -116,6 +116,7 @@ export function Sidebar({ userRole, closeMobileMenu }: SidebarProps) {
                   key={link.name}
                   href={link.href}
                   onClick={closeMobileMenu}
+                  prefetch={true}
                   className={cn(
                     'relative flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-[13px] tracking-[-0.01em] transition-all duration-300 ease-out group active:scale-[0.97] active:transition-none',
                     isActive

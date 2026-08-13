@@ -175,6 +175,17 @@ export class SyncManager {
     return this.store.getPendingItems().then((items) => items.length);
   }
 
+  public async findPendingItem(entity: string, field: string, value: any): Promise<any | null> {
+    const pending = await this.store.getPendingItems();
+    const item = pending.reverse().find((i) => i.entity === entity && i.payload && (i.payload as any)[field] === value);
+    return item ? item.payload : null;
+  }
+
+  public async getPendingItemsByEntity(entity: string): Promise<OutboxItem[]> {
+    const all = await this.store.getAllItems();
+    return all.filter(i => i.entity === entity && (i.status === 'pending' || i.status === 'failed'));
+  }
+
   private async updateState(): Promise<void> {
     const pending = await this.store.getPendingItems();
     this.state.pendingCount = pending.length;
