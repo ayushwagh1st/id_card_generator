@@ -30,6 +30,25 @@ export function SpotRegistration() {
 
   useEffect(() => {
     fetchSessions()
+    
+    // Request Screen Wake Lock (keeps Android screen from dimming while scanning)
+    let wakeLock: any = null;
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await (navigator as any).wakeLock.request('screen');
+        }
+      } catch (err) {
+        console.warn('Wake Lock error:', err);
+      }
+    };
+    requestWakeLock();
+    
+    return () => {
+      if (wakeLock) {
+        wakeLock.release().catch(console.warn);
+      }
+    }
   }, [])
 
   const fetchSessions = async () => {
@@ -103,6 +122,7 @@ export function SpotRegistration() {
           }
 
           setChildData({ ...data, status: newStatus })
+          if (navigator.vibrate) navigator.vibrate([100]); // Haptic feedback
           toast.success(`Successfully ${newStatus === 'Checked In' ? 'checked in' : 'checked out'} ${data.name}`)
 
           setTimeout(() => {
@@ -111,13 +131,16 @@ export function SpotRegistration() {
             setChildData(null)
           }, 2000)
         } else {
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]); // Error haptic feedback
           toast.info('Child already registered for this QR code!')
         }
       } else {
         if (mode === 'attendance') {
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
           toast.error('This QR code is not registered yet.')
           setTimeout(() => setScannedId(null), 2000)
         } else {
+          if (navigator.vibrate) navigator.vibrate([100]); // Haptic feedback
           setChildData(null)
           setName('')
           setContact('')
