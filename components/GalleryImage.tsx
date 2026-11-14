@@ -2,27 +2,15 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Skeleton } from '@/components/ui/skeleton'
+import styles from '@/app/public.module.css'
 
-export default function GalleryImage({ src, alt }: { src: string, alt: string }) {
-  const [isLoading, setIsLoading] = useState(true)
+export default function GalleryImage({ src, alt, enlarged = false }: { src: string; alt: string; enlarged?: boolean }) {
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
 
   return (
-    <div className="relative w-full overflow-hidden">
-      {isLoading && (
-        <Skeleton className="absolute inset-0 w-full h-full bg-white/10 rounded-none z-0" />
-      )}
-      <Image
-        src={src}
-        alt={alt}
-        width={1200}
-        height={800}
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        className={`w-full h-auto object-cover transform group-hover:scale-105 transition-all duration-700 relative z-0 ${
-          isLoading ? 'opacity-0 blur-sm scale-110' : 'opacity-100 blur-0 scale-100'
-        }`}
-        onLoad={() => setIsLoading(false)}
-      />
-    </div>
+    <span className={`${styles.archiveImage} ${enlarged ? styles.archiveImageEnlarged : ''}`} aria-busy={status === 'loading'}>
+      {status !== 'loaded' && <span className={styles.imageStatus} role="status">{status === 'error' ? 'This photograph could not load. Please try again later.' : 'Loading photograph…'}</span>}
+      {status !== 'error' && <Image src={src} alt={alt} fill sizes={enlarged ? '90vw' : '(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw'} className={`${enlarged ? styles.containImage : ''} ${status === 'loaded' ? '' : styles.imagePending}`} onLoad={() => setStatus('loaded')} onError={() => setStatus('error')} />}
+    </span>
   )
 }

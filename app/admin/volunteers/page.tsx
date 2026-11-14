@@ -1,9 +1,10 @@
 'use client'
 
+import { Suspense } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Download, Filter, Plus } from 'lucide-react'
+import { Filter, Plus } from 'lucide-react'
 
 // Hooks
 import { useVolunteersState } from './_hooks/useVolunteersState'
@@ -14,8 +15,10 @@ import { VolunteersHeader } from './_components/VolunteersHeader'
 import { VolunteersFilters } from './_components/VolunteersFilters'
 import { VolunteersTable } from './_components/VolunteersTable'
 import { VolunteersModals } from './_components/VolunteersModals'
+import { ExportMenu } from '@/components/ui/export-menu'
+import { LoadError } from '@/components/ui/load-error'
 
-export default function VolunteersPage() {
+function VolunteersWorkspace() {
   const {
     state,
     dispatchField,
@@ -38,8 +41,11 @@ export default function VolunteersPage() {
   } = useVolunteersState()
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <VolunteersHeader />
+    <div className="task-page">
+      <VolunteersHeader actions={<>
+        <ExportMenu onCSV={() => window.open(`/api/export?${new URLSearchParams({ type: 'volunteers', status: state.filterStatus, model: state.filterModel, search: state.searchTerm })}`, '_blank', 'noopener,noreferrer')} onPDF={handleExportPDF} />
+        <Button onClick={() => { resetForm(); dispatchField('isAddOpen', true) }}><Plus size={16} aria-hidden="true" />Add volunteer</Button>
+      </>} />
 
       <Tabs defaultValue="list" className="space-y-4">
         <TabsList className="bg-muted p-1 rounded-xl">
@@ -69,43 +75,15 @@ export default function VolunteersPage() {
             onPrintSelected={handlePrintSelected}
             onBulkApprove={handleBulkApprove}
             onBulkDelete={handleBulkDelete}
+            onClearSelection={() => dispatchField('selectedIds', [])}
           />
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto"
-              onClick={() => {
-                window.open(
-                  `/api/export?type=volunteers&status=${state.filterStatus}&model=${state.filterModel}&search=${state.searchTerm}`,
-                  '_blank'
-                )
-              }}
-            >
-              <Download className="w-4 h-4" />
-              Export CSV
-            </Button>
-
-            <Button variant="outline" className="w-full sm:w-auto" onClick={handleExportPDF}>
-              <Download className="w-4 h-4" />
-              Export PDF
-            </Button>
-
-            <Button
-              className="w-full sm:w-auto px-5 gap-2"
-              onClick={() => {
-                resetForm()
-                dispatchField('isAddOpen', true)
-              }}
-            >
-              <Plus className="h-4 w-4" />
-              Add Volunteer
-            </Button>
-          </div>
-
+          {state.loadError && <LoadError message={state.loadError} onRetry={() => void fetchVolunteers()} retrying={state.loading} />}
+          {state.loading && state.volunteers.length > 0 && <p className="text-sm text-muted-foreground" role="status">Updating roster…</p>}
+          {!state.loadError || state.volunteers.length > 0 ?
           <VolunteersTable
             volunteers={state.volunteers}
-            loading={state.loading}
+            loading={state.loading && state.volunteers.length === 0}
             selectedIds={state.selectedIds}
             page={state.page}
             totalPages={totalPages}
@@ -126,6 +104,7 @@ export default function VolunteersPage() {
               }
             }}
           />
+          : null}
         </TabsContent>
 
         <TabsContent value="import">
@@ -214,4 +193,8 @@ export default function VolunteersPage() {
       />
     </div>
   )
+}
+
+export default function VolunteersPage() {
+  return <Suspense fallback={<p className="p-6" role="status">Loading volunteer workspace…</p>}><VolunteersWorkspace /></Suspense>
 }

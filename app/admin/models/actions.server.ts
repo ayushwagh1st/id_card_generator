@@ -1,11 +1,11 @@
 'use server'
-import { checkAuth } from '@/lib/supabase/server'
+import { checkAdmin } from '@/lib/supabase/server'
 
 import { createClient } from '@supabase/supabase-js'
 import { sendRegistrationEmail } from '@/lib/email'
 import { modelHeadSchema } from '@/lib/validations'
 export async function createModelHeadAction(formData: FormData) {
-  await checkAuth();
+  await checkAdmin();
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
@@ -35,6 +35,7 @@ export async function createModelHeadAction(formData: FormData) {
     email,
     password,
     email_confirm: true,
+    app_metadata: { role: 'MODEL_HEAD' },
     user_metadata: {
       full_name: fullName,
       role: 'MODEL_HEAD'
@@ -75,7 +76,7 @@ export async function createModelHeadAction(formData: FormData) {
 }
 
 export async function updateModelHeadAction(id: string, formData: FormData) {
-  await checkAuth();
+  await checkAdmin();
   const email = formData.get('email') as string
   const fullName = formData.get('fullName') as string
 
@@ -116,7 +117,7 @@ export async function updateModelHeadAction(id: string, formData: FormData) {
 
 export async function resetModelHeadPasswordAction(id: string, newPassword: string) {
   if (!newPassword || newPassword.length < 6) return { error: 'Password must be at least 6 characters.' }
-  await checkAuth();
+  await checkAdmin();
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -142,7 +143,7 @@ export async function resetModelHeadPasswordAction(id: string, newPassword: stri
 }
 
 export async function deleteModelHeadAction(id: string) {
-  await checkAuth();
+  await checkAdmin();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!supabaseUrl || !serviceRoleKey) return { error: 'Missing environment variables.' }
@@ -171,7 +172,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 
 export async function getHeadsDataAction() {
   try {
-    await checkAuth();
+    await checkAdmin();
     const supabase = await createServerClient();
     const { data: profiles, error } = await supabase
       .from('profiles')
@@ -197,7 +198,7 @@ export async function getHeadsDataAction() {
 
 export async function getModelsDataAction() {
   try {
-    await checkAuth();
+    await checkAdmin();
     const supabase = await createServerClient();
     const { data, error } = await supabase
       .from('models')
@@ -226,7 +227,7 @@ export async function getModelsDataAction() {
 }
 
 export async function createModelAction(payload: any) {
-  await checkAuth();
+  await checkAdmin();
   const supabase = await createServerClient();
   const { error } = await supabase.from('models').insert(payload)
   if (error) throw new Error(error.message)
@@ -234,7 +235,7 @@ export async function createModelAction(payload: any) {
 }
 
 export async function updateModelAction(id: string, payload: any) {
-  await checkAuth();
+  await checkAdmin();
   const supabase = await createServerClient();
   const { error } = await supabase.from('models').update(payload).eq('id', id)
   if (error) throw new Error(error.message)
@@ -242,7 +243,7 @@ export async function updateModelAction(id: string, payload: any) {
 }
 
 export async function deleteModelAction(id: string) {
-  await checkAuth();
+  await checkAdmin();
   const supabase = await createServerClient();
   const { error } = await supabase.from('models').delete().eq('id', id)
   if (error) throw new Error(error.message)

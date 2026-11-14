@@ -11,7 +11,8 @@ export class NetworkMonitor {
   private pingUrl: string;
   private pingIntervalMs: number;
   private listeners: Set<NetworkStatusListener> = new Set();
-  private intervalId: any = null;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
+  private checking: Promise<boolean> | null = null;
 
   constructor(pingUrl = '/api/health', pingIntervalMs = 15000) {
     this.isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
@@ -21,6 +22,7 @@ export class NetworkMonitor {
 
   public start(): void {
     if (typeof window === 'undefined') return;
+    if (this.intervalId) return;
 
     window.addEventListener('online', this.handleBrowserOnline);
     window.addEventListener('offline', this.handleBrowserOffline);
@@ -36,6 +38,7 @@ export class NetworkMonitor {
     window.removeEventListener('online', this.handleBrowserOnline);
     window.removeEventListener('offline', this.handleBrowserOffline);
     if (this.intervalId) clearInterval(this.intervalId);
+    this.intervalId = null;
   }
 
   public subscribe(listener: NetworkStatusListener): () => void {
@@ -56,7 +59,13 @@ export class NetworkMonitor {
     this.updateStatus(false);
   };
 
-  public async checkServerReachability(): Promise<boolean> {
+  public checkServerReachability(): Promise<boolean> {
+    if (this.checking) return this.checking;
+    this.checking = this.performCheck().finally(() => { this.checking = null; });
+    return this.checking;
+  }
+
+  private async performCheck(): Promise<boolean> {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       this.updateStatus(false);
       return false;
@@ -67,14 +76,15 @@ export class NetworkMonitor {
       const timeoutId = setTimeout(() => controller.abort(), 4000);
 
       const response = await fetch(this.pingUrl, {
-        method: 'HEAD',
+        method: 'GET',
         cache: 'no-store',
         signal: controller.signal,
       }).catch(() => null);
 
       clearTimeout(timeoutId);
 
-      const reachable = response !== null && response.ok;
+      const body = response?.ok ? await response.json().catch(() => null) : null;
+      const reachable = response !== null && response.ok && body?.status === 'ok';
       this.updateStatus(reachable);
       return reachable;
     } catch {

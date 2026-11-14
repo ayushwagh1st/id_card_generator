@@ -1,20 +1,10 @@
-import Image from 'next/image'
+import { cn } from '@/lib/utils'
 
 export function AnimatedLoader({ className = "w-6 h-6", text }: { className?: string; text?: string }) {
-  if (!text) {
-    return <Image src="/loader.svg" alt="Loading..." width={24} height={24} className={className} />
-  }
-
   return (
-    <div className="flex items-center gap-2">
-      <Image 
-        src="/loader.svg" 
-        alt="Loading..." 
-        width={24} 
-        height={24}
-        className={className}
-      />
-      <span className="text-sm font-semibold">{text}</span>
-    </div>
+    <span role="status" className="inline-flex items-center gap-2">
+      <span aria-hidden="true" className={cn('ui-loading-indicator shrink-0 rounded-full border-2 border-current border-r-transparent', className)} />
+      <span className={text ? 'text-sm font-medium' : 'sr-only'}>{text || 'Loading…'}</span>
+    </span>
   )
 }

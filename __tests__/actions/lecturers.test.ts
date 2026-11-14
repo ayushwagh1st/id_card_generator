@@ -6,7 +6,7 @@ import {
   deleteLecturerAction,
   resetLecturerPasswordAction
 } from '../../server/actions/lecturers'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, checkAuth } from '@/lib/supabase/server'
 
 describe('Lecturer Actions', () => {
   let mockSupabase: any
@@ -18,7 +18,8 @@ describe('Lecturer Actions', () => {
 
   it('should get lecturers', async () => {
     mockSupabase.select.mockReturnThis()
-    mockSupabase.order.mockResolvedValueOnce({ data: [{ id: '1' }], error: null })
+    mockSupabase.order.mockReturnThis()
+    mockSupabase.range.mockResolvedValueOnce({ data: [{ id: '1' }], count: 1, error: null })
 
     const result = await getLecturersAction()
     expect(result.data).toBeDefined()
@@ -26,7 +27,7 @@ describe('Lecturer Actions', () => {
 
   it('should add lecturer', async () => {
     // Mock user auth
-    mockSupabase.auth.getUser.mockResolvedValueOnce({ data: { user: { role: 'ADMIN' } }, error: null })
+    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'admin', app_metadata: { role: 'SUPER_ADMIN' } } }, error: null })
     
     // Auth admin create user
     mockSupabase.auth.admin = {
@@ -37,7 +38,7 @@ describe('Lecturer Actions', () => {
     mockSupabase.select.mockReturnThis()
     mockSupabase.single.mockResolvedValueOnce({ data: { id: '1' }, error: null })
 
-    const result = await addLecturerAction({ full_name: 'John Doe', email: 'j@example.com', password: 'password', role: 'LECTURER' })
+    const result = await addLecturerAction({ name: 'John Doe', email: 'j@example.com', password: 'password', status: 'Active' })
     expect(result.success).toBe(true)
   })
 
@@ -45,7 +46,7 @@ describe('Lecturer Actions', () => {
     mockSupabase.update.mockReturnThis()
     mockSupabase.eq.mockResolvedValueOnce({ error: null })
 
-    const result = await updateLecturerAction('1', { full_name: 'Updated Name' })
+    const result = await updateLecturerAction('1', { name: 'Updated Name', email: 'j@example.com', status: 'Active' })
     expect(result.success).toBe(true)
   })
 
@@ -76,5 +77,17 @@ describe('Lecturer Actions', () => {
 
     const result = await resetLecturerPasswordAction('1', 'newpass')
     expect(result.success).toBe(true)
+  })
+  it('rejects non-admin updates before any privileged password change', async () => {
+    vi.mocked(checkAuth).mockResolvedValueOnce({ user: { id: 'staff', app_metadata: { role: 'LECTURER' } } } as any)
+    const updateUserById=vi.fn(); mockSupabase.auth.admin={updateUserById}
+    expect(await updateLecturerAction('target',{name:'Name',password:'changed-password'})).toMatchObject({error:'Unauthorized.'})
+    expect(updateUserById).not.toHaveBeenCalled()
+  })
+  it('rejects non-admin password resets before calling the auth admin API', async () => {
+    vi.mocked(checkAuth).mockResolvedValueOnce({ user: { id: 'staff', app_metadata: { role: 'MODEL_HEAD' } } } as any)
+    const updateUserById=vi.fn(); mockSupabase.auth.admin={updateUserById}
+    expect(await resetLecturerPasswordAction('target','changed-password')).toMatchObject({error:'Unauthorized.'})
+    expect(updateUserById).not.toHaveBeenCalled()
   })
 })

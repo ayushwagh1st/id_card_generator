@@ -160,6 +160,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
         {!validationResults && !results && (
           <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center hover:border-blue-500/50 transition-colors relative bg-white/40 dark:bg-slate-900/40">
             <input 
+              aria-label="Upload volunteer CSV file"
               type="file" 
               accept=".csv" 
               onChange={handleFileUpload} 
@@ -185,7 +186,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
         )}
 
         {error && (
-          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs">
+          <div role="alert" className="p-4 rounded-lg border border-destructive text-destructive text-sm">
             {error}
           </div>
         )}
@@ -204,6 +205,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
               )}
             </div>
 
+            {validationResults.errors.length > 0 && <section className="import-validation-errors" aria-label="CSV rows needing correction" role="alert"><h3>Rows needing correction</h3><p>Correct these rows in your CSV file, then upload it again. Only valid rows will be imported.</p><ul>{validationResults.errors.map((message: string, index: number) => <li key={`${index}-${message}`}>{message}</li>)}</ul></section>}
             <Table>
               <TableHeader>
                 <TableRow>

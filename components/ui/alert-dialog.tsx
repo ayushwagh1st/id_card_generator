@@ -30,7 +30,7 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Backdrop
       data-slot="alert-dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-slate-900/30 dark:bg-black/40 backdrop-blur-[10px] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "ui-modal-backdrop fixed inset-0 isolate z-50",
         className
       )}
       {...props}
@@ -52,7 +52,7 @@ function AlertDialogContent({
         data-slot="alert-dialog-content"
         data-size={size}
         className={cn(
-          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-[32px] bg-white/70 dark:bg-slate-900/70 backdrop-blur-[40px] saturate-[1.8] border border-white/50 dark:border-slate-700/50 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.15)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.5)] p-6 text-[15px] text-slate-900 dark:text-slate-100 duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] outline-none data-[size=default]:max-w-md data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.98] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-[0.98]",
+          "ui-modal group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 bg-popover border border-border p-6 text-sm text-popover-foreground data-[size=default]:max-w-md data-[size=sm]:max-w-xs",
           className
         )}
         {...props}
@@ -85,7 +85,7 @@ function AlertDialogFooter({
     <div
       data-slot="alert-dialog-footer"
       className={cn(
-        "-mx-6 -mb-6 mt-4 flex flex-col-reverse gap-2.5 rounded-b-3xl border-t border-slate-200/50 dark:border-slate-800/60 bg-slate-100/40 dark:bg-slate-900/40 p-4 sm:flex-row sm:justify-end",
+        "ui-modal-footer -mx-6 -mb-6 mt-4 flex flex-col-reverse gap-2.5 border-t border-border bg-muted/40 p-4 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
@@ -117,7 +117,7 @@ function AlertDialogTitle({
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
       className={cn(
-        "text-[19px] font-bold tracking-[-0.02em] text-slate-900 dark:text-white leading-tight sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2",
+        "ui-modal-title text-xl font-medium text-foreground leading-snug sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2",
         className
       )}
       {...props}
@@ -133,7 +133,7 @@ function AlertDialogDescription({
     <AlertDialogPrimitive.Description
       data-slot="alert-dialog-description"
       className={cn(
-        "text-[13px] sm:text-[14px] tracking-[-0.01em] text-slate-500 dark:text-slate-400 md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+        "text-sm leading-relaxed text-muted-foreground md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
         className
       )}
       {...props}
@@ -143,14 +143,11 @@ function AlertDialogDescription({
 
 function AlertDialogAction({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof Button>) {
   return (
-    <Button
-      data-slot="alert-dialog-action"
-      className={cn(className)}
-      {...props}
-    />
+    <AlertDialogPrimitive.Close data-slot="alert-dialog-action" render={<Button variant="destructive" className={cn(className)} {...props} />}>{children}</AlertDialogPrimitive.Close>
   )
 }
 

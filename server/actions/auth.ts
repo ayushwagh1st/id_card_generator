@@ -13,7 +13,7 @@ export async function loginAction(email: string, password: string) {
       return { error: error.message }
     }
 
-    const role = data.user?.user_metadata?.role
+    const role = data.user?.app_metadata?.role
     return { success: true, role }
   } catch (err: any) {
     console.error('loginAction unexpected error:', err)

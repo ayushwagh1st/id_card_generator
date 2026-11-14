@@ -1,5 +1,6 @@
 import { useReducer, useCallback, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { readVolunteerQuery, updateVolunteerQuery } from './volunteer-query'
 import { toast } from 'sonner'
 import { exportToPDF } from '@/lib/pdf'
 import { compressImage } from '@/lib/image'
@@ -21,6 +22,7 @@ export type State = {
   searchTerm: string
   selectedIds: string[]
   loading: boolean
+  loadError: string | null
   page: number
   totalCount: number
   filterModel: string
@@ -50,6 +52,7 @@ const initialState: State = {
   searchTerm: '',
   selectedIds: [],
   loading: true,
+  loadError: null,
   page: 1,
   totalCount: 0,
   filterModel: 'all',
@@ -75,6 +78,8 @@ const initialState: State = {
 
 function reducer(state: State, action: any): State {
   switch (action.type) {
+    case 'APPLY_QUERY':
+      return Object.keys(action.payload).every(key => state[key as keyof State] === action.payload[key]) ? state : { ...state, ...action.payload }
     case 'SET_STATE':
       return { ...state, [action.field]: action.payload }
     case 'RESET_FORM':
@@ -119,7 +124,9 @@ function reducer(state: State, action: any): State {
 }
 
 export function useVolunteersState() {
-  const [state, dispatch] = useReducer(reducer, initialState)
+  const searchParams = useSearchParams()
+  const [state, dispatch] = useReducer(reducer, { ...initialState, ...readVolunteerQuery(searchParams) })
+  const requestSequence = useRef(0)
   const currentVolunteerRef = useRef<any>(null)
   const cropOriginalFileRef = useRef<File | null>(null)
   const router = useRouter()
@@ -127,7 +134,14 @@ export function useVolunteersState() {
 
   const dispatchField = useCallback((field: string, payload: any) => {
     dispatch({ type: 'SET_STATE', field, payload })
+    const url = new URL(window.location.href)
+    if (updateVolunteerQuery(url.searchParams, field, payload)) window.history.replaceState(window.history.state, '', url)
   }, [])
+
+  const queryString = searchParams.toString()
+  useEffect(() => {
+    dispatch({ type: 'APPLY_QUERY', payload: readVolunteerQuery(new URLSearchParams(queryString)) })
+  }, [queryString])
 
   const fetchModels = useCallback(async () => {
     try {
@@ -139,7 +153,9 @@ export function useVolunteersState() {
   }, [dispatchField])
 
   const fetchVolunteers = useCallback(async () => {
+    const requestId = ++requestSequence.current
     dispatchField('loading', true)
+    dispatchField('loadError', null)
     try {
       const { data, count } = await getVolunteersAction(
         state.page,
@@ -148,12 +164,15 @@ export function useVolunteersState() {
         state.filterStatus,
         state.filterModel
       )
+      if (requestSequence.current !== requestId) return
       dispatchField('volunteers', data || [])
       dispatchField('totalCount', count || 0)
+      const lastPage = Math.max(1, Math.ceil((count || 0) / limit))
+      if (state.page > lastPage) dispatchField('page', lastPage)
     } catch (err: any) {
-      toast.error(err.message || 'Error loading volunteer records')
+      if (requestSequence.current === requestId) dispatchField('loadError', err.message || 'Check your connection and retry loading the roster.')
     } finally {
-      dispatchField('loading', false)
+      if (requestSequence.current === requestId) dispatchField('loading', false)
     }
   }, [state.page, state.searchTerm, state.filterStatus, state.filterModel, dispatchField])
 
@@ -165,7 +184,7 @@ export function useVolunteersState() {
     const timeoutId = setTimeout(() => {
       fetchVolunteers()
     }, 300) // debounce
-    return () => clearTimeout(timeoutId)
+    return () => { clearTimeout(timeoutId); requestSequence.current++ }
   }, [fetchVolunteers])
 
   const handleCreateVolunteer = async (e: React.FormEvent) => {
@@ -384,11 +403,9 @@ export function useVolunteersState() {
   }
 
   const toggleSelectAll = () => {
-    if (state.selectedIds.length === state.volunteers.length) {
-      dispatchField('selectedIds', [])
-    } else {
-      dispatchField('selectedIds', state.volunteers.map(v => v.id))
-    }
+    const pageIds = new Set(state.volunteers.map(v => v.id))
+    const allOnPageSelected = state.volunteers.every(v => state.selectedIds.includes(v.id))
+    dispatchField('selectedIds', allOnPageSelected ? state.selectedIds.filter(id => !pageIds.has(id)) : Array.from(new Set([...state.selectedIds, ...pageIds])))
   }
 
   const toggleSelect = (id: string) => {

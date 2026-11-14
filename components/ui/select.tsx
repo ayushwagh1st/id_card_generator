@@ -5,7 +5,18 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
-const Select = SelectPrimitive.Root
+function Select<Value, Multiple extends boolean | undefined = false>({ children, items, ...props }: SelectPrimitive.Root.Props<Value, Multiple>) {
+  const labels: { value: unknown; label: React.ReactNode }[] = []
+  const collectLabels = (nodes: React.ReactNode) => {
+    React.Children.forEach(nodes, node => {
+      if (!React.isValidElement<{ value?: unknown; label?: React.ReactNode; children?: React.ReactNode }>(node)) return
+      if (node.type === SelectItem) labels.push({ value: node.props.value, label: node.props.label ?? node.props.children })
+      else if (node.props.children) collectLabels(node.props.children)
+    })
+  }
+  collectLabels(children)
+  return <SelectPrimitive.Root {...props} items={items ?? labels}>{children}</SelectPrimitive.Root>
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
@@ -40,7 +51,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-full items-center justify-between gap-2 rounded-2xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 px-3.5 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-blue-500/40 disabled:opacity-50 data-[size=default]:h-10 data-[size=sm]:h-8.5 font-medium shadow-sm hover:bg-white/90 dark:hover:bg-slate-900/90",
+        "ui-select-trigger flex min-h-11 w-full items-center justify-between gap-2 rounded-md bg-card border border-input px-3.5 py-2.5 text-sm text-foreground select-none disabled:opacity-50 font-medium",
         className
       )}
       {...props}
@@ -81,7 +92,7 @@ function SelectContent({
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
           className={cn(
-            "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-44 overflow-x-hidden overflow-y-auto rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800/80 p-1.5 text-slate-900 dark:text-slate-100 shadow-2xl duration-150 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "ui-select-popup relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-44 overflow-x-hidden overflow-y-auto rounded-md bg-popover border border-border p-1.5 text-popover-foreground",
             className
           )}
           {...props}
@@ -102,7 +113,7 @@ function SelectLabel({
   return (
     <SelectPrimitive.GroupLabel
       data-slot="select-label"
-      className={cn("px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400", className)}
+      className={cn("px-2 py-2 text-xs font-medium text-muted-foreground", className)}
       {...props}
     />
   )
@@ -117,12 +128,12 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-pointer items-center gap-2 rounded-xl py-2 pr-8 pl-3 text-xs sm:text-sm font-medium outline-none select-none transition-colors hover:bg-blue-500/10 focus:bg-blue-500/15 text-slate-700 dark:text-slate-200 focus:text-blue-600 dark:focus:text-blue-400 data-disabled:pointer-events-none data-disabled:opacity-50",
+        "ui-select-item relative flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm py-2.5 pr-8 pl-3 text-sm select-none text-popover-foreground data-disabled:opacity-50",
         className
       )}
       {...props}
     >
-      <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
+      <SelectPrimitive.ItemText className="flex min-w-0 flex-1 gap-2 whitespace-normal">
         {children}
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator className="pointer-events-none absolute right-2.5 flex size-4 items-center justify-center text-blue-500">

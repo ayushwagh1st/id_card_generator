@@ -4,6 +4,8 @@ import React, { useEffect, useState, useCallback, useReducer } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SearchField } from '@/components/ui/search-field'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
@@ -134,7 +136,6 @@ export default function SessionsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this session?')) return
     try {
       const res = await deleteSessionAction(id)
       if (res?.error) throw new Error(res.error)
@@ -254,16 +255,11 @@ export default function SessionsPage() {
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
+          <SearchField id="session-search" label="Search sessions" className="sm:w-72"
             placeholder="Search sessions..."
-            className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-        </div>
 
         <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
           <Button onClick={handleExportCSV} variant="outline" className="w-full sm:w-auto">
@@ -273,10 +269,8 @@ export default function SessionsPage() {
             <Download className="w-4 h-4" /> Export PDF
           </Button>
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger>
-              <Button onClick={resetForm} className="w-full sm:w-auto text-white px-5 gap-2">
+            <DialogTrigger render={<Button onClick={resetForm} className="w-full sm:w-auto px-5 gap-2" />}>
                 <Plus className="h-4 w-4" /> Create Session
-              </Button>
             </DialogTrigger>
           <DialogContent className="sm:max-w-2xl rounded-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -285,50 +279,50 @@ export default function SessionsPage() {
             <form onSubmit={handleCreate} className="space-y-4 py-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Session Name</Label>
-                  <Input value={name} onChange={e => setName(e.target.value)} required />
+                  <Label htmlFor="session-name">Session Name</Label>
+                  <Input id="session-name" value={name} onChange={e => setName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Category</Label>
-                  <Input value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Yoga, Training" />
+                  <Label htmlFor="session-category">Category</Label>
+                  <Input id="session-category" value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Yoga, Training" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Lecturer Name</Label>
-                  <Input value={lecturerName} onChange={e => setLecturerName(e.target.value)} placeholder="Name of lecturer" />
+                  <Label htmlFor="session-lecturer">Lecturer Name</Label>
+                  <Input id="session-lecturer" value={lecturerName} onChange={e => setLecturerName(e.target.value)} placeholder="Name of lecturer" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Venue</Label>
-                  <Input value={venue} onChange={e => setVenue(e.target.value)} />
+                  <Label htmlFor="session-venue">Venue</Label>
+                  <Input id="session-venue" value={venue} onChange={e => setVenue(e.target.value)} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Date</Label>
-                  <Input type="date" value={date} onChange={e => setDate(e.target.value)} required />
+                  <Label htmlFor="session-date">Date</Label>
+                  <Input id="session-date" type="date" value={date} onChange={e => setDate(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Start Time</Label>
-                  <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} required />
+                  <Label htmlFor="session-start">Start Time</Label>
+                  <Input id="session-start" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>End Time</Label>
-                  <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} required />
+                  <Label htmlFor="session-end">End Time</Label>
+                  <Input id="session-end" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} required />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Capacity</Label>
-                  <Input type="number" value={capacity} onChange={e => setCapacity(e.target.value)} />
+                  <Label htmlFor="session-capacity">Capacity</Label>
+                  <Input id="session-capacity" type="number" value={capacity} onChange={e => setCapacity(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Status</Label>
+                  <Label htmlFor="session-status">Status</Label>
                   <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="session-status"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Scheduled">Scheduled</SelectItem>
                       <SelectItem value="Ongoing">Ongoing</SelectItem>
@@ -340,8 +334,8 @@ export default function SessionsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Description</Label>
-                <Input value={description} onChange={e => setDescription(e.target.value)} />
+                <Label htmlFor="session-description">Description</Label>
+                <Input id="session-description" value={description} onChange={e => setDescription(e.target.value)} />
               </div>
 
               <DialogFooter>
@@ -362,50 +356,50 @@ export default function SessionsPage() {
           <form onSubmit={handleUpdate} className="space-y-4 py-2">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Session Name</Label>
-                  <Input value={name} onChange={e => setName(e.target.value)} required />
+                  <Label htmlFor="edit-session-name">Session Name</Label>
+                  <Input id="edit-session-name" value={name} onChange={e => setName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Category</Label>
-                  <Input value={category} onChange={e => setCategory(e.target.value)} />
+                  <Label htmlFor="edit-session-category">Category</Label>
+                  <Input id="edit-session-category" value={category} onChange={e => setCategory(e.target.value)} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Lecturer Name</Label>
-                  <Input value={lecturerName} onChange={e => setLecturerName(e.target.value)} placeholder="Name of lecturer" />
+                  <Label htmlFor="edit-session-lecturer">Lecturer Name</Label>
+                  <Input id="edit-session-lecturer" value={lecturerName} onChange={e => setLecturerName(e.target.value)} placeholder="Name of lecturer" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Venue</Label>
-                  <Input value={venue} onChange={e => setVenue(e.target.value)} />
+                  <Label htmlFor="edit-session-venue">Venue</Label>
+                  <Input id="edit-session-venue" value={venue} onChange={e => setVenue(e.target.value)} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Date</Label>
-                  <Input type="date" value={date} onChange={e => setDate(e.target.value)} required />
+                  <Label htmlFor="edit-session-date">Date</Label>
+                  <Input id="edit-session-date" type="date" value={date} onChange={e => setDate(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Start Time</Label>
-                  <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} required />
+                  <Label htmlFor="edit-session-start">Start Time</Label>
+                  <Input id="edit-session-start" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>End Time</Label>
-                  <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} required />
+                  <Label htmlFor="edit-session-end">End Time</Label>
+                  <Input id="edit-session-end" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} required />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Capacity</Label>
-                  <Input type="number" value={capacity} onChange={e => setCapacity(e.target.value)} />
+                  <Label htmlFor="edit-session-capacity">Capacity</Label>
+                  <Input id="edit-session-capacity" type="number" value={capacity} onChange={e => setCapacity(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Status</Label>
+                  <Label htmlFor="edit-session-status">Status</Label>
                   <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="edit-session-status"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Scheduled">Scheduled</SelectItem>
                       <SelectItem value="Ongoing">Ongoing</SelectItem>
@@ -417,8 +411,8 @@ export default function SessionsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Description</Label>
-                <Input value={description} onChange={e => setDescription(e.target.value)} />
+                <Label htmlFor="edit-session-description">Description</Label>
+                <Input id="edit-session-description" value={description} onChange={e => setDescription(e.target.value)} />
               </div>
 
             <DialogFooter>
@@ -493,12 +487,10 @@ export default function SessionsPage() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(sess)}>
+                    <Button variant="ghost" size="icon" aria-label={`Edit ${sess.name}`} onClick={() => openEdit(sess)}>
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(sess.id)} className="text-destructive">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <AlertDialog><AlertDialogTrigger render={<Button variant="ghost" size="icon" aria-label={`Delete ${sess.name}`} className="text-destructive" />}><Trash2 className="w-4 h-4" /></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete {sess.name}?</AlertDialogTitle><AlertDialogDescription>This permanently deletes this session. You cannot undo this action.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDelete(sess.id)}>Delete session</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
                   </TableCell>
                 </TableRow>
               ))}

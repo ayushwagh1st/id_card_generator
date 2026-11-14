@@ -21,7 +21,7 @@ interface IDCardProps {
 
 const CardWrapper = ({ children, width, height }: { children: React.ReactNode, width: string, height: string }) => (
   <div 
-    className="relative flex flex-col select-none overflow-hidden bg-white"
+    className="print-artifact relative flex flex-col select-none overflow-hidden bg-white"
     style={{ 
       width: width, 
       height: height,

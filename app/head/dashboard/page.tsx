@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import { 
   Users, CheckCircle2, Clock, 
   ScanLine, Database, TrendingUp, AlertTriangle, ShieldCheck
@@ -62,10 +61,10 @@ export default function HeadDashboardPage() {
           <div className="space-y-3 max-w-xl">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500">
               <ShieldCheck className="w-4 h-4" />
-              <span>Supervisor Command Portal</span>
+              <span>Your assigned models</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Model Head Control Center
+              Your team, ready to serve.
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Real-time overview of volunteer rosters and card verification states for your assigned models.
@@ -78,14 +77,6 @@ export default function HeadDashboardPage() {
             </div>
           </div>
 
-          <div className="hidden md:block relative w-48 h-48 shrink-0">
-            <Image 
-              src="/images/head_dashboard_illustration.png" 
-              alt="Supervisor Command" 
-              fill
-              className="object-contain"
-            />
-          </div>
         </div>
       </GlassCard>
 
@@ -118,13 +109,13 @@ export default function HeadDashboardPage() {
               <Database className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white tracking-tight">Supervised Divisions</h3>
+              <h2 className="font-bold text-base text-slate-900 dark:text-white tracking-tight">Your exhibition models</h2>
               <p className="text-xs text-slate-400">Exhibition sectors assigned to your supervisor credentials</p>
             </div>
           </div>
 
           {myModels.length === 0 ? (
-            <p className="text-xs text-slate-400 py-6 text-center">No assigned models found.</p>
+            <p className="text-sm text-muted-foreground py-6">No models assigned yet. Contact the organizing team to confirm your assignments.</p>
           ) : (
             <ul className="space-y-3">
               {myModels.map((model) => (
@@ -152,7 +143,7 @@ export default function HeadDashboardPage() {
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white tracking-tight">Supervisor Operational Guidelines</h3>
+              <h2 className="font-bold text-base text-slate-900 dark:text-white tracking-tight">Before you register your team</h2>
               <p className="text-xs text-slate-400">Protocols for model supervisors</p>
             </div>
           </div>

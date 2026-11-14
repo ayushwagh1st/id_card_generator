@@ -4,6 +4,7 @@ import { useEffect, useReducer } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SearchField } from '@/components/ui/search-field'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import {
@@ -244,16 +245,11 @@ export default function ModelsPage() {
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Search */}
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
+          <SearchField id="model-search" label="Search models" className="sm:w-80"
             placeholder="Search models, categories, heads..."
-            className="pl-9"
             value={state.searchTerm}
             onChange={(e) => dispatch({ type: 'SET_SEARCH_TERM', payload: e.target.value })}
           />
-        </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
 
@@ -451,14 +447,12 @@ export default function ModelsPage() {
                     </TableCell>
                     <TableCell className="text-right py-4 px-6">
                       <div className="flex justify-end gap-1.5">
-                        <Button variant="ghost" size="icon" onClick={() => dispatch({ type: 'OPEN_EDIT', payload: model })} className="hover:bg-primary/10 hover:text-primary rounded-xl">
+                        <Button variant="ghost" size="icon" aria-label={`Edit ${model.name}`} onClick={() => dispatch({ type: 'OPEN_EDIT', payload: model })} className="hover:bg-primary/10 hover:text-primary rounded-xl">
                           <Edit className="h-4 w-4" />
                         </Button>
                         <AlertDialog>
-                          <AlertDialogTrigger>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10">
+                          <AlertDialogTrigger render={<Button variant="ghost" size="icon" aria-label={`Delete ${model.name}`} className="text-destructive hover:bg-destructive/10" />}>
                               <Trash2 className="h-4 w-4" />
-                            </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent className="rounded-xl">
                             <AlertDialogHeader>

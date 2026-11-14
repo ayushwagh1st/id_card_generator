@@ -48,7 +48,8 @@ export async function getLecturersAction(
 }
 
 export async function addLecturerAction(formData: any) {
-  await checkAuth();
+  const { user: operator } = await checkAuth();
+  if (operator.app_metadata?.role !== 'SUPER_ADMIN') return { error: 'Unauthorized.' }
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`add_lecturer_${ip}`, 5, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -68,6 +69,7 @@ export async function addLecturerAction(formData: any) {
       email: formData.email,
       password: formData.password,
       email_confirm: true,
+      app_metadata: { role: 'LECTURER' },
       user_metadata: { role: 'LECTURER', name: formData.name }
     })
 
@@ -83,7 +85,7 @@ export async function addLecturerAction(formData: any) {
 
   const supabaseAuth = await createClient()
   const { data: { user } } = await supabaseAuth.auth.getUser()
-  if (!user || user.user_metadata?.role !== 'SUPER_ADMIN') {
+  if (!user || user.app_metadata?.role !== 'SUPER_ADMIN') {
       return { error: 'Unauthorized.' }
   }
 
@@ -120,7 +122,8 @@ export async function addLecturerAction(formData: any) {
 }
 
 export async function updateLecturerAction(id: string, formData: any) {
-  await checkAuth();
+  const { user: operator } = await checkAuth();
+  if (operator.app_metadata?.role !== 'SUPER_ADMIN') return { error: 'Unauthorized.' }
   const ip = (await headers()).get('x-forwarded-for') || 'unknown'
   const rateLimit = await checkRateLimit(`update_lecturer_${ip}`, 10, 60000)
   if (!rateLimit.success) return { error: 'Too many requests. Please try again later.' }
@@ -147,7 +150,7 @@ export async function updateLecturerAction(id: string, formData: any) {
 
   const supabaseAuth = await createClient()
   const { data: { user } } = await supabaseAuth.auth.getUser()
-  if (!user || user.user_metadata?.role !== 'SUPER_ADMIN') {
+  if (!user || user.app_metadata?.role !== 'SUPER_ADMIN') {
       return { error: 'Unauthorized.' }
   }
 
@@ -178,7 +181,7 @@ export async function deleteLecturerAction(id: string) {
 
   const supabaseAuth = await createClient()
   const { data: { user } } = await supabaseAuth.auth.getUser()
-  if (!user || user.user_metadata?.role !== 'SUPER_ADMIN') {
+  if (!user || user.app_metadata?.role !== 'SUPER_ADMIN') {
       return { error: 'Unauthorized.' }
   }
 
@@ -201,7 +204,8 @@ export async function deleteLecturerAction(id: string) {
 }
 
 export async function resetLecturerPasswordAction(id: string, newPassword: string) {
-  await checkAuth();
+  const { user: operator } = await checkAuth();
+  if (operator.app_metadata?.role !== 'SUPER_ADMIN') return { error: 'Unauthorized.' }
   const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') ||
     !process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -222,7 +226,7 @@ export async function resetLecturerPasswordAction(id: string, newPassword: strin
 
   const supabaseAuth = await createClient()
   const { data: { user } } = await supabaseAuth.auth.getUser()
-  if (!user || user.user_metadata?.role !== 'SUPER_ADMIN') {
+  if (!user || user.app_metadata?.role !== 'SUPER_ADMIN') {
       return { error: 'Unauthorized.' }
   }
 

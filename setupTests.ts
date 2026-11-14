@@ -34,7 +34,7 @@ vi.mock('next/headers', () => ({
 vi.mock('@/lib/supabase/server', () => {
   const supabaseClientMock = {
     auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'test-user', email: 'test@example.com' } }, error: null }),
+      getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'test-user', email: 'test@example.com', app_metadata: { role: 'SUPER_ADMIN' }, user_metadata: { role: 'SUPER_ADMIN' } } }, error: null }),
       getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
       exchangeCodeForSession: vi.fn().mockResolvedValue({ data: {}, error: null }),
     },
@@ -61,9 +61,25 @@ vi.mock('@/lib/supabase/server', () => {
   }
   return {
     createClient: vi.fn().mockResolvedValue(supabaseClientMock),
-    checkAuth: vi.fn().mockResolvedValue({ user: { id: 'test-user', email: 'test@example.com' } }),
+    checkAuth: vi.fn().mockResolvedValue({ user: { id: 'test-user', email: 'test@example.com', app_metadata: { role: 'SUPER_ADMIN' }, user_metadata: { role: 'SUPER_ADMIN' } } }),
+    checkAdmin: vi.fn().mockResolvedValue({ user: { id: 'test-user', app_metadata: { role: 'SUPER_ADMIN' } } }),
   }
 })
+
+vi.mock('@supabase/ssr', async () => {
+  const original = await vi.importActual<typeof import('@supabase/ssr')>('@supabase/ssr')
+  const { createClient } = await import('@/lib/supabase/server')
+  const client = await createClient()
+  return { ...original, createServerClient: vi.fn(() => client) }
+})
+vi.mock('@supabase/supabase-js', async () => {
+  const original = await vi.importActual<typeof import('@supabase/supabase-js')>('@supabase/supabase-js')
+  const { createClient } = await import('@/lib/supabase/server')
+  const client = await createClient()
+  return { ...original, createClient: vi.fn(() => client) }
+})
+vi.mock('@/lib/rate-limit', () => ({ checkRateLimit: vi.fn(async () => ({ success: true })) }))
+vi.mock('@/lib/email', () => ({ sendRegistrationEmail: vi.fn(async () => ({ success: true })) }))
 
 // Provide a mock for jsPDF
 const mockSave = vi.fn()

@@ -12,9 +12,16 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
+/verification-results
+/public/offline-assets.json
+/offline-relay.sqlite*
+/scripts/.offline-deploy.sql
 
 # next.js
 /.next/
+/.next-offline-tests/
 /out/
 
 # production

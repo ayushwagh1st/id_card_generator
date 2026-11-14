@@ -24,7 +24,7 @@ export async function getVolunteersAction(
   // Support Mock User
   const cookieStore = await cookies()
   const mockUserStr = cookieStore.get('mock-user')?.value
-  let role = user.user_metadata?.role
+  let role = user.app_metadata?.role
   let headEmail = user.email
 
   if (mockUserStr) {

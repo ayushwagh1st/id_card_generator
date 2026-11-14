@@ -20,7 +20,8 @@ describe('Session Actions', () => {
 
   it('should get sessions', async () => {
     mockSupabase.select.mockReturnThis()
-    mockSupabase.order.mockResolvedValueOnce({ data: [{ id: '1' }], error: null })
+    mockSupabase.order.mockReturnThis()
+    mockSupabase.range.mockResolvedValueOnce({ data: [{ id: '1' }], count: 1, error: null })
 
     const result = await getSessionsAction()
     expect(result.data).toBeDefined()
@@ -31,7 +32,7 @@ describe('Session Actions', () => {
     mockSupabase.select.mockReturnThis()
     mockSupabase.single.mockResolvedValueOnce({ data: { id: '1' }, error: null })
 
-    const result = await addSessionAction({ title: 'Morning Session' })
+    const result = await addSessionAction({ name: 'Morning Session', date: '2026-11-14', start_time: '09:00', end_time: '10:00' })
     expect(result.success).toBe(true)
   })
 
@@ -49,7 +50,7 @@ describe('Session Actions', () => {
     mockSupabase.single.mockResolvedValueOnce({ data: { title: 'Session' } })
     
     mockSupabase.delete.mockReturnThis()
-    mockSupabase.eq.mockResolvedValueOnce({ error: null })
+    mockSupabase.eq.mockReturnThis()
 
     const result = await deleteSessionAction('1')
     expect(result.success).toBe(true)
@@ -76,7 +77,7 @@ describe('Session Actions', () => {
     mockSupabase.single.mockResolvedValueOnce({ data: { id: '1', volunteers: { full_name: 'V1' } } })
 
     mockSupabase.delete.mockReturnThis()
-    mockSupabase.eq.mockResolvedValueOnce({ error: null })
+    mockSupabase.eq.mockReturnThis()
 
     const result = await removeEnrollmentAction('1')
     expect(result.success).toBe(true)

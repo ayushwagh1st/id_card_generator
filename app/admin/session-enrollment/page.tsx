@@ -17,8 +17,10 @@ import { getVolunteersAction } from '@/server/actions/volunteers'
 import { getModelsDataAction } from '@/app/admin/models/actions.server'
 import { formatSessionLabel, formatModelLabel, formatVolunteerLabel } from '@/lib/formatters'
 import { GlassCard } from '@/components/ui/GlassCard'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 export default function SessionEnrollmentPage() {
+  const [mobileView, setMobileView] = useState<'available' | 'enrolled'>('available')
   const [state, dispatch] = React.useReducer(
     (state: any, action: any) => typeof action === 'function' ? { ...state, ...action(state) } : { ...state, ...action },
     {
@@ -186,27 +188,13 @@ export default function SessionEnrollmentPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Hero Banner */}
-      <GlassCard className="p-8 md:p-10 relative overflow-hidden" glowColor="rose">
-        <div className="relative z-10 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold tracking-wide uppercase border border-emerald-500/20">
-            <Users className="w-4 h-4" /> 
-            <span>Enrollment</span>
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Session Enrollment
-          </h1>
-          <p className="font-sans text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl leading-relaxed">
-            Assign volunteers to sessions to enable attendance tracking.
-          </p>
-        </div>
-      </GlassCard>
+      <PageHeader title="Session enrollment" description="Choose a session, select volunteers, and assign them to duty." />
 
       <GlassCard className="p-6" glowColor="blue">
         <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <Label className="font-semibold text-xs uppercase tracking-wider text-slate-400 shrink-0">Select Session:</Label>
+          <Label htmlFor="enrollment-session" className="font-semibold text-xs uppercase tracking-wider text-slate-400 shrink-0">Select Session:</Label>
           <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
-            <SelectTrigger className="w-full sm:w-[400px]">
+            <SelectTrigger id="enrollment-session" className="w-full sm:w-[400px]">
               <span data-slot="select-value" className="flex flex-1 text-left truncate">
                 {selectedSessionId !== 'none' && sessions.length > 0
                   ? formatSessionLabel(sessions.find((s: any) => s.id === selectedSessionId))
@@ -223,15 +211,17 @@ export default function SessionEnrollmentPage() {
         </div>
       </GlassCard>
 
+      {selectedSessionId === 'none' && <p className="task-empty">Choose a session to see available and enrolled volunteers.</p>}
+      {selectedSessionId !== 'none' && <div className="enrollment-view-switch" role="group" aria-label="Enrollment view"><Button variant={mobileView === 'available' ? 'secondary' : 'outline'} aria-pressed={mobileView === 'available'} onClick={() => setMobileView('available')}>Available volunteers</Button><Button variant={mobileView === 'enrolled' ? 'secondary' : 'outline'} aria-pressed={mobileView === 'enrolled'} onClick={() => setMobileView('enrolled')}>Enrolled ({enrollments.length})</Button></div>}
       {selectedSessionId !== 'none' && (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="enrollment-layout grid grid-cols-1 md:grid-cols-12 gap-6" data-view={mobileView}>
           {/* Left Panel: Available Volunteers */}
-          <div className="md:col-span-5 flex flex-col">
-            <GlassCard className="flex flex-col h-[720px] p-0 overflow-hidden" glowColor="cyan">
+          <div className="enrollment-available md:col-span-5 flex flex-col">
+            <GlassCard className="enrollment-panel flex flex-col p-0 overflow-hidden" glowColor="cyan">
               <CardHeader className="p-5 sm:p-6 pb-4 border-b border-slate-200/60 dark:border-slate-800/80 space-y-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                    Add Volunteers
+                    Available volunteers
                   </CardTitle>
                   {selectedVolunteers.length > 0 && (
                     <span className="bg-blue-600 text-white text-[11px] font-semibold font-mono px-2.5 py-0.5 rounded-full shadow-sm">
@@ -247,6 +237,7 @@ export default function SessionEnrollmentPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                     <Input 
+                      aria-label="Search available volunteers by name or SNK ID"
                       placeholder="Search name, SNK ID..." 
                       className="pl-9 text-xs sm:text-sm h-9"
                       value={searchVol}
@@ -254,7 +245,7 @@ export default function SessionEnrollmentPage() {
                     />
                   </div>
                   <Select value={modelFilter} onValueChange={(val: any) => setModelFilter(val)}>
-                    <SelectTrigger className="h-9 text-xs sm:text-sm">
+                    <SelectTrigger aria-label="Filter available volunteers by model" className="h-9 text-xs sm:text-sm">
                       <span data-slot="select-value" className="flex flex-1 text-left truncate">
                         {modelFilter !== 'all' && models.length > 0
                           ? formatModelLabel(models.find((m: any) => m.id === modelFilter))
@@ -364,8 +355,8 @@ export default function SessionEnrollmentPage() {
           </div>
 
           {/* Right Panel: Enrolled Volunteers List */}
-          <div className="md:col-span-7 flex flex-col">
-            <GlassCard className="h-[720px] flex flex-col p-0 overflow-hidden" glowColor="purple">
+          <div className="enrollment-enrolled md:col-span-7 flex flex-col">
+            <GlassCard className="enrollment-panel flex flex-col p-0 overflow-hidden" glowColor="purple">
               <CardHeader className="p-5 sm:p-6 pb-4 flex flex-row items-center justify-between shrink-0 border-b border-slate-200/60 dark:border-slate-800/80">
                 <div>
                   <CardTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
@@ -446,7 +437,7 @@ export default function SessionEnrollmentPage() {
                           <TableCell colSpan={4} className="text-center py-20 text-slate-400">
                             <Users className="w-12 h-12 mx-auto mb-3 opacity-25 text-blue-500" />
                             <p className="text-sm font-medium">No volunteers enrolled yet.</p>
-                            <p className="text-xs text-slate-400 mt-1">Select volunteers on the left panel to enroll them.</p>
+                            <p className="text-xs text-slate-400 mt-1">Choose records in Available volunteers, then select Enroll selected.</p>
                           </TableCell>
                         </TableRow>
                       )}

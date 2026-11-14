@@ -57,3 +57,9 @@ export async function checkAuth() {
   }
   return { user }
 }
+
+export async function checkAdmin() {
+  const auth = await checkAuth()
+  if (auth.user.app_metadata?.role !== 'SUPER_ADMIN') throw new Error('Unauthorized. Administrator access required.')
+  return auth
+}

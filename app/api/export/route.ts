@@ -34,7 +34,7 @@ export async function GET(request: Request) {
       return new NextResponse('Unauthorized', { status: 401 })
     }
     const user = authData.user
-    const role = user.user_metadata?.role
+    const role = user.app_metadata?.role
 
     if (role !== 'SUPER_ADMIN' && role !== 'MODEL_HEAD') {
       return new NextResponse('Forbidden: Insufficient permissions', { status: 403 })

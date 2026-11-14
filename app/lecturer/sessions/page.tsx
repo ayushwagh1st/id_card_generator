@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback, useReducer } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SearchField } from '@/components/ui/search-field'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Search, Users, ScanLine, LogOut } from 'lucide-react'
@@ -66,7 +67,7 @@ export default function LecturerSessionsPage() {
       const user = await getCurrentUserAction()
       if (!user) return
 
-      const role = user.user_metadata?.role
+      const role = user.app_metadata?.role
       const lecturerFilter = 'all' // Security needs to see all sessions
 
       const res = await getSessionsAction(1, 100, searchTerm, 'all', lecturerFilter)
@@ -125,16 +126,11 @@ export default function LecturerSessionsPage() {
       </GlassCard>
 
       <div className="flex items-center gap-4">
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
+          <SearchField id="security-session-search" label="Search sessions" className="sm:w-72"
             placeholder="Search sessions..."
-            className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-        </div>
       </div>
 
       <GlassCard className="p-0 overflow-hidden" glowColor="purple">

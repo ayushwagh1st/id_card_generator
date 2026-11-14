@@ -1,83 +1,27 @@
-# 🌐 Web Offline P2P Mesh & Cloud Sync Package (`web_offline_p2p_sync`)
+# Event offline synchronization
 
-A complete, self-contained TypeScript/JavaScript module that empowers web applications (React, Next.js, Vue, Svelte, or Vanilla JS) to **communicate offline device-to-device** and **sync automatically with backend servers** when internet connectivity is restored.
+This module is the portal's event-operations implementation. It is not a generic arbitrary-table replication library.
 
----
+Supported commands:
 
-## ⚡ Key Features
+- `children / CREATE`: register a prepared QR badge.
+- `children / UPDATE`: record an explicit child check-in or checkout with its timestamp.
+- `attendance_scans / CREATE`: record a volunteer or child scan with `scanData`, `sessionId`, `mode`, and the original timestamp.
 
-- 📱 **100% Offline Capability**: Saves all transactions locally in an `IndexedDB` outbox (`OfflineStore.ts`).
-- 📡 **Offline Local P2P Mesh**: Devices on the same Wi-Fi network or browser session share updates offline via `WebRTC DataChannels` & `BroadcastChannel` (`P2PMeshEngine.ts`).
-- 🌐 **Automatic Server Upload**: Detects network recovery (`NetworkMonitor.ts`) and uploads queued offline changes to backend server endpoints with retry ACKs.
-- 🎨 **Ready-to-Use UI**: Includes Tailwind/CSS status badges (`NetworkSyncStatus.tsx`) and an outbox queue drawer modal (`SyncProgressModal.tsx`).
-- 🤖 **AI-Agent Ready**: Includes `AGENT_INSTRUCTIONS.md` so you can upload this folder to Cursor, Antigravity, ChatGPT, or Claude and ask it to integrate offline mode into your app automatically.
+Every operation commits to IndexedDB before the UI says it was saved. The uploader uses a durable server receipt per operation ID. Failed records and acknowledged history are retained. Local state combines the prepared event snapshot with verified operations.
 
----
+Devices must prepare online before the event. Preparation downloads the event data, enrolls a device public key, and verifies the complete production application bundle. An offline authorization lasts seven days. The non-exportable private key remains in that operator's IndexedDB partition; other devices and the cloud verify signed operations.
 
-## 📁 Package Structure
+Device transports are same-browser BroadcastChannel, manually paired WebRTC data channels, and an optional authenticated WSS relay. WebRTC still requires a usable shared network. Inventories and missing-record requests provide catch-up for late peers; updates are forwarded only after durable receipt. Peer delivery never counts as cloud acknowledgment. The runnable local relay is `scripts/offline-relay.mjs` and requires trusted TLS, the portal public key, a strong token, and approved origins.
 
-```
-web_offline_p2p_sync/
-├── README.md                 # Master documentation
-├── AGENT_INSTRUCTIONS.md     # Instructions for AI Agents to integrate this package
-├── core/
-│   ├── OfflineStore.ts       # IndexedDB outbox queue & persistent local state
-│   ├── NetworkMonitor.ts     # Online/offline reachability listener with server ping
-│   ├── P2PMeshEngine.ts      # WebRTC DataChannel & BroadcastChannel offline P2P engine
-│   └── SyncManager.ts        # Master sync coordinator managing outbox & server uploads
-├── components/
-│   ├── NetworkSyncStatus.tsx # Modern status badge (Online / Offline / Mesh / Syncing)
-│   └── SyncProgressModal.tsx # Drawer modal displaying pending outbox & manual sync trigger
-└── examples/
-    └── ReactNextExample.tsx  # Full React/Next.js integration code blueprint
+Production requires the transactional SQL migration, explicit trusted operator-role mapping, and a matching production build/asset manifest. Do not enable server writes by restoring a generic table fallback or accepting unsigned peer packets.
+
+Read `docs/OFFLINE_OPERATIONS.md` for preparation, deployment, local-router setup, backups, imports, and event rehearsal. `docs/OFFLINE_TEST_REPORT.md` records the verification evidence and remaining rollout requirements.
+
+```text
+npm run test:offline
+npm run test:browser
+npm run offline:relay
 ```
 
----
-
-## 🚀 How to Use This Folder
-
-### Option 1: Give to an AI Agent (Recommended)
-1. Copy/upload the `web_offline_p2p_sync` folder into your project repo.
-2. Prompt your AI Agent (Cursor, Antigravity, Claude, ChatGPT):
-   > *"Read `web_offline_p2p_sync/AGENT_INSTRUCTIONS.md` and integrate offline P2P mesh and background server sync into our application."*
-
-### Option 2: Manual Developer Integration
-
-1. Import `SyncManager` in your app setup:
-   ```typescript
-   import { SyncManager } from './web_offline_p2p_sync/core/SyncManager';
-
-   const syncManager = new SyncManager({ pingUrl: '/api/health' });
-   await syncManager.init();
-   ```
-
-2. Register server upload callback:
-   ```typescript
-   syncManager.setServerUploadHandler(async (pendingBatch) => {
-     const res = await fetch('/api/sync', {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({ items: pendingBatch }),
-     });
-     const data = await res.json();
-     return { successIds: data.successIds };
-   });
-   ```
-
-3. Replace API creation calls with `syncManager.mutate()`:
-   ```typescript
-   await syncManager.mutate('card_submissions', 'CREATE', newCardData);
-   ```
-
-4. Render connection badge:
-   ```tsx
-   <NetworkSyncStatus syncManager={syncManager} />
-   ```
-
----
-
-## 🛡️ Data Safety & Deduplication
-
-- **Idempotent IDs**: Every transaction receives a GUID and hash digest to prevent duplicate processing on the server.
-- **LRU Seen Cache**: Prevents infinite message looping across peer devices on local Wi-Fi.
-- **IndexedDB Persistence**: Pending items survive browser refreshes, app restarts, and computer reboots.
+The example component in `examples/` demonstrates the former generic API shape and is not the portal's active integration. Use `components/SyncProvider.tsx` and the operator pages as the integration reference.

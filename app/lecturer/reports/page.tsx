@@ -157,9 +157,9 @@ export default function LecturerReportsPage() {
 
       <GlassCard className="p-6" glowColor="cyan">
         <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <Label className="font-semibold text-xs uppercase tracking-wider text-slate-400 shrink-0">Select Active Session:</Label>
+          <Label htmlFor="attendance-report-session" className="font-semibold text-xs uppercase tracking-wider text-slate-400 shrink-0">Select Active Session:</Label>
           <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
-            <SelectTrigger className="w-full sm:w-[400px]">
+            <SelectTrigger id="attendance-report-session" className="w-full sm:w-[400px]">
               <span data-slot="select-value" className="flex flex-1 text-left truncate">
                 {selectedSessionId !== 'none' && sessions.length > 0
                   ? formatSessionLabel(sessions.find(s => s.id === selectedSessionId))

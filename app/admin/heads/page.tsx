@@ -4,6 +4,7 @@ import { useEffect, useReducer } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SearchField } from '@/components/ui/search-field'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
@@ -270,16 +271,11 @@ export default function HeadsPage() {
 
       {/* Actions & Filters */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
+          <SearchField id="head-search" label="Search model heads" className="sm:w-80"
             placeholder="Search name, email, model..."
-            className="pl-9"
             value={state.searchTerm}
             onChange={(e) => dispatch({ type: 'SET_SEARCH_TERM', payload: e.target.value })}
           />
-        </div>
 
         <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2">
           <Button 

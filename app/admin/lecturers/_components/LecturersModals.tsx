@@ -90,8 +90,9 @@ export function LecturersModals({
             {/* Name & Email */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
+                <Label htmlFor="security-name" className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
                 <Input
+                  id="security-name"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
@@ -99,8 +100,9 @@ export function LecturersModals({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Email *</Label>
+                <Label htmlFor="security-email" className="text-[11px] font-bold text-muted-foreground uppercase">Email *</Label>
                 <Input
+                  id="security-email"
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
@@ -113,17 +115,18 @@ export function LecturersModals({
             {/* Mobile & Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Mobile</Label>
+                <Label htmlFor="security-mobile" className="text-[11px] font-bold text-muted-foreground uppercase">Mobile</Label>
                 <Input
+                  id="security-mobile"
                   value={mobile}
                   onChange={e => setMobile(e.target.value)}
                   placeholder="Contact number"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Status</Label>
+                <Label htmlFor="security-status" className="text-[11px] font-bold text-muted-foreground uppercase">Status</Label>
                 <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="security-status"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Active">Active</SelectItem>
                     <SelectItem value="Inactive">Inactive</SelectItem>
@@ -134,10 +137,11 @@ export function LecturersModals({
 
             {/* Password with generate */}
             <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
-              <Label className="text-[11px] font-bold text-muted-foreground uppercase">Password *</Label>
+              <Label htmlFor="security-password" className="text-[11px] font-bold text-muted-foreground uppercase">Password *</Label>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Input
+                    id="security-password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
@@ -200,23 +204,23 @@ export function LecturersModals({
           <form onSubmit={handleUpdate} className="space-y-4 py-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
-                <Input value={name} onChange={e => setName(e.target.value)} required />
+                <Label htmlFor="edit-security-name" className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
+                <Input id="edit-security-name" value={name} onChange={e => setName(e.target.value)} required />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Email *</Label>
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+                <Label htmlFor="edit-security-email" className="text-[11px] font-bold text-muted-foreground uppercase">Email *</Label>
+                <Input id="edit-security-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Mobile</Label>
-                <Input value={mobile} onChange={e => setMobile(e.target.value)} />
+                <Label htmlFor="edit-security-mobile" className="text-[11px] font-bold text-muted-foreground uppercase">Mobile</Label>
+                <Input id="edit-security-mobile" value={mobile} onChange={e => setMobile(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Status</Label>
+                <Label htmlFor="edit-security-status" className="text-[11px] font-bold text-muted-foreground uppercase">Status</Label>
                 <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="edit-security-status"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Active">Active</SelectItem>
                     <SelectItem value="Inactive">Inactive</SelectItem>
@@ -244,10 +248,11 @@ export function LecturersModals({
           </DialogHeader>
           <form onSubmit={handleResetPassword} className="space-y-4 py-2">
             <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
-              <Label className="text-[11px] font-bold text-muted-foreground uppercase">New Password *</Label>
+              <Label htmlFor="reset-security-password" className="text-[11px] font-bold text-muted-foreground uppercase">New Password *</Label>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Input
+                    id="reset-security-password"
                     type={showResetPassword ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}

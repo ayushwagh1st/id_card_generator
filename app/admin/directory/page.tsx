@@ -12,10 +12,13 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { Search, LogOut, Loader2, Users, Filter, CheckCircle2, UserCheck, Shield, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Checkbox } from '@/components/ui/checkbox'
+import { SearchField } from '@/components/ui/search-field'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useSyncManager } from '@/components/SyncProvider'
 
 export default function DirectoryPage() {
+  const reduceMotion = useReducedMotion()
   const [children, setChildren] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -27,94 +30,26 @@ export default function DirectoryPage() {
 
   const { syncManager } = useSyncManager()
 
-  const mergeOfflineData = async (serverData: any[]) => {
-    if (!syncManager) return serverData;
-    let merged = [...serverData];
-    
-    try {
-      const pending = await syncManager.getPendingItemsByEntity('children');
-      
-      // Handle CREATEs (append new records)
-      const creates = pending.filter(p => p.action === 'CREATE').map(p => {
-        const payload = p.payload as any;
-        return {
-          ...payload,
-          session_name: sessions.find(s => s.id === payload.session_id)?.name || 'Offline Session',
-          isOfflineNode: true
-        };
-      });
-      merged = [...creates, ...merged];
-      
-      // Handle UPDATEs (modify existing records)
-      const updates = pending.filter(p => p.action === 'UPDATE');
-      for (const update of updates) {
-        const payload = update.payload as any;
-        const index = merged.findIndex(c => (c.id && c.id === payload.id) || (c.qr_id && c.qr_id === payload.qr_id));
-        if (index !== -1) {
-          merged[index] = { ...merged[index], ...payload, isOfflineNode: true };
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to merge offline data', e);
-    }
-    return merged;
-  }
-
-  const fetchData = async () => {
-    setLoading(true)
-    let childrenData: any[] = []
-    let sessionData: any[] = []
-
-    try {
-      const [childrenRes, sessionsRes] = await Promise.all([
-        getChildrenDirectoryAction(),
-        getSessionsAction(1, 100),
-      ])
-      
-      if (sessionsRes.data) sessionData = sessionsRes.data
-      setSessions(sessionData)
-
-      if (childrenRes.error) {
-        // Continue, offline fallback
-      } else {
-        childrenData = childrenRes.data || []
-      }
-    } catch (e) {
-      // Offline fallback
-    }
-
-    const merged = await mergeOfflineData(childrenData)
-    setChildren(merged)
-    setLoading(false)
-  }
-
   const fetchChildren = async () => {
-    setLoading(true)
-    let childrenData: any[] = []
+    if (!syncManager) { setLoading(false); return }
     try {
-      const res = await getChildrenDirectoryAction()
-      if (!res.error) childrenData = res.data || []
-    } catch (e) {}
-
-    const merged = await mergeOfflineData(childrenData)
-    setChildren(merged)
-    setLoading(false)
+      const [rows, localSessions, qrCodes] = await Promise.all([
+        syncManager.getLocalData('children'), syncManager.getLocalData('sessions'), syncManager.getLocalData('qrCodes'),
+      ])
+      const labels = new Map(localSessions.map(session => [session.id, session.name]))
+      const serials = new Map(qrCodes.map(qr => [qr.id, 'MSS-2027-' + String(qr.serial_number).padStart(3, '0')]))
+      setSessions(localSessions)
+      setChildren(rows.map(row => ({ ...row, serial_number: row.serial_number || serials.get(row.qr_id) || String(row.qr_id || '').slice(0, 8), session_name: labels.get(row.session_id) || 'Unknown session' })))
+    } catch (error: any) { toast.error(error.message || 'Could not read the local directory.') }
+    finally { setLoading(false) }
   }
 
-  // Subscribe to sync manager state to auto-refresh UI when offline mesh packets arrive
   useEffect(() => {
-    if (syncManager) {
-      const unsub = syncManager.subscribeState(() => {
-        // Light refresh from offline store when state changes
-        fetchChildren();
-      });
-      return unsub;
-    }
-  }, [syncManager, sessions])
-
-  useEffect(() => {
-    fetchData()
-  }, [])
+    if (!syncManager) return
+    let active = true
+    const unsubscribe = syncManager.subscribeState(() => { if (active) void fetchChildren() })
+    return () => { active = false; unsubscribe() }
+  }, [syncManager])
 
   const filteredChildren = children.filter((c) => {
     const matchesSearch =
@@ -147,25 +82,26 @@ export default function DirectoryPage() {
   const handleBulkCheckOut = async () => {
     if (selectedIds.size === 0) return
     setBulkLoading(true)
-    const res = await bulkCheckOutAction(Array.from(selectedIds))
-    if (res.error) {
-      toast.error(res.error)
-    } else {
-      toast.success(`Successfully checked out ${selectedIds.size} children`)
+    try {
+      if (!syncManager) throw new Error('Offline storage is not ready.')
+      const now = await syncManager.eventTime()
+      for (const id of selectedIds) await syncManager.mutate('children', 'UPDATE', { id, status: 'Checked Out', checked_out_at: now })
+      toast.success(`Saved ${selectedIds.size} checkouts on this device`)
       setSelectedIds(new Set())
       await fetchChildren()
-    }
-    setBulkLoading(false)
+    } catch (error: any) { toast.error(error.message || 'Some checkouts could not be saved. Review the queue.') }
+    finally { setBulkLoading(false) }
   }
 
   const handleToggleStatus = async (childId: string, currentStatus: string) => {
-    const res = await toggleAttendanceStatusAction(childId, currentStatus)
-    if (res.error) {
-      toast.error(res.error)
-    } else {
-      toast.success('Attendance status updated')
-      fetchChildren()
-    }
+    try {
+      if (!syncManager) throw new Error('Offline storage is not ready.')
+      const now = await syncManager.eventTime()
+      const status = currentStatus === 'Checked In' ? 'Checked Out' : 'Checked In'
+      await syncManager.mutate('children', 'UPDATE', { id: childId, status, ...(status === 'Checked In' ? { checked_in_at: now } : { checked_out_at: now }) })
+      toast.success('Attendance saved on this device')
+      await fetchChildren()
+    } catch (error: any) { toast.error(error.message || 'Attendance could not be saved.') }
   }
 
   const getStatusBadge = (status: string) => {
@@ -204,7 +140,7 @@ export default function DirectoryPage() {
               <span>Children & Attendance</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Directory & Real-Time Roster
+              Children’s directory
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
               Search, filter, and manage attendee check-ins across event slots.
@@ -214,19 +150,16 @@ export default function DirectoryPage() {
           {/* Filter Bar Controls */}
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             {/* Search Input */}
-            <div className="relative flex-1 sm:w-64">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input
+              <SearchField id="directory-search" label="Search attendee directory" className="flex-1 sm:w-72"
                 type="text"
                 placeholder="Search name or serial..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
-            </div>
 
             {/* Status Dropdown Filter */}
             <select
+              aria-label="Filter attendees by status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-2 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 text-xs text-slate-700 dark:text-slate-300 focus:outline-none"
@@ -239,6 +172,7 @@ export default function DirectoryPage() {
 
             {/* Session Dropdown Filter */}
             <select
+              aria-label="Filter attendees by session"
               value={sessionFilter}
               onChange={(e) => setSessionFilter(e.target.value)}
               className="px-3 py-2 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 text-xs text-slate-700 dark:text-slate-300 focus:outline-none"
@@ -253,7 +187,7 @@ export default function DirectoryPage() {
             
             {/* Refresh Button */}
             <button
-              onClick={fetchData}
+              onClick={fetchChildren}
               disabled={loading}
               className="p-2 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 text-slate-500 hover:text-blue-600 transition-colors disabled:opacity-50"
               title="Refresh Directory"
@@ -276,11 +210,10 @@ export default function DirectoryPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">
-                <input
-                  type="checkbox"
+                <Checkbox
+                  aria-label="Select all attendees"
                   checked={selectedIds.size > 0 && selectedIds.size === filteredChildren.length}
-                  onChange={handleSelectAll}
-                  className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                  onCheckedChange={handleSelectAll}
                 />
               </TableHead>
               <TableHead>Serial No</TableHead>
@@ -308,11 +241,10 @@ export default function DirectoryPage() {
                     className={isSelected ? 'bg-blue-500/10 dark:bg-blue-500/20' : ''}
                   >
                     <TableCell>
-                      <input
-                        type="checkbox"
+                      <Checkbox
+                        aria-label={`Select ${child.name}`}
                         checked={isSelected}
-                        onChange={() => handleToggleSelect(child.id)}
-                        className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                        onCheckedChange={() => handleToggleSelect(child.id)}
                       />
                     </TableCell>
                     <TableCell className="font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">
@@ -348,12 +280,13 @@ export default function DirectoryPage() {
       <AnimatePresence>
         {selectedIds.size > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 30 }}
-            className="fixed bottom-6 inset-x-0 mx-auto w-full max-w-lg z-50 px-4"
+            initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(12px)' }}
+            animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'translateY(0)' }}
+            exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(12px)' }}
+            transition={{ duration: reduceMotion ? 0.12 : 0.25, ease: [0.23, 1, 0.32, 1] }}
+            className="directory-selection-bar sticky bottom-4 mx-auto w-full max-w-xl z-40"
           >
-            <div className="glass-panel glass-edge-light p-3.5 rounded-2xl shadow-2xl flex items-center justify-between border border-blue-500/30">
+            <div className="glass-panel p-3.5 flex flex-wrap gap-3 items-center justify-between border border-input">
               <div className="flex items-center gap-3">
                 <span className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
                   {selectedIds.size}

@@ -119,7 +119,7 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse
     }
 
-    const role = user.user_metadata?.role
+    const role = user.app_metadata?.role
 
     // Redirect logged in users away from / or /login to their dashboard
     if (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '/login') {

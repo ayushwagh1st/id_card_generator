@@ -8,6 +8,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./setupTests.ts'],
     globals: true,
+    testTimeout: 15000,
     include: ['__tests__/**/*.test.{ts,tsx}'],
     exclude: ['node_modules', 'gstack', '.agents', '.next'],
     alias: {

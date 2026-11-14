@@ -1,191 +1,88 @@
 'use client'
 
-import { useState } from 'react'
+import { openOfflineSession } from '@/lib/offline/session'
+
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Mail, Lock, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react'
-import { AnimatedLoader } from '@/components/ui/animated-loader'
+import Link from 'next/link'
 import { toast } from 'sonner'
-import { GlassCard } from '@/components/ui/GlassCard'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { motion } from 'framer-motion'
+import { PublicShell } from '@/components/public/PublicShell'
+import styles from '../public.module.css'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const submitting = useRef(false)
   const router = useRouter()
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (submitting.current) return
+    submitting.current = true
+    setErrorMessage('')
     setLoading(true)
-
-    if (!email || !password) {
-      toast.error('Please enter both email and password.')
-      setLoading(false)
-      return
-    }
 
     try {
       const { createClient } = await import('@/lib/supabase/client')
       const supabase = createClient()
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
 
-      if (error) {
-        toast.error(error.message)
-        setLoading(false)
+      if (error || !data.user) {
+        setErrorMessage(error?.message || 'We could not sign you in. Please check your details and try again.')
         return
       }
 
-      if (data.user) {
-        toast.success('Logged in successfully')
-        const role = data.user.user_metadata?.role
-        if (role === 'SUPER_ADMIN') {
-          router.refresh()
-          router.push('/admin/dashboard')
-        } else if (role === 'MODEL_HEAD') {
-          router.refresh()
-          router.push('/head/dashboard')
-        } else if (role === 'LECTURER') {
-          router.refresh()
-          router.push('/lecturer/dashboard')
-        } else {
-          router.refresh()
-          router.push('/')
-        }
-      }
-    } catch (err: any) {
-      toast.error('An unexpected error occurred')
+      toast.success('Signed in successfully')
+      const role = data.user.app_metadata?.role
+      if (data.user.id) openOfflineSession(data.user.id)
+      router.refresh()
+      router.push(role === 'SUPER_ADMIN' ? '/admin/dashboard' : role === 'MODEL_HEAD' ? '/head/dashboard' : role === 'LECTURER' ? '/lecturer/dashboard' : '/')
+    } catch {
+      setErrorMessage('We could not connect to the portal. Please check your connection and try again.')
     } finally {
+      submitting.current = false
       setLoading(false)
     }
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground flex items-center justify-center p-4 sm:p-8 overflow-hidden select-none">
-      {/* Slow Ambient Aurora Background */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-[20%] left-[20%] w-[650px] h-[650px] rounded-full bg-blue-500/15 dark:bg-blue-600/20 blur-[140px] animate-aurora-1" />
-        <div className="absolute -bottom-[20%] right-[20%] w-[700px] h-[700px] rounded-full bg-indigo-500/15 dark:bg-indigo-600/20 blur-[150px] animate-aurora-2" />
-      </div>
-
-      <div className="relative z-10 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-        {/* Left Side: 3D Showcase Panel */}
-        <div className="hidden lg:flex flex-col justify-between h-[520px] p-10 rounded-3xl glass-panel glass-edge-light relative overflow-hidden">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-semibold w-max">
-            <Sparkles className="w-4 h-4" />
-            <span>Spatial Portal v2027</span>
-          </div>
-
-          <div className="relative z-10 my-auto text-center space-y-4">
-            <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
-              className="relative w-48 h-48 mx-auto"
-            >
-              <Image
-                src="/logo.png"
-                alt="Bal Pradarshani Logo"
-                fill
-                priority
-                className="object-contain drop-shadow-2xl"
-              />
-            </motion.div>
-
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-              Bal Pradarshani Portal
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-              Experience the next-generation spatial credential system for volunteers and model heads.
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between pt-4 border-t border-slate-200/50 dark:border-slate-800/60 text-xs text-slate-500">
-            <div className="flex items-center gap-1.5 text-emerald-500 font-medium">
-              <ShieldCheck className="w-4 h-4" />
-              <span>Encrypted Authentication</span>
+    <PublicShell activePage="login">
+      <main id="main-content" tabIndex={-1} className={`${styles.container} ${styles.loginMain}`}>
+        <aside className={styles.loginEditorial} aria-label="About the event">
+          <p className={styles.sectionLabel}>Bal Pradarshani · Samagam 2027</p>
+          <p className={styles.sectionTitle}>A shared purpose.<br />A place for everyone.</p>
+          <p>Your work behind the scenes brings the event together. This is where your team&apos;s journey begins.</p>
+          <figure>
+            <div className={styles.loginPhoto}><Image src="/gallary/IMG_6584.JPG" alt="Young visitors learning together at Bal Pradarshani" fill sizes="(max-width: 760px) 0px, 45vw" loading="eager" fetchPriority="high" /></div>
+            <figcaption className={styles.photoCaption}>From the Samagam archive</figcaption>
+          </figure>
+        </aside>
+        <section className={styles.loginFormSection} aria-labelledby="login-title">
+          <p className={styles.sectionLabel}>Welcome back</p>
+          <h1 id="login-title" className={styles.loginTitle}>Sign in to the portal.</h1>
+          <p className={styles.loginDescription}>Use your assigned account to manage volunteers, registrations, and event IDs.</p>
+          <form onSubmit={handleLogin} className={styles.loginForm} aria-busy={loading}>
+            <div className={styles.field}>
+              <label htmlFor="email">Email address</label>
+              <input id="email" name="email" type="email" autoComplete="username" placeholder="Your email address" required value={email} onChange={(event) => setEmail(event.target.value)} disabled={loading} aria-describedby={errorMessage ? 'login-error' : undefined} />
             </div>
-            <span className="font-mono">60th Samagam</span>
-          </div>
-        </div>
-
-        {/* Right Side: Floating Login Glass Form */}
-        <GlassCard className="p-8 sm:p-10 shadow-2xl" glowColor="blue">
-          <div className="space-y-2 mb-8">
-            <span className="text-[11px] font-mono uppercase tracking-widest text-blue-500 font-semibold block">
-              Secure Access
-            </span>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Sign In to Portal
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Enter your credentials to manage volunteer badges and event rosters.
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-5">
-            {/* Email Field */}
-            <div className="space-y-1.5">
-              <label htmlFor="email" className="text-xs font-medium text-slate-700 dark:text-slate-300 block">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@company.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                />
+            <div className={styles.field}>
+              <label htmlFor="password">Password</label>
+              <div className={styles.passwordField}>
+                <input id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="Your password" required value={password} onChange={(event) => setPassword(event.target.value)} disabled={loading} aria-describedby={errorMessage ? 'login-error' : undefined} />
+                <button type="button" className={styles.passwordToggle} onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} disabled={loading}>{showPassword ? 'Hide' : 'Show'}</button>
               </div>
             </div>
-
-            {/* Password Field */}
-            <div className="space-y-1.5">
-              <label htmlFor="password" className="text-xs font-medium text-slate-700 dark:text-slate-300 block">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 rounded-[16px] mt-4 text-[15px]"
-            >
-              {loading ? (
-                <>
-                  <AnimatedLoader className="w-4 h-4 text-white mr-2" />
-                  <span>Authenticating...</span>
-                </>
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </Button>
+            {errorMessage && <p id="login-error" role="alert" className={styles.formError}>{errorMessage}</p>}
+            <button type="submit" className={styles.primaryButton} disabled={loading}>{loading ? 'Signing you in…' : 'Sign in to your account'}</button>
           </form>
-        </GlassCard>
-      </div>
-    </div>
+          <div className={styles.loginHelp}><p>Need an account or help with access?</p><Link href="/support" className={styles.textLink}>Contact the organizing team</Link></div>
+        </section>
+      </main>
+    </PublicShell>
   )
 }

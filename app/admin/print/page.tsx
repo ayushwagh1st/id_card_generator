@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useReducer, useCallback } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { useReactToPrint } from 'react-to-print'
 import { Printer, RefreshCw, Layers, ChevronLeft, ChevronRight, Sliders, Sparkles } from 'lucide-react'
@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { getPrintVolunteersAction } from './actions.server'
 import { PrintSettings } from './_components/PrintSettings'
 import { GlassCard } from '@/components/ui/GlassCard'
+import { getPreviewFitZoom } from './_components/preview-fit'
 
 const mirrorPageForBack = (pageVols: any[]) => {
   const mirrored = []
@@ -23,6 +24,8 @@ const mirrorPageForBack = (pageVols: any[]) => {
 }
 
 export default function PrintCenter() {
+  const previewViewportRef = useRef<HTMLDivElement>(null)
+  const [fitMode, setFitMode] = useState<'width' | 'page' | null>('width')
   const [state, dispatch] = React.useReducer(
     (state: any, action: any) =>
       typeof action === 'function' ? { ...state, ...action(state) } : { ...state, ...action },
@@ -67,6 +70,20 @@ export default function PrintCenter() {
     (v: any) => dispatch((s: any) => ({ currentBatch: typeof v === 'function' ? v(s.currentBatch) : v })),
     []
   )
+  useEffect(() => {
+    const viewport = previewViewportRef.current
+    if (!viewport || !fitMode) return
+    const resize = () => {
+      const style = getComputedStyle(viewport)
+      const width = viewport.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+      const height = viewport.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom)
+      setZoom(getPreviewFitZoom(width, height, fitMode))
+    }
+    resize()
+    const observer = new ResizeObserver(resize)
+    observer.observe(viewport)
+    return () => observer.disconnect()
+  }, [fitMode, setZoom])
   const SHEETS_PER_BATCH = 20
 
   const fetchPrintData = useCallback(async () => {
@@ -156,7 +173,7 @@ export default function PrintCenter() {
               <ChevronLeft className="w-3.5 h-3.5" /> Back to Volunteers
             </Link>
             <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Professional Print Studio
+              Print studio
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
               Live A4 sheet layout positioning, real-time scaling, and duplex print rendering.
@@ -216,15 +233,18 @@ export default function PrintCenter() {
           zoom={zoom}
           setCardSize={setCardSize}
           setPrintMode={setPrintMode}
-          setZoom={setZoom}
+          setZoom={value => { setFitMode(null); setZoom(value) }}
+          fitMode={fitMode}
+          onFitWidth={() => setFitMode('width')}
+          onFitPage={() => setFitMode('page')}
         />
 
         <div className="xl:col-span-3 rounded-3xl glass-panel border border-slate-200/60 dark:border-slate-800/80 overflow-hidden flex flex-col">
-          <div className="px-6 py-4 border-b border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between bg-slate-100/40 dark:bg-slate-900/40">
+          <div className="px-6 py-4 border-b border-slate-200/60 dark:border-slate-800/80 flex flex-wrap gap-3 items-center justify-between bg-slate-100/40 dark:bg-slate-900/40">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-blue-500" />
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">
-                Live A4 Sheet Preview Canvas
+                A4 sheet preview
               </span>
             </div>
             <div className="text-xs font-mono text-slate-500 px-3 py-1 rounded-full bg-slate-200/50 dark:bg-slate-800/50">
@@ -232,7 +252,7 @@ export default function PrintCenter() {
             </div>
           </div>
 
-          <div className="p-6 overflow-x-auto flex justify-center min-h-[600px] bg-slate-950/20 backdrop-blur-md">
+          <div ref={previewViewportRef} role="region" aria-label="Print preview. Scroll to view all sheets." tabIndex={0} className="print-preview-viewport p-6 overflow-auto flex justify-start">
             {loading ? (
               <div className="flex flex-col items-center justify-center gap-6 mt-10 w-full max-w-2xl">
                 <div className="grid grid-cols-3 gap-6 w-full p-6">
@@ -251,10 +271,8 @@ export default function PrintCenter() {
                 </p>
               </div>
             ) : (
-              <div
-                className="transition-transform origin-top duration-200"
-                style={{ transform: `scale(${zoom / 100})` }}
-              >
+              <div className="print-preview-scaled-frame" style={{ width: `${210 * zoom / 100}mm`, height: `${312 * currentPrintSheets.length * zoom / 100}mm` }}>
+              <div style={{ width: '210mm', transform: `scale(${zoom / 100})`, transformOrigin: 'top left' }}>
                 <div ref={componentRef} className="print-engine-container">
                   {currentPrintSheets.map((sheet, idx) => (
                     <div
@@ -278,7 +296,7 @@ export default function PrintCenter() {
                             {vol ? (
                               <>
                                 <IDCard volunteer={vol} size={cardSize} side={sheet.type} />
-                                <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center print:hidden rounded-lg z-50">
+                                <div className="print-card-actions absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center print:hidden rounded-lg z-50">
                                   <button
                                     onClick={() => handlePrintSingleCard(vol)}
                                     className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold shadow-md flex items-center gap-1.5 hover:bg-blue-500"
@@ -330,6 +348,7 @@ export default function PrintCenter() {
                     }}
                   />
                 </div>
+              </div>
               </div>
             )}
           </div>

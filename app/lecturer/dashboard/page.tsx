@@ -5,7 +5,6 @@ import { Calendar, Activity, ShieldCheck, Database, Clock } from 'lucide-react'
 import { getLecturerStatsAction } from '@/server/actions/attendance'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import Image from 'next/image'
 import { GlassCard } from '@/components/ui/GlassCard'
 
 export default function LecturerDashboard() {
@@ -53,24 +52,16 @@ export default function LecturerDashboard() {
           <div className="space-y-3 max-w-xl">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500">
               <ShieldCheck className="w-4 h-4" />
-              <span>Security Access Portal</span>
+              <span>Sessions & attendance</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Security Dashboard
+              Ready for the next session.
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Welcome back! Live overview of all scheduled duty shifts and active venue check-in counters.
             </p>
           </div>
 
-          <div className="hidden md:block relative w-48 h-48 shrink-0">
-            <Image 
-              src="/images/lecturer_dashboard_illustration.png" 
-              alt="Security Dashboard" 
-              fill
-              className="object-contain"
-            />
-          </div>
         </div>
       </GlassCard>
 

@@ -1,80 +1,15 @@
-# AI Agent Integration Guidelines for `web_offline_p2p_sync`
+# Maintaining the event offline implementation
 
-> **Role for AI Agent**: You are an expert Web Application Architect. Follow these step-by-step instructions to integrate offline peer-to-peer (P2P) mesh networking and background server synchronization into this web repository.
+The active integration is `components/SyncProvider.tsx`. The supported application commands and operational prerequisites are documented in this folder's README and `docs/OFFLINE_OPERATIONS.md`.
 
----
-
-## 🎯 Goal
-
-Enable the current web application to:
-1. **Operate 100% Offline**: User actions (form submits, data creation, updates, deletes) must be saved into IndexedDB using `OfflineStore` when internet is disconnected.
-2. **Local P2P Mesh Synchronization**: Devices on the same Wi-Fi / browser session must share updates in real-time offline via `P2PMeshEngine` (WebRTC / BroadcastChannel).
-3. **Automatic Cloud Sync**: Once internet reachability returns (`NetworkMonitor`), pending outbox items must automatically upload to the backend server API.
-
----
-
-## 🛠️ Step-by-Step AI Agent Integration Workflow
-
-### Step 1: Copy `web_offline_p2p_sync` Core Files
-Ensure the `web_offline_p2p_sync` folder is located in your project source (e.g., `src/lib/web_offline_p2p_sync` or `app/lib/web_offline_p2p_sync`).
-
-### Step 2: Initialize `SyncManager` in App Root / Provider
-Create or update your application root context/provider (e.g. `App.tsx`, `layout.tsx`, or `SyncProvider.tsx`):
-
-```typescript
-import { SyncManager } from './web_offline_p2p_sync/core/SyncManager';
-
-export const syncManager = new SyncManager({
-  pingUrl: '/api/health', // Replace with your server health endpoint
-  dbName: 'app_offline_outbox',
-  channelName: 'app_p2p_mesh',
-});
-
-// Initialize on app launch
-syncManager.init();
-```
-
-### Step 3: Wire Up the Server Upload Handler
-Connect `syncManager.setServerUploadHandler()` to your existing API server endpoints or database layer (e.g. Supabase, REST API, Express, Next.js API Routes):
-
-```typescript
-syncManager.setServerUploadHandler(async (pendingBatch) => {
-  // Send batch of offline transactions to backend
-  const response = await fetch('/api/sync', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ batch: pendingBatch }),
-  });
-
-  if (!response.ok) throw new Error('Sync endpoint error');
-
-  const result = await response.json();
-  return { successIds: result.successIds };
-});
-```
-
-### Step 4: Replace Direct API Calls with `syncManager.mutate()`
-Wherever user data is created, edited, or deleted in your UI forms:
-
-```typescript
-// BEFORE:
-// await fetch('/api/cards', { method: 'POST', body: JSON.stringify(data) });
-
-// AFTER (Supports both Online & Offline Seamlessly!):
-await syncManager.mutate('cards', 'CREATE', data);
-```
-
-### Step 5: Render Connection & Sync UI Badges
-Add `<NetworkSyncStatus syncManager={syncManager} />` to your app header/navbar so users can visually see:
-- 🟢 **Online & Synced**
-- 🔵 **Offline (P2P Mesh Active)**
-- 🟠 **Syncing...**
-- 🔴 **Offline (Saved Locally)**
-
----
-
-## 📋 Verification Checklist for AI Agent
-- [ ] Has IndexedDB initialized without console errors?
-- [ ] Does turning off network interface switch badge status to **Offline**?
-- [ ] Do form submissions succeed while offline and persist in `IndexedDB` outbox?
-- [ ] Does reconnecting internet trigger automatic server batch upload?
+- Preserve the single durable queue across attendance scanning, spot registration, and directory actions. Do not reintroduce the separate localStorage attendance uploader.
+- Preserve existing legacy sources during migration. Never clear a batch based only on a top-level success flag. Every operation needs its own acknowledgment.
+- Resolve saves after the IndexedDB transaction commits, including abort handling. Keep local snapshots separate from delivery state and retained history.
+- New entities/actions require explicit payload validation and a transactional server implementation. Arbitrary table writes are intentionally rejected.
+- Do not accept a peer-provided delivery flag or unsigned operation as a server acknowledgment. Preserve actor/device/event binding, certificate verification, payload signatures, durable deduplication, and reconnect catch-up.
+- Authorization comes from server-controlled app metadata and current operator status. Do not fall back to editable user metadata or the former unrestricted profile policy.
+- Server receipt insertion and business mutation must stay in the same database transaction. A replay returns its original receipt without applying the action again.
+- Build production HTML, static assets, service worker, and offline asset manifest together. A missing, empty, or wrong-content-type asset must fail preparation while preserving the previous complete bundle.
+- Use the Next.js guides bundled with the installed framework before changing routes, build behavior, or service-worker integration.
+- Run the offline regressions and real-browser suite after relevant changes. Test fixtures must not create production attendees or send real email.
+- The production migration and application deployment remain separate external actions. Do not infer production readiness from local passing tests or a successful QR pairing. Check the current rollout status and physical-device rehearsal.

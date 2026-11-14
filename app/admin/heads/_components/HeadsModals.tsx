@@ -90,20 +90,21 @@ export function HeadsModals({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="head-name" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Full Name *</Label>
-                <Input id="head-name" placeholder="e.g. Ramesh Kumar" value={state.headName} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headName', value: e.target.value })} required />
+                <Input id="head-name" placeholder="Full name" value={state.headName} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headName', value: e.target.value })} required />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="head-email" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Email (Login ID) *</Label>
-                <Input id="head-email" type="email" placeholder="ramesh@example.com" value={state.headEmail} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headEmail', value: e.target.value })} required />
+                <Input id="head-email" type="email" placeholder="email@example.com" value={state.headEmail} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headEmail', value: e.target.value })} required />
               </div>
             </div>
 
             {/* Password with generate */}
             <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
-              <Label className="text-[11px] font-bold text-muted-foreground uppercase">Password *</Label>
+              <Label htmlFor="head-password" className="text-[11px] font-bold text-muted-foreground uppercase">Password *</Label>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Input
+                    id="head-password"
                     type={state.visiblePasswords['head'] ? 'text' : 'password'}
                     value={state.headPassword}
                     onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headPassword', value: e.target.value })}
@@ -167,12 +168,12 @@ export function HeadsModals({
           <form onSubmit={handleUpdateHead} className="space-y-4 py-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
-                <Input value={state.headName} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headName', value: e.target.value })} required />
+                <Label htmlFor="edit-head-name" className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
+                <Input id="edit-head-name" value={state.headName} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headName', value: e.target.value })} required />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold text-muted-foreground uppercase">Email (Login ID) *</Label>
-                <Input type="email" value={state.headEmail} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headEmail', value: e.target.value })} required />
+                <Label htmlFor="edit-head-email" className="text-[11px] font-bold text-muted-foreground uppercase">Email (Login ID) *</Label>
+                <Input id="edit-head-email" type="email" value={state.headEmail} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headEmail', value: e.target.value })} required />
               </div>
             </div>
             <DialogFooter className="pt-2">
@@ -194,10 +195,11 @@ export function HeadsModals({
           </DialogHeader>
           <form onSubmit={handleResetPassword} className="space-y-4 py-2">
             <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
-              <Label className="text-[11px] font-bold text-muted-foreground uppercase">New Password *</Label>
+              <Label htmlFor="reset-head-password" className="text-[11px] font-bold text-muted-foreground uppercase">New Password *</Label>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Input
+                    id="reset-head-password"
                     type={state.visiblePasswords['reset'] ? 'text' : 'password'}
                     value={state.headPassword}
                     onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'headPassword', value: e.target.value })}

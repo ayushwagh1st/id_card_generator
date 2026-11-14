@@ -1,33 +1,39 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import { Activity, CheckCircle, Clock, XCircle, Zap } from 'lucide-react'
+import { Activity, CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getLiveAttendanceFeedAction } from '@/server/actions/attendance'
-import { toast } from 'sonner'
 import { GlassCard } from '@/components/ui/GlassCard'
+import { LoadError } from '@/components/ui/load-error'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { Button } from '@/components/ui/button'
 
 export default function LiveAttendancePage() {
   const [liveFeed, setLiveFeed] = useState<any[]>([])
   const [stats, setStats] = useState({ todayCheckins: 0, todayLates: 0 })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const refreshFeed = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await getLiveAttendanceFeedAction()
+      if (response.error) throw new Error(response.error)
+      const data = response.data || []
+      setLiveFeed(data)
+      setStats({ todayCheckins: data.filter((item: any) => item.attendance_status === 'Present').length, todayLates: data.filter((item: any) => item.attendance_status === 'Late').length })
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Check your connection and try again.')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    async function initFeed() {
-      try {
-        const res: any = await getLiveAttendanceFeedAction()
-        const data = res?.data || []
-        setLiveFeed(data)
-
-        const present = data.filter((d: any) => d.attendance_status === 'Present').length
-        const late = data.filter((d: any) => d.attendance_status === 'Late').length
-        setStats({ todayCheckins: present, todayLates: late })
-      } catch (err: any) {
-        toast.error('Failed to load initial attendance feed')
-      }
-    }
-
-    initFeed()
+    void refreshFeed()
 
     if (typeof window !== 'undefined' && !navigator.onLine) return
 
@@ -38,15 +44,7 @@ export default function LiveAttendancePage() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'attendance' },
         async () => {
-          const freshRes: any = await getLiveAttendanceFeedAction()
-          const freshData = freshRes?.data || []
-          setLiveFeed(freshData)
-          
-          const present = freshData.filter((d: any) => d.attendance_status === 'Present').length
-          const late = freshData.filter((d: any) => d.attendance_status === 'Late').length
-          setStats({ todayCheckins: present, todayLates: late })
-
-          toast.info(`New Check-in recorded!`)
+          await refreshFeed()
         }
       )
       .subscribe()
@@ -54,37 +52,12 @@ export default function LiveAttendancePage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [refreshFeed])
 
   return (
     <div className="space-y-6">
-      <GlassCard className="p-8 sm:p-10" glowColor="blue">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500">
-              <Zap className="w-4 h-4" />
-              <span>Real-Time Monitor</span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Live Attendance Telemetry
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl">
-              Watch volunteer venue check-ins as they happen in real-time across all active exhibition sessions.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center min-w-[90px]">
-              <div className="text-2xl font-bold text-emerald-500 tracking-tight">{stats.todayCheckins}</div>
-              <div className="text-[10px] font-mono uppercase font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">Present</div>
-            </div>
-            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center min-w-[90px]">
-              <div className="text-2xl font-bold text-amber-500 tracking-tight">{stats.todayLates}</div>
-              <div className="text-[10px] font-mono uppercase font-semibold text-amber-600 dark:text-amber-400 mt-0.5">Late</div>
-            </div>
-          </div>
-        </div>
-      </GlassCard>
+      <PageHeader title="Live attendance" description="Volunteer check-ins and late arrivals recorded today." actions={<Button variant="outline" onClick={() => void refreshFeed()} disabled={loading}><RefreshCw size={16} aria-hidden="true" />Refresh feed</Button>} />
+      {!error && !loading && <dl className="overview-context"><div><dt>Present</dt><dd>{stats.todayCheckins}</dd></div><div><dt>Late arrivals</dt><dd>{stats.todayLates}</dd></div></dl>}
 
       <GlassCard className="p-0 overflow-hidden" glowColor="purple">
         <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/60 flex items-center justify-between">
@@ -96,7 +69,7 @@ export default function LiveAttendancePage() {
         </div>
 
         <div className="p-0">
-          {liveFeed.length === 0 ? (
+          {loading && liveFeed.length === 0 ? <p className="task-empty" role="status">Loading attendance records…</p> : error ? <LoadError message={error} onRetry={() => void refreshFeed()} retrying={loading} /> : liveFeed.length === 0 ? (
             <div className="text-center py-16 px-4">
               <div className="mx-auto w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-3">
                 <Activity className="w-6 h-6" />

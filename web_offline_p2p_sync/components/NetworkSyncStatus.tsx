@@ -31,14 +31,14 @@ export const NetworkSyncStatus: React.FC<NetworkSyncStatusProps> = ({ syncManage
         icon: <RefreshCw className="w-4 h-4 animate-spin text-amber-500" />,
         text: state.pendingCount > 0 ? `${state.pendingCount} left` : 'Syncing',
         styles: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20',
-        pulse: true
+        pulse: false
       };
     }
 
     if (state.isOnline) {
       return {
         icon: <Wifi className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />,
-        text: 'Online',
+        text: state.failedCount ? `${state.failedCount} Need review` : state.pendingCount ? `${state.pendingCount} Queued` : 'Online',
         styles: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-700/50',
         pulse: false
       };
@@ -64,10 +64,12 @@ export const NetworkSyncStatus: React.FC<NetworkSyncStatusProps> = ({ syncManage
   const content = getStatusContent();
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onOpenModal}
-      className={`group cursor-pointer transition-all duration-200 ease-in-out hover:scale-105 inline-flex items-center h-8 px-3 rounded-full border shadow-sm backdrop-blur-sm ${content.styles}`}
+      className={`workspace-sync-status inline-flex items-center gap-2 ${content.styles}`}
       title="View Sync Queue & Offline Details"
+      aria-label={`Sync status: ${content.text}. View sync queue and offline details`}
     >
       <div className="flex items-center gap-2">
         <div className="relative flex items-center justify-center">
@@ -80,6 +82,6 @@ export const NetworkSyncStatus: React.FC<NetworkSyncStatusProps> = ({ syncManage
           {content.text}
         </span>
       </div>
-    </div>
+    </button>
   );
 };

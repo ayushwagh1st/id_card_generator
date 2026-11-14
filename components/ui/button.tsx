@@ -4,32 +4,32 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-full text-[13px] sm:text-sm font-medium tracking-[-0.01em] whitespace-nowrap transition-all duration-300 ease-out outline-none select-none disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97] active:opacity-80 active:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "ui-button group/button inline-flex shrink-0 items-center justify-center rounded-md text-sm font-medium whitespace-nowrap select-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default:
-          "bg-gradient-to-b from-[#47A1FF] to-[#007AFF] text-white shadow-[0_1px_2px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.2)] border border-[#0066D6]",
+          "ui-button-primary bg-primary text-primary-foreground border border-transparent",
         outline:
-          "apple-glass text-foreground hover:bg-black/5 active:bg-black/10",
+          "ui-button-outline border border-border bg-card text-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "ui-button-secondary bg-secondary text-secondary-foreground border border-transparent",
         ghost:
-          "text-foreground hover:bg-black/5 active:bg-black/10",
+          "ui-button-ghost text-foreground border border-transparent",
         destructive:
-          "bg-gradient-to-b from-[#FF6B60] to-[#FF3B30] text-white shadow-[0_1px_2px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.2)] border border-[#D63026]",
+          "ui-button-destructive bg-destructive text-white border border-transparent",
         link:
           "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 gap-2 px-4 py-2",
-        xs: "h-7 gap-1 rounded-xl px-2.5 text-[11px]",
-        sm: "h-8.5 gap-1.5 px-3 text-xs",
+        default: "min-h-11 gap-2 px-4 py-2.5",
+        xs: "min-h-11 gap-1 px-2.5 text-xs",
+        sm: "min-h-11 gap-1.5 px-3 text-xs",
         lg: "h-12 gap-2.5 px-6 text-sm sm:text-base",
-        icon: "size-9 rounded-xl",
-        "icon-xs": "size-7 rounded-lg",
-        "icon-sm": "size-8 rounded-xl",
-        "icon-lg": "size-11 rounded-2xl",
+        icon: "size-11",
+        "icon-xs": "size-11",
+        "icon-sm": "size-11",
+        "icon-lg": "size-12",
       },
     },
     defaultVariants: {
@@ -48,6 +48,8 @@ function Button({
   return (
     <ButtonPrimitive
       data-slot="button"
+      data-variant={variant}
+      data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

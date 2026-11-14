@@ -29,7 +29,7 @@ export async function logActivityAction(
     const { data: authData } = await supabase.auth.getUser()
     if (authData?.user) {
       userId = authData.user.id
-      role = authData.user.user_metadata?.role || 'UNKNOWN'
+      role = authData.user.app_metadata?.role || 'UNKNOWN'
       
       // Try to get name from profile
       const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', userId).single()

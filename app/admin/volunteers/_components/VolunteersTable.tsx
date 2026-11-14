@@ -1,272 +1,45 @@
-import Image from 'next/image'
 import { Users, Edit, Printer, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { GlassCard } from '@/components/ui/GlassCard'
+import { RecordIdentity as Identity, type VolunteerSummary } from '@/components/volunteers/RecordIdentity'
 
+export type VolunteerRecord = VolunteerSummary
 interface VolunteersTableProps {
-  volunteers: any[]
-  loading: boolean
-  selectedIds: string[]
-  page: number
-  totalPages: number
-  totalCount: number
-  searchTerm: string
-  filterStatus: string
-  filterModel: string
-  onToggleSelectAll: () => void
-  onToggleSelect: (id: string) => void
-  onOpenEdit: (vol: any) => void
-  onPrintSingle: (id: string) => void
-  onStatusChange: (id: string, status: string) => void
-  onPageChange: (updater: number | ((prev: number) => number)) => void
+  volunteers: VolunteerRecord[]; loading: boolean; selectedIds: string[]; page: number; totalPages: number; totalCount: number
+  searchTerm: string; filterStatus: string; filterModel: string
+  onToggleSelectAll: () => void; onToggleSelect: (id: string) => void; onOpenEdit: (volunteer: VolunteerRecord) => void
+  onPrintSingle: (id: string) => void; onStatusChange: (id: string, status: string) => void
+  onPageChange: (updater: number | ((previous: number) => number)) => void
 }
 
-export function VolunteersTable({
-  volunteers,
-  loading,
-  selectedIds,
-  page,
-  totalPages,
-  totalCount,
-  searchTerm,
-  filterStatus,
-  filterModel,
-  onToggleSelectAll,
-  onToggleSelect,
-  onOpenEdit,
-  onPrintSingle,
-  onStatusChange,
-  onPageChange,
-}: VolunteersTableProps) {
-  if (loading) {
-    return (
-      <GlassCard className="p-0 overflow-hidden" glowColor="blue">
-        <div className="p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-8 w-[200px]" />
-            <Skeleton className="h-8 w-[150px]" />
-          </div>
-          <div className="rounded-md border">
-            <div className="border-b px-4 py-3 flex gap-4 bg-muted/40">
-              <Skeleton className="h-4 w-6" />
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-12" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-4 w-full" />
-            </div>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="px-4 py-4 flex items-center gap-4 border-b last:border-0">
-                <Skeleton className="h-4 w-4" />
-                <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-10 w-10 rounded-md" />
-                <div className="space-y-2 w-48">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-3 w-2/3" />
-                </div>
-                <div className="space-y-2 w-48 hidden md:block">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-3 w-2/3" />
-                </div>
-                <Skeleton className="h-8 w-16 ml-auto rounded-full" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </GlassCard>
-    )
-  }
+function StatusControl({ volunteer, onChange }: { volunteer: VolunteerRecord; onChange: VolunteersTableProps['onStatusChange'] }) {
+  return <Select value={volunteer.status} onValueChange={value => { if (value && ['Pending', 'Approved', 'Rejected'].includes(value)) onChange(volunteer.id, value) }}><SelectTrigger aria-label={`Status for ${volunteer.full_name}`} className={`roster-status-select status-${volunteer.status.toLowerCase()}`}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Pending">Pending</SelectItem><SelectItem value="Approved">Approved</SelectItem><SelectItem value="Rejected">Rejected</SelectItem></SelectContent></Select>
+}
 
-  return (
-    <GlassCard className="p-0 overflow-hidden" glowColor="blue">
-      <div className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-muted/40">
-              <TableRow>
-                <TableHead className="w-12 py-4 px-4">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                    checked={selectedIds.length === volunteers.length && volunteers.length > 0}
-                    onChange={onToggleSelectAll}
-                    aria-label="Select all volunteers"
-                  />
-                </TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground min-w-[120px]">
-                  SNK ID
-                </TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                  Photo
-                </TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground min-w-[150px]">
-                  Name & Role
-                </TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground min-w-[130px]">
-                  Mobile
-                </TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground min-w-[150px]">
-                  Model Area
-                </TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                  Status
-                </TableHead>
-                <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground text-right px-6">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(() => {
-                const selectedSet = new Set(selectedIds)
-                return volunteers.map((vol) => (
-                  <TableRow key={vol.id} className="hover:bg-muted/20 transition-colors duration-200">
-                    <TableCell className="py-4 px-4">
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                        checked={selectedSet.has(vol.id)}
-                        onChange={() => onToggleSelect(vol.id)}
-                        aria-label={`Select ${vol.full_name}`}
-                      />
-                    </TableCell>
-                    <TableCell className="font-bold text-sm text-primary">
-                    {vol.snk_id || 'Pending'}
-                  </TableCell>
-                  <TableCell>
-                    <div className="w-10 h-12 rounded bg-muted overflow-hidden flex items-center justify-center border shadow-sm">
-                      {vol.photo_url ? (
-                        <Image
-                          src={vol.photo_url}
-                          alt={`${vol.full_name}'s avatar`}
-                          width={40}
-                          height={48}
-                          unoptimized
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-zinc-900 dark:text-zinc-100">{vol.full_name}</span>
-                      <span className="font-semibold text-zinc-900 dark:text-zinc-100 truncate block text-[10px] text-muted-foreground">
-                        {vol.role || 'Volunteer'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm font-medium text-muted-foreground">
-                    {vol.mobile_number}
-                  </TableCell>
-                  <TableCell className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                    {vol.models ? vol.models.name : <span className="text-xs font-medium text-zinc-400">None Assigned</span>}
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={vol.status}
-                      onValueChange={(val) => onStatusChange(vol.id, val)}
-                    >
-                      <SelectTrigger
-                        className={`h-8 w-32 border-none font-bold text-xs rounded-full px-3 py-1 ${
-                          vol.status === 'Approved'
-                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400'
-                            : vol.status === 'Rejected'
-                            ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400'
-                            : 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400'
-                        }`}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        <SelectItem value="Pending" className="text-xs font-semibold">
-                          Pending
-                        </SelectItem>
-                        <SelectItem value="Approved" className="text-xs font-semibold">
-                          Approved
-                        </SelectItem>
-                        <SelectItem value="Rejected" className="text-xs font-semibold">
-                          Rejected
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="text-right px-6">
-                    <div className="flex justify-end gap-1.5">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onOpenEdit(vol)}
-                        className="hover:bg-primary/10 rounded-xl"
-                        aria-label={`Edit ${vol.full_name}`}
-                        title="Edit Volunteer"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onPrintSingle(vol.id)}
-                        className="hover:bg-primary/10 text-primary rounded-xl"
-                        title="Print Single Card"
-                        aria-label={`Print card for ${vol.full_name}`}
-                      >
-                        <Printer className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            })()}
-              {volunteers.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-16">
-                    <div className="flex flex-col items-center justify-center space-y-3">
-                      <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center">
-                        <Users className="w-8 h-8 text-muted-foreground/50" />
-                      </div>
-                      <p className="text-muted-foreground font-semibold">No volunteers found</p>
-                      <p className="text-xs text-muted-foreground/70 max-w-sm mx-auto">
-                        {searchTerm || filterStatus !== 'all' || filterModel !== 'all'
-                          ? "Try adjusting your search or filters to find what you're looking for."
-                          : "There are no volunteers in the system yet."}
-                      </p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+export function VolunteersTable({ volunteers, loading, selectedIds, page, totalPages, totalCount, searchTerm, filterStatus, filterModel, onToggleSelectAll, onToggleSelect, onOpenEdit, onPrintSingle, onStatusChange, onPageChange }: VolunteersTableProps) {
+  const selected = new Set(selectedIds)
+  const selectedOnPage = volunteers.filter(volunteer => selected.has(volunteer.id)).length
+  const allOnPageSelected = volunteers.length > 0 && selectedOnPage === volunteers.length
+  const filtered = !!searchTerm || filterStatus !== 'all' || filterModel !== 'all'
+  const start = (page - 1) * 20 + 1
 
-        {totalCount > 0 && (
-          <div className="border-t border-slate-200/50 dark:border-slate-800/60 p-4 flex items-center justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Previous
-            </Button>
-            <div className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400">
-              Page {page} of {Math.max(1, totalPages)}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange((p) => p + 1)}
-              disabled={page >= totalPages}
-            >
-              Next <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-        )}
-      </div>
-    </GlassCard>
-  )
+  if (loading) return <div className="ui-panel p-5 space-y-4" role="status"><p className="text-muted-foreground">Loading volunteer records…</p>{[1, 2, 3].map(id => <Skeleton key={id} className="h-20" />)}</div>
+  if (!volunteers.length) return <div className="ui-panel task-empty"><Users size={26} aria-hidden="true" /><h2>{filtered ? 'No volunteers match these filters' : 'No volunteers registered yet'}</h2><p>{filtered ? 'Try a different name, status, or exhibition model.' : 'Add a volunteer or import a CSV roster to get started.'}</p></div>
+
+  return <section className="roster-records" aria-label="Volunteer records">
+    <div className="roster-page-selection"><Checkbox checked={allOnPageSelected} indeterminate={selectedOnPage > 0 && !allOnPageSelected} onCheckedChange={onToggleSelectAll} aria-label="Select all volunteers on this page" /><span>Select this page <small>({volunteers.length} records)</small></span></div>
+    <div className="roster-mobile-list">{volunteers.map(volunteer => <article className="roster-mobile-record" key={volunteer.id} data-selected={selected.has(volunteer.id)}>
+      <div className="roster-mobile-identity"><Identity volunteer={volunteer} /><Checkbox checked={selected.has(volunteer.id)} onCheckedChange={() => onToggleSelect(volunteer.id)} aria-label={`Select ${volunteer.full_name}`} /></div>
+      <div className="roster-mobile-meta"><div><span>Exhibition model</span><strong>{volunteer.models?.name || 'Not assigned'}</strong></div><StatusControl volunteer={volunteer} onChange={onStatusChange} /></div>
+      {volunteer.mobile_number && <p className="roster-mobile-contact">{volunteer.mobile_number}</p>}
+      <div className="roster-mobile-actions"><Button variant="outline" onClick={() => onOpenEdit(volunteer)} aria-label={`Edit ${volunteer.full_name}`}><Edit size={15} aria-hidden="true" />Edit profile</Button><Button variant="ghost" onClick={() => onPrintSingle(volunteer.id)} aria-label={`Print card for ${volunteer.full_name}`}><Printer size={15} aria-hidden="true" />Print ID</Button></div>
+    </article>)}</div>
+    <div className="roster-desktop-table"><Table><TableHeader><TableRow><TableHead className="w-16"><span className="sr-only">Selection</span></TableHead><TableHead>Volunteer</TableHead><TableHead>Exhibition model</TableHead><TableHead>Mobile</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>{volunteers.map(volunteer => <TableRow key={volunteer.id} data-state={selected.has(volunteer.id) ? 'selected' : undefined}>
+      <TableCell><Checkbox checked={selected.has(volunteer.id)} onCheckedChange={() => onToggleSelect(volunteer.id)} aria-label={`Select ${volunteer.full_name}`} /></TableCell><TableCell><Identity volunteer={volunteer} /></TableCell><TableCell className="roster-model-cell">{volunteer.models?.name || 'Not assigned'}</TableCell><TableCell>{volunteer.mobile_number || <span className="text-muted-foreground">Not provided</span>}</TableCell><TableCell><StatusControl volunteer={volunteer} onChange={onStatusChange} /></TableCell><TableCell><div className="flex justify-end gap-1"><Button variant="ghost" size="icon" onClick={() => onOpenEdit(volunteer)} aria-label={`Edit ${volunteer.full_name}`}><Edit size={16} aria-hidden="true" /></Button><Button variant="ghost" size="icon" onClick={() => onPrintSingle(volunteer.id)} aria-label={`Print card for ${volunteer.full_name}`}><Printer size={16} aria-hidden="true" /></Button></div></TableCell>
+    </TableRow>)}</TableBody></Table></div>
+    <footer className="roster-pagination"><span>{start} to {Math.min(start + volunteers.length - 1, totalCount)} of {totalCount} volunteers</span><div><Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(previous => Math.max(1, previous - 1))}><ChevronLeft size={15} aria-hidden="true" />Previous</Button><span aria-live="polite">{page} / {Math.max(1, totalPages)}</span><Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => onPageChange(previous => previous + 1)}>Next<ChevronRight size={15} aria-hidden="true" /></Button></div></footer>
+  </section>
 }

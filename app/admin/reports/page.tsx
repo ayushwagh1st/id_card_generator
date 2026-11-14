@@ -1,17 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { FileText, Download, Activity, Users, Database, Shield, LayoutGrid, Loader2 } from 'lucide-react'
+import { Activity, Users, Database, Shield, LayoutGrid } from 'lucide-react'
 import { getActivitiesAction } from '@/server/actions/activity'
 import { getVolunteerReportData, getSessionReportData, getModelReportData, getSecurityReportData, getRegisteredChildrenReportData } from '@/server/actions/reports'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { exportToPDF, PDFSummaryStat } from '@/lib/pdf'
 import { GlassCard } from '@/components/ui/GlassCard'
-import Image from 'next/image'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { ExportMenu } from '@/components/ui/export-menu'
 
 const reports = [
   {
@@ -208,66 +208,18 @@ export default function AdminReportsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Hero Banner */}
-      <GlassCard className="p-8 md:p-10 relative overflow-hidden" glowColor="emerald">
-        <div className="relative z-10 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold tracking-wide uppercase border border-emerald-500/20">
-            <FileText className="w-4 h-4" /> 
-            <span>Hub</span>
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Report Hub
-          </h1>
-          <p className="font-sans text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl leading-relaxed">
-            Generate beautiful PDF analytics and comprehensive data exports across all system modules.
-          </p>
-        </div>
-      </GlassCard>
+      <PageHeader title="Reports" description="Choose a report and export registration or attendance records as PDF or CSV." />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <ul className="report-list">
         {reports.map(report => {
           const Icon = report.icon
           const isGenerating = generating === report.id
           
           return (
-            <GlassCard key={report.id} className="p-6 flex flex-col justify-between gap-4" glowColor="blue">
-              <div className="space-y-3">
-                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-slate-900 dark:text-white">{report.title}</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{report.description}</p>
-                </div>
-              </div>
-              <div className="flex gap-2 w-full mt-2">
-                <Button 
-                  onClick={() => handleGenerateReport(report.id, 'pdf')} 
-                  disabled={isGenerating}
-                  className="flex-1"
-                  variant="outline"
-                >
-                  {isGenerating ? (
-                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                  ) : (
-                    <Download className="w-3.5 h-3.5 mr-1.5" />
-                  )}
-                  PDF
-                </Button>
-                <Button 
-                  onClick={() => handleGenerateReport(report.id, 'csv')} 
-                  disabled={isGenerating}
-                  className="flex-1"
-                  variant="outline"
-                >
-                  <FileText className="w-3.5 h-3.5 mr-1.5" />
-                  CSV
-                </Button>
-              </div>
-            </GlassCard>
+            <li className="report-option" key={report.id}><Icon size={21} aria-hidden="true" /><div><h2>{report.title}</h2><p>{report.description}</p>{isGenerating && <p role="status">Preparing report…</p>}</div><ExportMenu label={`Export ${report.title}`} disabled={isGenerating} onCSV={() => handleGenerateReport(report.id, 'csv')} onPDF={() => handleGenerateReport(report.id, 'pdf')} /></li>
           )
         })}
-      </div>
+      </ul>
 
       <GlassCard className="p-0 overflow-hidden mt-8" glowColor="purple">
         <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/60 flex items-center justify-between">

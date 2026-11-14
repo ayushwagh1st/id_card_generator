@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SearchField } from '@/components/ui/search-field'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -13,12 +14,15 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { formatModelLabel } from '@/lib/formatters'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Search, Printer, Trash2, Edit, Plus, Users, Filter, CheckCircle, UploadCloud, Download } from 'lucide-react'
+import { Search, Printer, Trash2, Edit, Eye, Plus, Users, Filter, CheckCircle, UploadCloud, Download } from 'lucide-react'
 import { AnimatedLoader } from '@/components/ui/animated-loader'
 import { compressImage } from '@/lib/image'
 import { CSVUpload } from '@/components/volunteers/CSVUpload'
 import ImageCropperDialog from '@/components/volunteers/ImageCropperDialog'
 import { toast } from 'sonner'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { ExportMenu } from '@/components/ui/export-menu'
+import { VolunteerSummaryCard } from '@/components/volunteers/VolunteerSummaryCard'
 import { exportToPDF } from '@/lib/pdf'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { getHeadVolunteersDataAction, createVolunteerAction, updateVolunteerAction, bulkImportVolunteersAction, uploadVolunteerPhotoAction } from './actions.server'
@@ -290,21 +294,7 @@ export default function HeadVolunteersPage() {
         imageSrc={state.cropImageSrc}
         onCropComplete={handleCropComplete}
       />
-      {/* Header */}
-      <GlassCard className="p-6 md:p-8" glowColor="blue">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500 mb-1">
-            <Users className="w-3.5 h-3.5" />
-            <span>Supervised Volunteers</span>
-          </div>
-          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Model Head Volunteer Roster
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl">
-            Register and manage volunteers allocated to your supervised Samagam models. Add photo assets and submit for approval.
-          </p>
-        </div>
-      </GlassCard>
+      <PageHeader title="My volunteers" description="Register your team and review approval status. Approved profiles are locked." />
 
       {state.myModels.length === 0 ? (
         <Card className="bg-card p-12 text-center">
@@ -327,20 +317,15 @@ export default function HeadVolunteersPage() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               {/* Search & Filters */}
               <div className="flex flex-wrap items-center gap-3">
-                <div className="relative w-full sm:w-60">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
+                  <SearchField id="head-volunteer-search" label="Search volunteers" className="sm:w-72"
                     placeholder="Search name, ID, phone..."
-                    className="pl-9"
                     value={state.searchTerm}
                     onChange={(e) => dispatch({ type: 'SET_STATE', field: 'searchTerm', payload: e.target.value })}
                   />
-                </div>
 
                 {/* Model Filter */}
                 <Select value={state.filterModel} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'filterModel', payload: val || 'all' })}>
-                  <SelectTrigger className="w-full sm:w-44 bg-card border-primary/10 rounded-xl">
+                  <SelectTrigger aria-label="Filter volunteers by model" className="w-full sm:w-44 bg-card border-primary/10 rounded-xl">
                     <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="All My Models" />
                   </SelectTrigger>
@@ -354,7 +339,7 @@ export default function HeadVolunteersPage() {
 
                 {/* Status Filter */}
                 <Select value={state.filterStatus} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'filterStatus', payload: val || 'all' })}>
-                  <SelectTrigger className="w-full sm:w-36 bg-card border-primary/10 rounded-xl">
+                  <SelectTrigger aria-label="Filter volunteers by status" className="w-full sm:w-36 bg-card border-primary/10 rounded-xl">
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -367,39 +352,20 @@ export default function HeadVolunteersPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={() => {
-                    window.location.href = `/api/export?status=${state.filterStatus}&model=${state.filterModel}&search=${state.searchTerm}`
-                  }}
-                >
-                  <Download className="h-4 w-4" />
-                  Export CSV
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={handleExportPDF}
-                >
-                  <Download className="h-4 w-4" />
-                  Export PDF
-                </Button>
+                <ExportMenu onCSV={() => { window.location.href = `/api/export?${new URLSearchParams({status: state.filterStatus, model: state.filterModel, search: state.searchTerm})}` }} onPDF={handleExportPDF} />
 
                 {/* Add Trigger */}
                 <Dialog open={state.isAddOpen} onOpenChange={(val) => dispatch({ type: 'SET_STATE', field: 'isAddOpen', payload: val })}>
-                  <DialogTrigger>
-                    <Button
+                  <DialogTrigger render={<Button
                       className="w-full sm:w-auto px-5 gap-2"
                       onClick={() => {
                         dispatch({ type: 'RESET_FORM' });
                       }}
-                    >
+                    />}>
                       <Plus className="h-4 w-4" />
                       Add Volunteer
-                    </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-xl rounded-xl max-h-[90vh] overflow-y-auto">
+                  <DialogContent className="volunteer-editor sm:max-w-2xl">
                     <DialogHeader>
                       <DialogTitle className="text-xl font-bold">Register New Volunteer</DialogTitle>
                       <DialogDescription>Input profile details. Approved cards will be generated by the Super Admin.</DialogDescription>
@@ -407,20 +373,20 @@ export default function HeadVolunteersPage() {
                     <form onSubmit={handleCreateVolunteer} className="space-y-4 py-2">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
-                          <Input value={state.fullName} onChange={e => dispatch({ type: 'SET_STATE', field: 'fullName', payload: e.target.value })} required />
+                          <Label htmlFor="team-name" className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
+                          <Input id="team-name" value={state.fullName} onChange={e => dispatch({ type: 'SET_STATE', field: 'fullName', payload: e.target.value })} required />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
-                          <Input type="tel" value={state.mobileNumber} onChange={e => dispatch({ type: 'SET_STATE', field: 'mobileNumber', payload: e.target.value.replace(/\D/g, '') })} maxLength={10} required />
+                          <Label htmlFor="team-mobile" className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
+                          <Input id="team-mobile" type="tel" value={state.mobileNumber} onChange={e => dispatch({ type: 'SET_STATE', field: 'mobileNumber', payload: e.target.value.replace(/\D/g, '') })} maxLength={10} required />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender *</Label>
+                          <Label htmlFor="team-gender" className="text-[11px] font-bold text-muted-foreground uppercase">Gender *</Label>
                           <Select value={state.gender} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'gender', payload: val || 'Male' })} required>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectTrigger id="team-gender"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Male">Male</SelectItem>
                               <SelectItem value="Female">Female</SelectItem>
@@ -429,13 +395,13 @@ export default function HeadVolunteersPage() {
                           </Select>
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age *</Label>
-                          <Input type="number" value={state.age} onChange={e => dispatch({ type: 'SET_STATE', field: 'age', payload: e.target.value })} required />
+                          <Label htmlFor="team-age" className="text-[11px] font-bold text-muted-foreground uppercase">Age *</Label>
+                          <Input id="team-age" type="number" value={state.age} onChange={e => dispatch({ type: 'SET_STATE', field: 'age', payload: e.target.value })} required />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Seva/Role</Label>
+                          <Label htmlFor="team-role" className="text-[11px] font-bold text-muted-foreground uppercase">Seva/Role</Label>
                           <Select value={state.role} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'role', payload: val || 'Volunteer' })}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectTrigger id="team-role"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Volunteer">Volunteer</SelectItem>
                               <SelectItem value="Model Incharge">Model Incharge</SelectItem>
@@ -447,13 +413,13 @@ export default function HeadVolunteersPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
-                          <Input value={state.branch} onChange={e => dispatch({ type: 'SET_STATE', field: 'branch', payload: e.target.value })} />
+                          <Label htmlFor="team-branch" className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
+                          <Input id="team-branch" value={state.branch} onChange={e => dispatch({ type: 'SET_STATE', field: 'branch', payload: e.target.value })} />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
+                          <Label htmlFor="team-model" className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
                           <Select value={state.modelId} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'modelId', payload: val || '' })}>
-                            <SelectTrigger>
+                            <SelectTrigger id="team-model">
                               <SelectValue placeholder="Choose Division">
                                 {state.myModels.find((m: any) => m.id === state.modelId) ? formatModelLabel(state.myModels.find((m: any) => m.id === state.modelId)) : "Choose Division"}
                               </SelectValue>
@@ -469,12 +435,12 @@ export default function HeadVolunteersPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
-                          <Input type="tel" value={state.emergencyContact} onChange={e => dispatch({ type: 'SET_STATE', field: 'emergencyContact', payload: e.target.value.replace(/\D/g, '') })} maxLength={10} required />
+                          <Label htmlFor="team-emergency" className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
+                          <Input id="team-emergency" type="tel" value={state.emergencyContact} onChange={e => dispatch({ type: 'SET_STATE', field: 'emergencyContact', payload: e.target.value.replace(/\D/g, '') })} maxLength={10} required />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
-                          <Input value={state.address} onChange={e => dispatch({ type: 'SET_STATE', field: 'address', payload: e.target.value })} />
+                          <Label htmlFor="team-address" className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
+                          <Input id="team-address" value={state.address} onChange={e => dispatch({ type: 'SET_STATE', field: 'address', payload: e.target.value })} />
                         </div>
                       </div>
 
@@ -487,18 +453,18 @@ export default function HeadVolunteersPage() {
                           </div>
                         </div>
                         <div className="space-y-1 md:col-span-8">
-                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
-                          <Input value={state.remarks} onChange={e => dispatch({ type: 'SET_STATE', field: 'remarks', payload: e.target.value })} />
+                          <Label htmlFor="team-remarks" className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
+                          <Input id="team-remarks" value={state.remarks} onChange={e => dispatch({ type: 'SET_STATE', field: 'remarks', payload: e.target.value })} />
                         </div>
                       </div>
 
                       <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
-                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo *</Label>
+                        <Label htmlFor="team-photo" className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo *</Label>
                         <div className="flex items-center gap-4 mt-2">
                           {state.photoUrl && (
                             <Image src={state.photoUrl} alt="Volunteer preview" width={64} height={80} unoptimized className="w-16 h-20 object-cover rounded-md border" />
                           )}
-                          <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={state.uploadingPhoto} />
+                          <Input id="team-photo" type="file" accept="image/*" onChange={handlePhotoUpload} disabled={state.uploadingPhoto} />
                           {state.uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
                         </div>
                       </div>
@@ -515,28 +481,28 @@ export default function HeadVolunteersPage() {
 
             {/* Edit Volunteer Dialog */}
             <Dialog open={state.isEditOpen} onOpenChange={(val) => dispatch({ type: 'SET_STATE', field: 'isEditOpen', payload: val })}>
-              <DialogContent className="sm:max-w-xl rounded-xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className={`volunteer-editor sm:max-w-2xl ${state.currentVolunteer?.status === 'Approved' ? 'readonly-profile' : ''}`}>
                 <DialogHeader>
-                  <DialogTitle className="text-xl font-bold">Edit Volunteer Details</DialogTitle>
+                  <DialogTitle>{state.currentVolunteer?.status === 'Approved' ? 'Volunteer details' : 'Edit volunteer'}</DialogTitle>
                   <DialogDescription>Modify fields and save changes. Cards already approved are locked from head edits.</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleUpdateVolunteer} className="space-y-4 py-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
-                      <Input value={state.fullName} onChange={e => dispatch({ type: 'SET_STATE', field: 'fullName', payload: e.target.value })} required disabled={state.currentVolunteer?.status === 'Approved'} />
+                      <Label htmlFor="edit-team-name" className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
+                      <Input id="edit-team-name" value={state.fullName} onChange={e => dispatch({ type: 'SET_STATE', field: 'fullName', payload: e.target.value })} required disabled={state.currentVolunteer?.status === 'Approved'} />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
-                      <Input type="tel" value={state.mobileNumber} onChange={e => dispatch({ type: 'SET_STATE', field: 'mobileNumber', payload: e.target.value.replace(/\D/g, '') })} disabled={state.currentVolunteer?.status === 'Approved'} maxLength={10} required />
+                      <Label htmlFor="edit-team-mobile" className="text-[11px] font-bold text-muted-foreground uppercase">Contact Number *</Label>
+                      <Input id="edit-team-mobile" type="tel" value={state.mobileNumber} onChange={e => dispatch({ type: 'SET_STATE', field: 'mobileNumber', payload: e.target.value.replace(/\D/g, '') })} disabled={state.currentVolunteer?.status === 'Approved'} maxLength={10} required />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Gender *</Label>
+                      <Label htmlFor="edit-team-gender" className="text-[11px] font-bold text-muted-foreground uppercase">Gender *</Label>
                       <Select value={state.gender} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'gender', payload: val || 'Male' })} disabled={state.currentVolunteer?.status === 'Approved'} required>
-                        <SelectTrigger disabled={state.currentVolunteer?.status === 'Approved'}><SelectValue /></SelectTrigger>
+                        <SelectTrigger id="edit-team-gender" disabled={state.currentVolunteer?.status === 'Approved'}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Male">Male</SelectItem>
                           <SelectItem value="Female">Female</SelectItem>
@@ -545,13 +511,13 @@ export default function HeadVolunteersPage() {
                       </Select>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Age *</Label>
-                      <Input type="number" value={state.age} onChange={e => dispatch({ type: 'SET_STATE', field: 'age', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} required />
+                      <Label htmlFor="edit-team-age" className="text-[11px] font-bold text-muted-foreground uppercase">Age *</Label>
+                      <Input id="edit-team-age" type="number" value={state.age} onChange={e => dispatch({ type: 'SET_STATE', field: 'age', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} required />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Seva/Role</Label>
+                      <Label htmlFor="edit-team-role" className="text-[11px] font-bold text-muted-foreground uppercase">Seva/Role</Label>
                       <Select value={state.role} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'role', payload: val || 'Volunteer' })} disabled={state.currentVolunteer?.status === 'Approved'}>
-                        <SelectTrigger disabled={state.currentVolunteer?.status === 'Approved'}><SelectValue /></SelectTrigger>
+                        <SelectTrigger id="edit-team-role" disabled={state.currentVolunteer?.status === 'Approved'}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Volunteer">Volunteer</SelectItem>
                           <SelectItem value="Model Incharge">Model Incharge</SelectItem>
@@ -563,13 +529,13 @@ export default function HeadVolunteersPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
-                      <Input value={state.branch} onChange={e => dispatch({ type: 'SET_STATE', field: 'branch', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} />
+                      <Label htmlFor="edit-team-branch" className="text-[11px] font-bold text-muted-foreground uppercase">Branch</Label>
+                      <Input id="edit-team-branch" value={state.branch} onChange={e => dispatch({ type: 'SET_STATE', field: 'branch', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
+                      <Label htmlFor="edit-team-model" className="text-[11px] font-bold text-muted-foreground uppercase">Model / Duty Area</Label>
                       <Select value={state.modelId} onValueChange={(val) => dispatch({ type: 'SET_STATE', field: 'modelId', payload: val || '' })} disabled={state.currentVolunteer?.status === 'Approved'}>
-                        <SelectTrigger disabled={state.currentVolunteer?.status === 'Approved'}>
+                        <SelectTrigger id="edit-team-model" disabled={state.currentVolunteer?.status === 'Approved'}>
                           <SelectValue placeholder="Choose Division">
                             {state.myModels.find((m: any) => m.id === state.modelId) ? formatModelLabel(state.myModels.find((m: any) => m.id === state.modelId)) : "Choose Division"}
                           </SelectValue>
@@ -585,12 +551,12 @@ export default function HeadVolunteersPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
-                      <Input type="tel" value={state.emergencyContact} onChange={e => dispatch({ type: 'SET_STATE', field: 'emergencyContact', payload: e.target.value.replace(/\D/g, '') })} disabled={state.currentVolunteer?.status === 'Approved'} maxLength={10} required />
+                      <Label htmlFor="edit-team-emergency" className="text-[11px] font-bold text-muted-foreground uppercase">Emergency Contact *</Label>
+                      <Input id="edit-team-emergency" type="tel" value={state.emergencyContact} onChange={e => dispatch({ type: 'SET_STATE', field: 'emergencyContact', payload: e.target.value.replace(/\D/g, '') })} disabled={state.currentVolunteer?.status === 'Approved'} maxLength={10} required />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
-                      <Input value={state.address} onChange={e => dispatch({ type: 'SET_STATE', field: 'address', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} />
+                      <Label htmlFor="edit-team-address" className="text-[11px] font-bold text-muted-foreground uppercase">Address</Label>
+                      <Input id="edit-team-address" value={state.address} onChange={e => dispatch({ type: 'SET_STATE', field: 'address', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} />
                     </div>
                   </div>
 
@@ -603,31 +569,31 @@ export default function HeadVolunteersPage() {
                       </div>
                     </div>
                     <div className="space-y-1 md:col-span-8">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
-                      <Input value={state.remarks} onChange={e => dispatch({ type: 'SET_STATE', field: 'remarks', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} />
+                      <Label htmlFor="edit-team-remarks" className="text-[11px] font-bold text-muted-foreground uppercase">Remarks</Label>
+                      <Input id="edit-team-remarks" value={state.remarks} onChange={e => dispatch({ type: 'SET_STATE', field: 'remarks', payload: e.target.value })} disabled={state.currentVolunteer?.status === 'Approved'} />
                     </div>
                   </div>
 
                   <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
-                    <Label className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo *</Label>
+                    <Label htmlFor="edit-team-photo" className="text-[11px] font-bold text-muted-foreground uppercase">Volunteer Photo *</Label>
                     <div className="flex items-center gap-4 mt-2">
                       {state.photoUrl && (
                         <Image src={state.photoUrl} alt="Volunteer preview" width={64} height={80} unoptimized className="w-16 h-20 object-cover rounded-md border" />
                       )}
-                      <Input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={state.uploadingPhoto || state.currentVolunteer?.status === 'Approved'} />
+                      <Input id="edit-team-photo" type="file" accept="image/*" onChange={handlePhotoUpload} disabled={state.uploadingPhoto || state.currentVolunteer?.status === 'Approved'} />
                       {state.uploadingPhoto && <AnimatedLoader className="w-4 h-4" />}
                     </div>
                   </div>
 
                   {state.currentVolunteer?.status === 'Approved' && (
                     <p className="text-[11px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/15 p-2 rounded border border-amber-100">
-                      ⚠️ Profile is approved and locked. Contact the Super Admin to request edits.
+                      This approved profile is locked. Contact the Super Admin to request edits.
                     </p>
                   )}
 
                   <DialogFooter className="pt-2">
-                    <Button type="button" variant="outline" onClick={() => dispatch({ type: 'SET_STATE', field: 'isEditOpen', payload: false })}>Cancel</Button>
-                    <Button type="submit" disabled={state.currentVolunteer?.status === 'Approved'}>Save Changes</Button>
+                    <Button type="button" variant="outline" onClick={() => dispatch({ type: 'SET_STATE', field: 'isEditOpen', payload: false })}>{state.currentVolunteer?.status === 'Approved' ? 'Close' : 'Cancel'}</Button>
+                    {state.currentVolunteer?.status !== 'Approved' && <Button type="submit">Save changes</Button>}
                   </DialogFooter>
                 </form>
               </DialogContent>
@@ -673,6 +639,9 @@ export default function HeadVolunteersPage() {
                     No volunteers registered in your models. Add one above!
                   </div>
                 ) : (
+                  <>
+                  <div className="head-roster-mobile roster-mobile-list">{filteredVolunteers.map((vol: any) => <VolunteerSummaryCard key={vol.id} volunteer={vol} onOpen={() => openEditDialog(vol)} />)}{filteredVolunteers.length === 0 && <p className="task-empty">No volunteers match these filters. Try a different search or status.</p>}</div>
+                  <div className="head-roster-desktop">
                   <Table>
                     <TableHeader className="bg-muted/40">
                       <TableRow>
@@ -717,8 +686,8 @@ export default function HeadVolunteersPage() {
                             </span>
                           </TableCell>
                           <TableCell className="text-right py-4 space-x-1 px-6">
-                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(vol)} title="Edit Details" className="h-8 w-8 hover:bg-primary/10 rounded-lg">
-                              <Edit className="h-4 w-4 text-primary" />
+                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(vol)} aria-label={`${vol.status === 'Approved' ? 'View' : 'Edit'} ${vol.full_name}`} title={vol.status === 'Approved' ? 'View details' : 'Edit profile'} className="h-8 w-8 hover:bg-primary/10 rounded-lg">
+                              {vol.status === 'Approved' ? <Eye className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -742,6 +711,8 @@ export default function HeadVolunteersPage() {
                       )}
                     </TableBody>
                   </Table>
+                  </div>
+                  </>
                 )}
               </div>
             </div>

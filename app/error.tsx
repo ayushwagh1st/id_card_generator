@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { AlertTriangle, Home } from 'lucide-react'
 import Link from 'next/link'
 
@@ -16,7 +16,6 @@ export default function GlobalError({
     // Ignore Next.js devtools simulated errors
     if (error.message === 'NEXT_DEVTOOLS_SIMULATED_ERROR') return;
 
-    // In production, this would securely ship logs to Datadog / Sentry
     if (navigator.onLine) {
       console.error('[PROD_LOG] Global Error Caught:', {
         message: error.message,
@@ -28,32 +27,31 @@ export default function GlobalError({
   }, [error])
 
   const isOfflineError = typeof navigator !== 'undefined' && !navigator.onLine;
-  const displayTitle = isOfflineError ? 'Not Available Offline' : 'System Error Occurred';
+  const displayTitle = isOfflineError ? 'This page needs a connection.' : 'This page couldn’t load.';
   const displayMessage = isOfflineError 
     ? 'This specific page was not saved to your offline cache. Please reconnect to the internet to view it.'
-    : 'Our automated monitoring has logged this issue. Please try refreshing or return to the dashboard.';
+    : 'Try loading the page again. If the problem continues, return home and contact support.';
 
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center bg-zinc-950 text-white p-4">
+    <div className="flex min-h-dvh w-full flex-col items-center justify-center bg-background text-foreground p-6">
       <div className="max-w-md w-full space-y-6 text-center">
-        <div className="mx-auto w-20 h-20 bg-rose-500/10 rounded-full flex items-center justify-center border border-rose-500/20 shadow-inner">
-          <AlertTriangle className="w-10 h-10 text-rose-500" />
+        <div className="mx-auto w-14 h-14 bg-muted rounded-lg flex items-center justify-center">
+          <AlertTriangle aria-hidden="true" className="w-7 h-7 text-primary" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-black tracking-tight">{displayTitle}</h1>
-          <p className="text-zinc-400 text-sm">
+          <h1 className="text-3xl font-normal font-serif tracking-tight">{displayTitle}</h1>
+          <p className="text-muted-foreground text-base leading-relaxed">
             {displayMessage}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-          <Button onClick={() => reset()} className="bg-rose-600 hover:bg-rose-500 text-white w-full sm:w-auto font-bold rounded-xl shadow-md h-11">
+          <Button onClick={() => reset()} className="w-full sm:w-auto">
             Try Again
           </Button>
-          <Link href="/">
-            <Button variant="outline" className="bg-zinc-900 text-zinc-300 hover:bg-zinc-800 w-full sm:w-auto font-bold h-11">
-              <Home className="w-4 h-4 mr-2" />
+          <a href="/offline" className={buttonVariants({ variant: 'outline', className: 'w-full sm:w-auto' })}>Open saved event tools</a>
+          <Link href="/" className={buttonVariants({ variant: 'outline', className: 'w-full sm:w-auto' })}>
+              <Home aria-hidden="true" className="w-4 h-4 mr-2" />
               Return Home
-            </Button>
           </Link>
         </div>
       </div>

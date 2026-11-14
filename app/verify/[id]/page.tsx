@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { CheckCircle2, XCircle, AlertTriangle, Building, Users, Phone, Hash, ShieldAlert, Sparkles } from 'lucide-react'
+import { CheckCircle2, XCircle, AlertTriangle, Users, ShieldAlert } from 'lucide-react'
 import Image from 'next/image'
 import { GlassCard } from '@/components/ui/GlassCard'
 
@@ -7,9 +7,9 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
   const [resolvedParams, supabase] = await Promise.all([params, createClient()])
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
+  if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.app_metadata?.role)) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex items-center justify-center p-4">
+      <div className="verification-page app-workspace min-h-dvh flex items-center justify-center p-6">
         <GlassCard className="max-w-md w-full p-8 text-center space-y-4" glowColor="purple">
           <ShieldAlert className="w-14 h-14 text-rose-500 mx-auto" />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Access Restricted</h1>
@@ -26,7 +26,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
 
   if (error || !volunteer) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex items-center justify-center p-4">
+      <div className="verification-page app-workspace min-h-dvh flex items-center justify-center p-6">
         <GlassCard className="max-w-md w-full p-8 text-center space-y-4" glowColor="purple">
           <XCircle className="w-14 h-14 text-rose-500 mx-auto" />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Invalid Badge</h1>
@@ -45,7 +45,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
   const isPending = volunteer.status === 'Pending'
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex items-center justify-center p-4 sm:p-6">
+    <div className="verification-page app-workspace min-h-dvh flex items-center justify-center p-6">
       <GlassCard className="max-w-md w-full p-8 relative overflow-hidden" glowColor={isApproved ? 'blue' : 'purple'}>
         {/* Status Top Banner */}
         <div className={`py-2 px-4 rounded-2xl mb-6 text-center flex items-center justify-center gap-2 text-xs font-semibold ${
@@ -65,13 +65,13 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
             {volunteer.photo_url ? (
               <Image src={volunteer.photo_url} alt={`${volunteer.full_name}'s profile photo`} width={96} height={112} unoptimized className="w-full h-full object-cover" />
             ) : (
-              <Sparkles className="w-8 h-8 text-blue-400" />
+              <Users aria-hidden="true" className="w-8 h-8 text-muted-foreground" />
             )}
           </div>
 
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
             {volunteer.full_name}
-          </h2>
+          </h1>
 
           <div className="inline-block px-3 py-1 rounded-full text-xs font-mono font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20">
             {volunteer.snk_id || volunteer.id.substring(0, 8).toUpperCase()}

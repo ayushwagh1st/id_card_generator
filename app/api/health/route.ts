@@ -30,6 +30,7 @@ export async function GET() {
 }
 
 export async function HEAD() {
-  return new NextResponse(null, { status: 200 });
+  const result = await GET();
+  return new NextResponse(null, { status: result.status, headers: { 'Cache-Control': 'no-store' } });
 }
 

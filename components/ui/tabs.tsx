@@ -23,7 +23,7 @@ function Tabs({
 }
 
 const tabsListVariants = cva(
-  "group/tabs-list inline-flex w-fit items-center justify-center rounded-2xl glass-pill p-1 text-slate-500 dark:text-slate-400 group-data-horizontal/tabs:h-10 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col",
+  "ui-tabs-list group/tabs-list inline-flex max-w-full w-fit flex-wrap items-center justify-start rounded-md bg-muted p-1 text-muted-foreground group-data-vertical/tabs:flex-col",
   {
     variants: {
       variant: {
@@ -57,7 +57,7 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
-        "relative inline-flex h-full flex-1 items-center justify-center gap-1.5 rounded-xl px-3.5 py-1 text-xs font-semibold whitespace-nowrap text-slate-600 dark:text-slate-400 transition-all group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start hover:text-slate-900 dark:hover:text-white outline-none disabled:pointer-events-none disabled:opacity-50 data-active:bg-blue-600 data-active:text-white shadow-sm shadow-blue-500/20 font-sans tracking-tight",
+        "ui-tab relative inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-sm px-3.5 py-2 text-xs font-medium whitespace-nowrap text-muted-foreground group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start disabled:opacity-50 data-active:bg-card data-active:text-foreground font-sans",
         className
       )}
       {...props}
@@ -69,7 +69,7 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"
-      className={cn("flex-1 text-sm outline-none transition-all duration-200", className)}
+      className={cn("flex-1 min-w-0 text-sm", className)}
       {...props}
     />
   )

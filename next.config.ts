@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  distDir: process.env.NEXT_BUILD_DIR || '.next',
+  env: { NEXT_PUBLIC_OFFLINE_BUILD_ID: process.env.OFFLINE_BUILD_ID || '' },
+  ...(process.env.OFFLINE_BUILD_ID ? { generateBuildId: async () => process.env.OFFLINE_BUILD_ID! } : {}),
   async headers() {
     return [
+      { source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }, { key: 'Content-Type', value: 'application/javascript; charset=utf-8' }] },
+      { source: '/offline-assets.json', headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }] },
       {
         source: "/(.*)",
         headers: [

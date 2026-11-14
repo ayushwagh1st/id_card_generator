@@ -1,102 +1,49 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { OutboxItem } from '@/web_offline_p2p_sync/core/OfflineStore';
+import { z } from 'zod';
+import { adminClient, applyOperation, OPERATOR_ROLES, requireOperator, verifyOperation } from '@/lib/offline/server';
+import { operationSchema } from '@/web_offline_p2p_sync/core/protocol';
+import type { OutboxItem } from '@/web_offline_p2p_sync/core/OfflineStore';
+import { errorMessage } from '@/web_offline_p2p_sync/core/errors';
 
-// Helper for Last-Write-Wins (LWW) Conflict Resolution
-async function performLwwUpdate(supabase: any, table: string, payload: any, matchColumn: string, matchValue: any) {
-  const { data: existing, error: fetchErr } = await supabase.from(table).select('updated_at').eq(matchColumn, matchValue).single();
-  if (!fetchErr && existing?.updated_at && payload.updated_at && new Date(payload.updated_at) < new Date(existing.updated_at)) {
-    console.log(`[Sync API] Skipped older UPDATE for ${table} ${matchValue}`);
-    return null; // Skip without error
-  }
-  const { error } = await supabase.from(table).update(payload).eq(matchColumn, matchValue);
-  return error;
-}
-
+export const runtime = 'nodejs';
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const batch: OutboxItem[] = body.batch || body.items || [];
-
-    if (!Array.isArray(batch) || batch.length === 0) {
-      return NextResponse.json({ successIds: [], failedIds: [] });
-    }
-
-    const supabase = await createClient();
+    await requireOperator();
+    if (Number(request.headers.get('content-length') || 0) > 256000) return NextResponse.json({ error: 'Batch exceeds 256 KB' }, { status: 413 });
+    const raw = await request.text();
+    if (new TextEncoder().encode(raw).length > 256000) return NextResponse.json({ error: 'Batch exceeds 256 KB' }, { status: 413 });
+    const { batch } = z.object({ batch: z.array(z.unknown()).min(1).max(20) }).parse(JSON.parse(raw));
     const successIds: string[] = [];
-    const failedIds: Array<{ id: string; error: string }> = [];
-
-    for (const item of batch) {
+    const failedIds: Array<{ id: string; error: string; retryable: boolean }> = [];
+    const actors = new Map<string, boolean>();
+    for (const rawItem of batch) {
+      const candidate = rawItem as Record<string, unknown>;
+      const id = typeof candidate?.id === 'string' ? candidate.id : 'invalid';
       try {
-        const { id, entity, action, payload } = item;
-
-        if (!entity || !action) {
-          failedIds.push({ id, error: 'Invalid outbox item structure' });
+        const parsed = operationSchema.parse(candidate);
+        const item = parsed as OutboxItem;
+        const claims = verifyOperation(item);
+        if (!actors.has(claims.actorId)) {
+          const { data, error } = await adminClient().auth.admin.getUserById(claims.actorId);
+          if (error) throw new Error('Could not verify the original operator. Retry when authentication is available.');
+          actors.set(claims.actorId, !!data.user && (!data.user.banned_until || Date.parse(data.user.banned_until) <= Date.now()) && OPERATOR_ROLES.includes(data.user.app_metadata?.role));
+        }
+        if (!actors.get(claims.actorId)) {
+          failedIds.push({ id, error: 'The original operator is no longer authorized.', retryable: false });
           continue;
         }
-
-        let error: any = null;
-
-        if (entity === 'children') {
-          if (action === 'CREATE') {
-            const { error: insertErr } = await supabase.from('children').upsert(payload, { onConflict: 'id' });
-            error = insertErr;
-          } else if (action === 'UPDATE') {
-            const targetId = payload.id;
-            if (targetId) {
-              error = await performLwwUpdate(supabase, 'children', payload, 'id', targetId);
-            } else if (payload.qr_id) {
-              error = await performLwwUpdate(supabase, 'children', payload, 'qr_id', payload.qr_id);
-            }
-          } else if (action === 'DELETE') {
-            const { error: deleteErr } = await supabase.from('children').delete().eq('id', payload.id);
-            error = deleteErr;
-          }
-        } else if (entity === 'attendance') {
-          if (action === 'CREATE') {
-            const { error: insertErr } = await supabase.from('attendance').insert(payload);
-            error = insertErr;
-          } else if (action === 'UPDATE') {
-            error = await performLwwUpdate(supabase, 'attendance', payload, 'id', payload.id);
-          }
-        } else if (entity === 'volunteers') {
-          if (action === 'CREATE') {
-            const { error: insertErr } = await supabase.from('volunteers').upsert(payload, { onConflict: 'snk_id' });
-            error = insertErr;
-          } else if (action === 'UPDATE') {
-            error = await performLwwUpdate(supabase, 'volunteers', payload, 'id', payload.id);
-          } else if (action === 'DELETE') {
-            const { error: deleteErr } = await supabase.from('volunteers').delete().eq('id', payload.id);
-            error = deleteErr;
-          }
-        } else {
-          // Generic fallback for any other table entity
-          if (action === 'CREATE') {
-            const { error: insertErr } = await supabase.from(entity).insert(payload);
-            error = insertErr;
-          } else if (action === 'UPDATE' && payload.id) {
-            error = await performLwwUpdate(supabase, entity, payload, 'id', payload.id);
-          } else if (action === 'DELETE' && payload.id) {
-            const { error: deleteErr } = await supabase.from(entity).delete().eq('id', payload.id);
-            error = deleteErr;
-          }
-        }
-
-        if (error) {
-          console.error(`[Sync API] Error processing item ${id} (${entity}:${action}):`, error);
-          failedIds.push({ id, error: error.message || 'Database mutation failed' });
-        } else {
-          successIds.push(id);
-        }
-      } catch (err: any) {
-        console.error(`[Sync API] Exception processing item ${item.id}:`, err);
-        failedIds.push({ id: item.id, error: err.message || 'Unknown processing error' });
+        const result = await applyOperation(item, claims.actorId);
+        if (result.error) failedIds.push({ id, error: result.error, retryable: result.retryable });
+        else successIds.push(id);
+      } catch (error: unknown) {
+        const message=errorMessage(error);
+        failedIds.push({ id, error: error instanceof z.ZodError ? 'Invalid operation data. Export this record for review.' : message, retryable: !(error instanceof z.ZodError) && message.includes('Retry when') });
       }
     }
-
-    return NextResponse.json({ successIds, failedIds });
-  } catch (error: any) {
-    console.error('[Sync API] Batch request exception:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ successIds, failedIds }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (error: unknown) {
+    const message=errorMessage(error);
+    const status = message === 'AUTH_REQUIRED' ? 401 : message === 'OPERATOR_ROLE_REQUIRED' ? 403 : 400;
+    return NextResponse.json({ error: message }, { status, headers: { 'Cache-Control': 'no-store' } });
   }
 }

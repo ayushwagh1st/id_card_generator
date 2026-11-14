@@ -14,8 +14,8 @@ import { AlertCircle, CheckCircle, Clock, XCircle, Camera, Users, LogIn, LogOut,
 import { toast } from 'sonner'
 import { getSessionsAction } from '@/server/actions/sessions'
 import { formatSessionLabel } from '@/lib/formatters'
-import { recordAttendanceAction, bulkSyncAttendanceAction } from '@/server/actions/attendance'
-import { getCurrentUserAction } from '@/server/actions/auth'
+import { useSyncManager } from '@/components/SyncProvider'
+import { normalizeScan } from '@/web_offline_p2p_sync/core/protocol'
 import { GlassCard } from '@/components/ui/GlassCard'
 
 // Audio fallback if file isn't present
@@ -74,163 +74,63 @@ function ScannerContent() {
 
   const lastScannedIdRef = useRef<{id: string, time: number} | null>(null)
 
-  // 1. Load Sessions & Offline Data
+  const { syncManager, state: syncState, openModal } = useSyncManager()
+  const processingRef = useRef(false)
+
   useEffect(() => {
-      async function loadSessions() {
-          const user = await getCurrentUserAction()
-          if (!user) return
-          try {
-            const role = user.user_metadata?.role
-            const lecturerFilter = 'all' // Security needs to see all sessions
-            const res = await getSessionsAction(1, 100, '', 'all', lecturerFilter)
-            setSessions(res.data || [])
-            // Save sessions locally for offline use
-            localStorage.setItem('lecturer_sessions:v1', JSON.stringify(res.data || []))
-          } catch (e) {
-              // Fallback to local
-              const localSessions = localStorage.getItem('lecturer_sessions:v1')
-              if (localSessions) setSessions(JSON.parse(localSessions))
-          }
-      }
-      loadSessions()
+    if (!syncManager) return
+    let active = true
+    const refresh = async () => {
+      const [localSessions, queued] = await Promise.all([
+        syncManager.getLocalData('sessions'),
+        syncManager.getPendingItemsByEntity('attendance_scans'),
+      ])
+      if (active) { setSessions(localSessions); setPendingScans(queued) }
+    }
+    const unsubscribe = syncManager.subscribeState(value => {
+      if (!active) return
+      setIsOnline(value.isOnline)
+      setIsSyncing(value.isSyncing)
+      void refresh().catch(error => toast.error(error.message))
+    })
+    return () => { active = false; unsubscribe() }
+  }, [syncManager, setSessions, setPendingScans, setIsOnline, setIsSyncing])
 
-      // Load pending scans
-      const localScans = localStorage.getItem('pending-scans:v1')
-      if (localScans) setPendingScans(JSON.parse(localScans))
-
-      // Network Listeners
-      setIsOnline(navigator.onLine)
-      const handleOnline = () => setIsOnline(true)
-      const handleOffline = () => setIsOnline(false)
-      window.addEventListener('online', handleOnline)
-      window.addEventListener('offline', handleOffline)
-      
-      return () => {
-          window.removeEventListener('online', handleOnline)
-          window.removeEventListener('offline', handleOffline)
-      }
-  }, [setSessions, setPendingScans, setIsOnline])
-
-  const syncPendingScans = useCallback(async () => {
-      if (pendingScans.length === 0 || isSyncing) return
-      setIsSyncing(true)
-      toast('Syncing offline scans...')
-      try {
-          const res = await bulkSyncAttendanceAction(pendingScans)
-          if (res?.success) {
-              toast.success(`Successfully synced ${pendingScans.length} offline scans!`)
-              setPendingScans([])
-              localStorage.removeItem('pending-scans:v1')
-          } else {
-              throw new Error('Sync failed')
-          }
-      } catch (e: any) {
-          toast.error('Failed to sync. Will retry later.')
-      } finally {
-          setIsSyncing(false)
-      }
-  }, [pendingScans, isSyncing, setPendingScans, setIsSyncing])
-
-  // 2. Auto Sync
-  useEffect(() => {
-      if (isOnline && pendingScans.length > 0 && !isSyncing) {
-          syncPendingScans()
-      }
-  }, [isOnline, pendingScans.length, isSyncing, syncPendingScans])
-
-  const pushRecentScan = (id: string, status: string, msg: string) => {
-      setRecentScans((prev: any) => [{ id, time: new Date(), status, msg }, ...prev].slice(0, 5))
+  const syncPendingScans = async () => {
+    try { await syncManager?.retryFailed() }
+    catch (error: any) { toast.error(error.message || 'Records are still saved on this device.') }
   }
 
-  const saveToOffline = (data: string, sessionId: string, scanMode: string, timestamp: string) => {
-      const newScan = { scanData: data, sessionId, mode: scanMode, timestamp }
-      setPendingScans((prev: any) => {
-          const updated = [...prev, newScan]
-          localStorage.setItem('pending-scans:v1', JSON.stringify(updated))
-          return updated
-      })
-      setLastScanResult({ status: 'offline', message: `Saved offline: ${data}` })
-      pushRecentScan(data, 'offline', 'Saved Offline')
-      
-      if (!isBulkMode) {
-          setTimeout(() => {
-              setIsProcessing(false)
-              setTimeout(() => setLastScanResult(null), 2000)
-          }, 1000)
-      }
+  const pushRecentScan = (id: string, status: string, msg: string) => {
+    setRecentScans((prev: any) => [{ id, time: new Date(), status, msg }, ...prev].slice(0, 5))
   }
 
   const handleScan = async (rawData: string) => {
-      // Extract ID from URL if QR contains a verify URL
-      let data = rawData;
-      if (data && data.includes('/verify/')) {
-          const split = data.split('/verify/');
-          if (split.length > 1) {
-              data = split[1];
-          }
-      }
-
-      if (!data || selectedSessionId === 'none' || isProcessing) return
-      
-      // Cooldown check for same ID (prevent accidental double scan of same person within 3 seconds)
-      const now = Date.now()
-      if (lastScannedIdRef.current && lastScannedIdRef.current.id === data && now - lastScannedIdRef.current.time < 3000) {
-          return // Ignore rapid double scan of the SAME person
-      }
-      lastScannedIdRef.current = { id: data, time: now }
-      
+    const data = normalizeScan(rawData)
+    if (!data || selectedSessionId === 'none' || (!isBulkMode && processingRef.current)) return
+    if (!syncManager) { toast.error('Offline storage is still opening. Wait, then scan again.'); return }
+    const now = Date.now()
+    const scanKey = data + ':' + selectedSessionId + ':' + mode
+    if (lastScannedIdRef.current?.id === scanKey && now - lastScannedIdRef.current.time < 3000) return
+    lastScannedIdRef.current = { id: scanKey, time: now }
+    if (!isBulkMode) { processingRef.current = true; setIsProcessing(true) }
+    try {
+      const timestamp = await syncManager.eventTime()
+      await syncManager.mutate('attendance_scans', 'CREATE', { scanData: data, sessionId: selectedSessionId, mode, timestamp })
       playBeep()
-
-      if (!isBulkMode) setIsProcessing(true)
-
-      const timestamp = new Date().toISOString()
-
-      if (!isOnline) {
-          // OFFLINE MODE: Save to local storage
-          saveToOffline(data, selectedSessionId, mode, timestamp)
-          return
-      }
-
-      // ONLINE MODE
-      try {
-          // If bulk mode, we don't await blocking UI
-          if (isBulkMode) {
-              recordAttendanceAction(data, selectedSessionId, mode).then(res => {
-                  if (res?.error) {
-                      pushRecentScan(data, 'error', res.error)
-                      toast.error(res.error)
-                  } else {
-                      const st = res.message?.includes('Late') ? 'late' : 'success'
-                      pushRecentScan(data, st, res.message || 'Success')
-                  }
-              }).catch(err => {
-                  console.warn('Network error in bulk mode, saving offline:', err)
-                  saveToOffline(data, selectedSessionId, mode, timestamp)
-              })
-              setLastScanResult({ status: 'success', message: 'Processing...' })
-              setTimeout(() => setLastScanResult(null), 1000)
-          } else {
-              const res = await recordAttendanceAction(data, selectedSessionId, mode)
-              if (res?.error) {
-                  setLastScanResult({ status: 'error', message: res.error })
-                  pushRecentScan(data, 'error', res.error)
-              } else {
-                  const st = res.message?.includes('Late') ? 'late' : 'success'
-                  setLastScanResult({ status: st, message: res.message || 'Success', volunteer: res.volunteer })
-                  pushRecentScan(data, st, res.message || 'Success')
-              }
-          }
-      } catch (err: any) {
-          console.warn('Network error, saving offline:', err)
-          saveToOffline(data, selectedSessionId, mode, timestamp)
-      } finally {
-          if (!isBulkMode) {
-              setTimeout(() => {
-                  setIsProcessing(false)
-                  setTimeout(() => setLastScanResult(null), 2000)
-              }, 1500)
-          }
-      }
+      const message = 'Saved on this device. Server validation will follow.'
+      setLastScanResult({ status: 'offline', message })
+      pushRecentScan(data, 'offline', message)
+    } catch (error: any) {
+      lastScannedIdRef.current = null
+      const message = error.message || 'Scan was not saved. Keep the badge and try again.'
+      setLastScanResult({ status: 'error', message })
+      pushRecentScan(data, 'error', message)
+      toast.error(message)
+    } finally {
+      processingRef.current = false
+      setIsProcessing(false)
+    }
   }
 
   const handleManualEntry = (e: React.FormEvent) => {
@@ -249,6 +149,7 @@ function ScannerContent() {
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500">
               <Camera className="w-4 h-4" />
               <span>Security Access Control</span>
+              <button type="button" onClick={openModal} className="underline">Prepare and review offline storage</button>
               {pendingScans.length > 0 && (
                 <button 
                   onClick={() => isOnline && syncPendingScans()} 
@@ -260,16 +161,16 @@ function ScannerContent() {
               )}
             </div>
             <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-              QR Attendance Scanner
+              Volunteer attendance
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl">
-              Scan volunteer ID cards to log venue entry. {isOnline ? 'Real-time synchronization active.' : 'Offline mode active - scans saved locally.'}
+              Scan volunteer ID cards to log venue entry. Every scan is saved locally before upload. {syncState.error && <span role="alert">{syncState.error}</span>}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 shrink-0">
             <Select value={selectedSessionId} onValueChange={(val: any) => setSelectedSessionId(val)}>
-              <SelectTrigger className="w-full sm:w-[250px]">
+              <SelectTrigger aria-label="Attendance session" className="w-full sm:w-[250px]">
                 <span data-slot="select-value" className="flex flex-1 text-left truncate">
                   {selectedSessionId !== 'none' && sessions.length > 0
                     ? formatSessionLabel(sessions.find((s: any) => s.id === selectedSessionId))
@@ -285,7 +186,7 @@ function ScannerContent() {
             </Select>
 
             <Select value={mode} onValueChange={(val: any) => setMode(val)}>
-              <SelectTrigger className="w-full sm:w-[150px]">
+              <SelectTrigger aria-label="Attendance action" className="w-full sm:w-[150px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -354,12 +255,7 @@ function ScannerContent() {
 
                       {/* Overlay Result */}
                       {lastScanResult && (
-                          <div className={`absolute bottom-0 left-0 right-0 p-6 transform transition-transform animate-in slide-in-from-bottom-10 z-20 ${
-                              lastScanResult.status === 'success' ? 'bg-emerald-500/95 backdrop-blur-md text-white border-t border-emerald-400' :
-                              lastScanResult.status === 'late' ? 'bg-amber-500/95 backdrop-blur-md text-white border-t border-amber-400' :
-                              lastScanResult.status === 'offline' ? 'bg-zinc-800/95 backdrop-blur-md text-white border-t border-zinc-700' :
-                              'bg-rose-500/95 backdrop-blur-md text-white border-t border-rose-400'
-                          }`}>
+                          <div role={lastScanResult.status === 'error' ? 'alert' : 'status'} className="scanner-result absolute bottom-0 left-0 right-0 p-5 z-20" data-status={lastScanResult.status}>
                               <div className="flex items-center gap-4">
                                   {lastScanResult.volunteer?.photo ? (
                                       <Image src={lastScanResult.volunteer.photo} alt={`${lastScanResult.volunteer.name || 'Volunteer'}'s profile avatar`} width={64} height={64} unoptimized className="w-16 h-16 rounded-full border-2 border-white shadow-md object-cover shrink-0 bg-white/20" />
@@ -424,6 +320,7 @@ function ScannerContent() {
                       </div>
                       <form onSubmit={handleManualEntry} className="flex gap-2">
                           <Input 
+                            aria-label="Volunteer SNK ID"
                             placeholder="Enter Volunteer ID (SNK ID)" 
                             value={manualId}
                             onChange={(e) => setManualId(e.target.value)}

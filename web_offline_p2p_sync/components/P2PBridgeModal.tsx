@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Scanner } from '@yudiel/react-qr-scanner';
-import { X, QrCode, Scan, Wifi, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { QrCode, Scan, Wifi, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { SyncManager } from '../core/SyncManager';
 
 interface P2PBridgeModalProps {
@@ -17,7 +18,7 @@ export const P2PBridgeModal: React.FC<P2PBridgeModalProps> = ({ isOpen, onClose,
   const [activeTab, setActiveTab] = useState<TabType>('CREATE');
   const [step, setStep] = useState<ConnectionStep>('IDLE');
   const [qrPayload, setQrPayload] = useState<string>('');
-  const [localIp, setLocalIp] = useState('ws://192.168.1.100:8080');
+  const [localIp, setLocalIp] = useState('wss://event-router.local:8080');
   const [error, setError] = useState<string>('');
   const currentPc = useRef<RTCPeerConnection | null>(null);
 
@@ -64,46 +65,51 @@ export const P2PBridgeModal: React.FC<P2PBridgeModalProps> = ({ isOpen, onClose,
     }
   };
 
-  const handleConnectWs = () => {
-    mesh.connectWebSocket(localIp);
-    onClose();
+  const handleConnectWs = async () => {
+    setStep('GENERATING'); setError('');
+    try { await mesh.connectWebSocket(localIp); onClose(); }
+    catch (error: any) { setError(error.message || 'Router connection failed.'); }
+    finally { setStep('IDLE'); }
   };
 
   const reset = () => {
+    if(currentPc.current && currentPc.current.connectionState!=='connected') currentPc.current.close();
+    currentPc.current=null;
     setStep('IDLE');
     setError('');
     setQrPayload('');
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col">
+    <Dialog open={isOpen} onOpenChange={open => { if (!open) onClose(); }}>
+      <DialogContent className="workspace-bridge-dialog sm:max-w-lg">
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
           <div className="flex items-center gap-2">
             <LinkIcon className="w-5 h-5 text-indigo-500" />
-            <h3 className="font-semibold text-slate-900 dark:text-white">Bridge Devices Offline</h3>
+            <DialogTitle>Bridge devices offline</DialogTitle>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-            <X className="w-5 h-5 text-slate-500" />
-          </button>
         </div>
+        <DialogDescription className="sr-only">Create or join a device bridge, or connect using a local WiFi router.</DialogDescription>
 
         {/* Tabs */}
         <div className="flex p-2 gap-2 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
           <button
+            aria-pressed={activeTab === 'CREATE'}
             onClick={() => { setActiveTab('CREATE'); reset(); }}
             className={`flex-1 flex justify-center items-center gap-2 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'CREATE' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
           >
             <QrCode className="w-4 h-4" /> Create Bridge
           </button>
           <button
+            aria-pressed={activeTab === 'JOIN'}
             onClick={() => { setActiveTab('JOIN'); reset(); }}
             className={`flex-1 flex justify-center items-center gap-2 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'JOIN' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
           >
             <Scan className="w-4 h-4" /> Join Bridge
           </button>
           <button
+            aria-pressed={activeTab === 'WIFI'}
             onClick={() => { setActiveTab('WIFI'); reset(); }}
             className={`flex-1 flex justify-center items-center gap-2 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'WIFI' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
           >
@@ -113,7 +119,7 @@ export const P2PBridgeModal: React.FC<P2PBridgeModalProps> = ({ isOpen, onClose,
 
         {/* Body */}
         <div className="p-6 flex flex-col items-center justify-center min-h-[350px]">
-          {error && <div className="w-full p-3 mb-4 text-sm text-rose-600 bg-rose-50 rounded-lg border border-rose-200">{error}</div>}
+          {error && <div role="alert" className="w-full p-3 mb-4 text-sm text-destructive bg-muted rounded-lg border border-border">{error}</div>}
 
           {/* CREATE TAB */}
           {activeTab === 'CREATE' && (
@@ -124,7 +130,7 @@ export const P2PBridgeModal: React.FC<P2PBridgeModalProps> = ({ isOpen, onClose,
                     <QrCode className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Host an Offline Session</h4>
-                  <p className="text-sm text-slate-500 text-center mb-6">Generate a connection QR code. The other device must scan it using the "Join Bridge" tab.</p>
+                  <p className="text-sm text-slate-500 text-center mb-6">Generate a connection QR code. The other device must scan it using the &quot;Join Bridge&quot; tab.</p>
                   <button onClick={handleCreateOffer} className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors shadow-sm shadow-indigo-600/20">
                     Generate Connection QR
                   </button>
@@ -154,7 +160,7 @@ export const P2PBridgeModal: React.FC<P2PBridgeModalProps> = ({ isOpen, onClose,
                 <div className="flex flex-col items-center w-full">
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 text-center">Step 2: Scan the Answer QR code shown on the other device.</p>
                   <div className="w-full h-64 bg-slate-900 rounded-xl overflow-hidden mb-4 relative">
-                    <Scanner onScan={(res) => handleScanAnswer(res[0].rawValue)} />
+                    <Scanner onScan={(res) => { if(res[0]?.rawValue) void handleScanAnswer(res[0].rawValue); }} />
                   </div>
                 </div>
               )}
@@ -181,7 +187,7 @@ export const P2PBridgeModal: React.FC<P2PBridgeModalProps> = ({ isOpen, onClose,
                   </div>
                   <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Join an Offline Session</h4>
                   <p className="text-sm text-slate-500 text-center mb-6">Scan a Connection QR code from the host device.</p>
-                  <button onClick={() => setStep('SCANNING_OFFER')} className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-medium transition-colors shadow-sm shadow-sky-600/20">
+                  <button onClick={() => setStep('SCANNING_OFFER')} className="ui-button ui-button-primary w-full py-2.5 px-4 font-medium">
                     Open Scanner
                   </button>
                 </>
@@ -189,9 +195,9 @@ export const P2PBridgeModal: React.FC<P2PBridgeModalProps> = ({ isOpen, onClose,
 
               {step === 'SCANNING_OFFER' && (
                 <div className="flex flex-col items-center w-full">
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 text-center">Step 1: Scan the Host's QR Code.</p>
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 text-center">Step 1: Scan the Host&apos;s QR Code.</p>
                   <div className="w-full h-64 bg-slate-900 rounded-xl overflow-hidden mb-4 relative">
-                    <Scanner onScan={(res) => handleScanOffer(res[0].rawValue)} />
+                    <Scanner onScan={(res) => { if(res[0]?.rawValue) void handleScanOffer(res[0].rawValue); }} />
                   </div>
                 </div>
               )}
@@ -225,23 +231,24 @@ export const P2PBridgeModal: React.FC<P2PBridgeModalProps> = ({ isOpen, onClose,
               <p className="text-sm text-slate-500 text-center mb-6">Connect to a local Node.js WebSocket mesh router on your offline Wi-Fi network.</p>
               
               <div className="w-full mb-6">
-                <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Router WebSocket URL</label>
+                <label htmlFor="bridge-router-url" className="block text-xs font-semibold text-slate-500 mb-2">Router WebSocket URL</label>
                 <input
+                  id="bridge-router-url"
                   type="text"
                   value={localIp}
                   onChange={(e) => setLocalIp(e.target.value)}
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-indigo-500 font-mono"
-                  placeholder="ws://192.168.1.100:8080"
+                  placeholder="wss://event-router.local:8080/?token=..."
                 />
               </div>
 
-              <button onClick={handleConnectWs} className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-900 dark:bg-slate-200 dark:hover:bg-white dark:text-slate-900 text-white rounded-xl font-medium transition-colors">
-                Connect
+              <button disabled={step === 'GENERATING'} onClick={handleConnectWs} className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-900 dark:bg-slate-200 dark:hover:bg-white dark:text-slate-900 text-white rounded-xl font-medium transition-colors">
+                {step === 'GENERATING' ? 'Connecting...' : 'Connect'}
               </button>
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

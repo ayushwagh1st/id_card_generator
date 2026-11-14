@@ -1,144 +1,49 @@
-import { Search, Filter, Printer, CheckCircle, Trash2 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+'use client'
+
+import { useState } from 'react'
+import { CheckCircle, Filter, Printer, Trash2, X } from 'lucide-react'
+import { Label } from '@/components/ui/label'
+import { SearchField } from '@/components/ui/search-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '@/components/ui/dialog'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { formatModelLabel } from '@/lib/formatters'
 
+interface ModelOption { id: string; name: string; category?: string | null }
 interface VolunteersFiltersProps {
-  searchTerm: string
-  filterModel: string
-  filterStatus: string
-  models: any[]
-  selectedIdsCount: number
-  onSearchChange: (val: string) => void
-  onModelChange: (val: string) => void
-  onStatusChange: (val: string) => void
-  onPrintSelected: () => void
-  onBulkApprove: () => void
-  onBulkDelete: () => void
+  searchTerm: string; filterModel: string; filterStatus: string; models: ModelOption[]; selectedIdsCount: number
+  onSearchChange: (value: string) => void; onModelChange: (value: string) => void; onStatusChange: (value: string) => void
+  onPrintSelected: () => void; onBulkApprove: () => void; onBulkDelete: () => void; onClearSelection?: () => void
 }
 
-export function VolunteersFilters({
-  searchTerm,
-  filterModel,
-  filterStatus,
-  models,
-  selectedIdsCount,
-  onSearchChange,
-  onModelChange,
-  onStatusChange,
-  onPrintSelected,
-  onBulkApprove,
-  onBulkDelete,
-}: VolunteersFiltersProps) {
-  return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search name, SNK ID, mobile..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
+function ModelFilter({ id, value, models, onChange }: { id: string; value: string; models: ModelOption[]; onChange: (value: string) => void }) {
+  return <div className="space-y-2"><Label htmlFor={id}>Exhibition model</Label><Select value={value} onValueChange={next => onChange(next || 'all')}>
+    <SelectTrigger id={id}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All exhibition models</SelectItem>{models.map(model => <SelectItem key={model.id} value={model.id}>{formatModelLabel(model)}</SelectItem>)}</SelectContent>
+  </Select></div>
+}
 
-        <Select value={filterModel} onValueChange={(val) => onModelChange(val || 'all')}>
-          <SelectTrigger className="w-full sm:w-48 bg-card border-primary/10 rounded-xl">
-            <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-            <SelectValue placeholder="Filter by Model" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" label="All Exhibition Models">All Exhibition Models</SelectItem>
-            {models.map((m) => (
-              <SelectItem key={m.id} value={m.id} label={formatModelLabel(m)}>
-                {formatModelLabel(m)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={filterStatus} onValueChange={(val) => onStatusChange(val || 'all')}>
-          <SelectTrigger className="w-full sm:w-40 bg-card border-primary/10 rounded-xl">
-            <SelectValue placeholder="Filter by Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" label="All Statuses">All Statuses</SelectItem>
-            <SelectItem value="Approved" label="Approved">Approved</SelectItem>
-            <SelectItem value="Pending" label="Pending">Pending</SelectItem>
-            <SelectItem value="Rejected" label="Rejected">Rejected</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        {selectedIdsCount > 0 && (
-          <div className="flex items-center gap-1.5 bg-muted p-1 rounded-xl">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onPrintSelected}
-              className="gap-1.5 text-primary bg-card px-3"
-            >
-              <Printer className="h-3.5 w-3.5" />
-              Print Selected ({selectedIdsCount})
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onBulkApprove}
-              className="gap-1.5 bg-card px-3"
-            >
-              <CheckCircle className="h-3.5 w-3.5" />
-              Approve
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger
-                render={
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-destructive bg-card px-3"
-                  />
-                }
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                Delete
-              </AlertDialogTrigger>
-              <AlertDialogContent className="rounded-xl">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete {selectedIdsCount} volunteer record(s). This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={onBulkDelete}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    Delete Records
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        )}
-      </div>
+export function VolunteersFilters({ searchTerm, filterModel, filterStatus, models, selectedIdsCount, onSearchChange, onModelChange, onStatusChange, onPrintSelected, onBulkApprove, onBulkDelete, onClearSelection }: VolunteersFiltersProps) {
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const activeModel = models.find(model => model.id === filterModel)
+  return <div className="roster-controls">
+    <div className="roster-search-row">
+      <SearchField id="volunteer-search" label="Search volunteers" placeholder="Name, SNK ID, or mobile number" value={searchTerm} onChange={event => onSearchChange(event.target.value)} />
+      <div className="roster-model-desktop"><ModelFilter id="volunteer-model-filter" value={filterModel} models={models} onChange={onModelChange} /></div>
+      <Button variant="outline" className="roster-filter-trigger" onClick={() => setFiltersOpen(true)} aria-haspopup="dialog"><Filter size={16} aria-hidden="true" />Filters{filterModel !== 'all' ? ' (1)' : ''}</Button>
     </div>
-  )
+    <Tabs value={filterStatus} onValueChange={value => onStatusChange(String(value))}>
+      <TabsList variant="line" aria-label="Filter volunteers by status" className="roster-status-tabs">{[['all', 'All volunteers'], ['Pending', 'Pending'], ['Approved', 'Approved'], ['Rejected', 'Rejected']].map(([value, label]) => <TabsTrigger key={value} value={value}>{label}</TabsTrigger>)}</TabsList>
+    </Tabs>
+    {filterModel !== 'all' && <div className="active-filter-row"><span>Model: {activeModel ? formatModelLabel(activeModel) : 'Selected model'}</span><Button variant="ghost" size="sm" onClick={() => onModelChange('all')} aria-label="Clear model filter"><X size={14} aria-hidden="true" />Clear</Button></div>}
+    {selectedIdsCount > 0 && <div className="roster-selection-bar" aria-label="Selected volunteer actions">
+      <div><strong>{selectedIdsCount} selected</strong><small>Selection is retained across pages and filters.</small></div>
+      <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={onPrintSelected}><Printer size={15} aria-hidden="true" />Print selected</Button><Button variant="outline" size="sm" onClick={onBulkApprove}><CheckCircle size={15} aria-hidden="true" />Approve selected</Button>
+        <AlertDialog><AlertDialogTrigger render={<Button variant="ghost" size="sm" className="text-destructive" />}><Trash2 size={15} aria-hidden="true" />Delete</AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete selected volunteers?</AlertDialogTitle><AlertDialogDescription>This permanently deletes {selectedIdsCount} selected volunteer records, including any selected on other pages. This cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={onBulkDelete}>Delete {selectedIdsCount} records</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+        {onClearSelection && <Button variant="ghost" size="sm" onClick={onClearSelection}>Clear selection</Button>}
+      </div>
+    </div>}
+    <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}><DialogContent><DialogTitle>Filter volunteers</DialogTitle><DialogDescription>Model filters apply immediately. Use the status tabs to switch between approvals.</DialogDescription><ModelFilter id="mobile-volunteer-model-filter" value={filterModel} models={models} onChange={onModelChange} /><DialogFooter><Button onClick={() => setFiltersOpen(false)}>Done</Button></DialogFooter></DialogContent></Dialog>
+  </div>
 }

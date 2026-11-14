@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Inter, Geist_Mono, Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
+import "./workspace.css";
 import { Toaster } from "@/components/ui/sonner";
 import { PWAInstaller } from "@/components/PWAInstaller";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -50,7 +51,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#8C6DFD",
+  themeColor: "#f8f5ee",
 };
 
 export default function RootLayout({
@@ -64,8 +65,9 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${inter.variable} ${geistMono.variable} ${notoDevanagari.variable} h-full`}
       suppressHydrationWarning
     >
+      <head><meta name="event-offline-build" content={process.env.NEXT_PUBLIC_OFFLINE_BUILD_ID || 'development'} /></head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <SyncProvider>
             <PWAInstaller />
             {children}

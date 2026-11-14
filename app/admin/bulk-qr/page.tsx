@@ -117,11 +117,15 @@ export default function BulkQRPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <Card className="max-w-md mx-auto mb-8">
+    <div className="space-y-8">
+      <header className="space-y-3 border-b border-border pb-7">
+        <h1>Bulk QR stickers</h1>
+        <p className="text-muted-foreground">Prepare QR stickers for on-the-spot child registration.</p>
+      </header>
+      <Card className="max-w-lg mb-8">
         <CardHeader>
-          <CardTitle>Bulk QR Generation</CardTitle>
-          <CardDescription>Generate QR stickers for on-the-spot child registration.</CardDescription>
+          <CardTitle>Generate a batch</CardTitle>
+          <CardDescription>Choose how many stickers to prepare, then download the printable PDF.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">

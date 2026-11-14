@@ -3,179 +3,18 @@
 import { createClient, checkAuth } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logActivityAction } from './activity'
+import { createHash } from 'node:crypto'
+import { requireOperator, applyOperation, signServerOperation } from '@/lib/offline/server'
+import { normalizeScan, scanSchema } from '@/web_offline_p2p_sync/core/protocol'
 
-// Process QR scan for attendance
-export async function recordAttendanceAction(
-  scanData: string, // could be uuid or snk_id
-  sessionId: string,
-  mode: 'check-in' | 'check-out'
-) {
-  await checkAuth();
-  const supabase = await createClient()
-
-  // 1. Get Logged in User
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
-    return { error: 'Unauthorized. You do not have permission to mark attendance.' }
-  }
-  const lecturerId = user.id
-
-  // 2. Identify Volunteer
-  // Clean scanData in case it's a verify URL
-  let parsedScanData = scanData
-  if (parsedScanData && parsedScanData.includes('/verify/')) {
-      const split = parsedScanData.split('/verify/')
-      if (split.length > 1) {
-          parsedScanData = split[1]
-      }
-  }
-  // Strip trailing slashes or whitespace
-  parsedScanData = parsedScanData.trim().replace(/\/$/, '').split('?')[0]
-
-  // Check if parsedScanData is a valid UUID
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(parsedScanData)
-  
-  let query = supabase.from('volunteers').select('id, full_name, snk_id, photo_url')
-  if (isUuid) {
-      query = query.eq('id', parsedScanData)
-  } else {
-      query = query.or(`id.eq.${parsedScanData},snk_id.eq.${parsedScanData}`)
-  }
-
-  const { data: volunteerData, error: volunteerError } = await query.single()
-
-  if (volunteerError || !volunteerData) {
-      // Check if it's a child QR code instead
-      const { data: childData } = await supabase.from('children').select('id, name, status').eq('qr_id', parsedScanData).single()
-      
-      if (childData) {
-          const newStatus = mode === 'check-in' ? 'Checked In' : 'Checked Out'
-          const now = new Date().toISOString()
-          await supabase.from('children').update({
-              status: newStatus,
-              ...(mode === 'check-in' ? { checked_in_at: now } : { checked_out_at: now })
-          }).eq('id', childData.id)
-          
-          await logActivityAction(`CHILD_${mode.toUpperCase().replace('-', '_')}`, `Child ${childData.name}`, { message: `${mode === 'check-in' ? 'checked in' : 'checked out'} by security`, lecturerId })
-          return {
-              message: `[CHILD] ${childData.name} successfully ${mode === 'check-in' ? 'checked in' : 'checked out'}!`,
-              volunteer: { name: childData.name, photo_url: null }
-          }
-      }
-      
-      return { error: `Participant not found. Searched for: ${parsedScanData}` }
-  }
-
-  const volunteerId = volunteerData.id
-
-  // 3. Verify Enrollment
-  const { data: enrollment, error: enrollError } = await supabase
-    .from('volunteer_sessions')
-    .select('id')
-    .eq('volunteer_id', volunteerId)
-    .eq('session_id', sessionId)
-    .single()
-
-  if (enrollError || !enrollment) {
-      return { error: '❌ Volunteer Not Assigned To This Session' }
-  }
-
-  // 4. Get Session details for time rules
-  const { data: session } = await supabase.from('sessions').select('date, start_time, end_time').eq('id', sessionId).single()
-  
-  if (!session) {
-      return { error: 'Session not found.' }
-  }
-
-  const todayStr = new Date().toISOString().split('T')[0]
-  // Ideally, compare session.date with todayStr, but ignoring for strictness if they scan on another day for some reason (or if we want to enforce it):
-  // if (session.date !== todayStr) return { error: 'Session is not scheduled for today.' }
-
-  // 5. Check if attendance already exists for today
-  const { data: existingAttendance } = await supabase
-    .from('attendance')
-    .select('*')
-    .eq('volunteer_id', volunteerId)
-    .eq('session_id', sessionId)
-    .eq('attendance_date', todayStr)
-    .single()
-
-  const now = new Date().toISOString()
-
-  if (mode === 'check-in') {
-      if (existingAttendance && existingAttendance.check_in_time) {
-          return { error: '⚠ Attendance Already Marked for Check-in' }
-      }
-
-      // Calculate Present vs Late
-      // Assuming session.start_time is 'HH:mm:ss'
-      const sessionStartStr = `${session.date}T${session.start_time}`
-      const sessionStartTime = new Date(sessionStartStr).getTime()
-      const currentTime = new Date().getTime()
-      
-      // 15 minutes grace period
-      const gracePeriodMs = 15 * 60 * 1000
-      
-      let status = 'Present'
-      if (currentTime > sessionStartTime + gracePeriodMs) {
-          status = 'Late'
-      }
-
-      const { error: insertError } = await supabase.from('attendance').insert([{
-          volunteer_id: volunteerId,
-          session_id: sessionId,
-          lecturer_id: lecturerId,
-          attendance_status: status,
-          check_in_time: now,
-          attendance_date: todayStr
-      }])
-
-      if (insertError) {
-          console.error('Error recording check-in:', insertError)
-          return { error: 'Database error recording attendance.' }
-      }
-
-      await logActivityAction('ATTENDANCE_SCAN', `Check-in (${status}) for ${volunteerData.full_name}`)
-
-      return { 
-          success: true, 
-          message: `✅ Attendance Marked Successfully (${status}) for ${volunteerData.full_name}`,
-          volunteer: {
-              name: volunteerData.full_name,
-              photo: volunteerData.photo_url
-          }
-      }
-
-  } else if (mode === 'check-out') {
-      if (!existingAttendance) {
-          return { error: 'Volunteer has not checked in yet.' }
-      }
-      if (existingAttendance.check_out_time) {
-          return { error: '⚠ Attendance Already Marked for Check-out' }
-      }
-
-      const { error: updateError } = await supabase.from('attendance')
-        .update({ check_out_time: now })
-        .eq('id', existingAttendance.id)
-
-      if (updateError) {
-          console.error('Error recording check-out:', updateError)
-          return { error: 'Database error recording check-out.' }
-      }
-
-      await logActivityAction('ATTENDANCE_SCAN', `Check-out for ${volunteerData.full_name}`)
-
-      return { 
-          success: true, 
-          message: `✅ Check-out Marked Successfully for ${volunteerData.full_name}`,
-          volunteer: {
-              name: volunteerData.full_name,
-              photo: volunteerData.photo_url
-          }
-      }
-  }
-
-  return { error: 'Invalid mode.' }
+export async function recordAttendanceAction(scanData: string, sessionId: string, mode: 'check-in' | 'check-out', operationId = crypto.randomUUID(), timestamp = new Date().toISOString()) {
+  const user = await requireOperator()
+  const parsed = scanSchema.safeParse({ scanData: normalizeScan(scanData), sessionId, mode, timestamp })
+  if (!parsed.success) return { error: 'Invalid scan data.', success: false }
+  const item = signServerOperation({ id: operationId, entity: 'attendance_scans', action: 'CREATE', payload: parsed.data, timestamp: Date.parse(timestamp), status: 'pending', retryCount: 0 }, user.id, user.app_metadata.role)
+  const result = await applyOperation(item, user.id)
+  if (result.error) return { success: false, error: result.error }
+  return { success: true, message: 'Attendance recorded.', volunteer: { name: result.data?.name || scanData }, operationId }
 }
 
 export async function getSessionAttendanceAction(sessionId: string) {
@@ -230,7 +69,7 @@ export async function bulkCheckoutAllAction(sessionId: string) {
   await checkAuth();
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
+    if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.app_metadata?.role)) {
         return { error: 'Unauthorized.' }
     }
 
@@ -291,133 +130,18 @@ export async function getLiveAttendanceFeedAction(limit = 50) {
   }
 }
 export async function bulkSyncAttendanceAction(scans: any[]) {
-    await checkAuth();
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !['SUPER_ADMIN', 'MODEL_HEAD', 'LECTURER'].includes(user.user_metadata?.role)) {
-        return { error: 'Unauthorized.' }
-    }
-    const lecturerId = user.id
-
-    const results = []
-
-    for (const scan of scans) {
-        try {
-            const { scanData, sessionId, mode, timestamp } = scan
-            
-            let parsedScanData = scanData
-            // oxlint-disable-next-line react-doctor/js-set-map-lookups -- false positive: parsedScanData is a string, not an array
-            if (parsedScanData && parsedScanData.includes('/verify/')) {
-                const split = parsedScanData.split('/verify/')
-                if (split.length > 1) {
-                    parsedScanData = split[1]
-                }
-            }
-            parsedScanData = parsedScanData.trim().replace(/\/$/, '').split('?')[0]
-
-            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(parsedScanData)
-            let query = supabase.from('volunteers').select('id, full_name')
-            if (isUuid) {
-                query = query.eq('id', parsedScanData)
-            } else {
-                query = query.or(`id.eq.${parsedScanData},snk_id.eq.${parsedScanData}`)
-            }
-
-            const { data: volunteerData, error: volErr } = await query.single()
-
-            if (volErr || !volunteerData) {
-                results.push({ scanData, status: 'error', message: `Volunteer not found. Searched for: ${parsedScanData}` })
-                continue
-            }
-            
-            const volunteerId = volunteerData.id
-            
-            // Verify Enrollment
-            const { data: enrollment } = await supabase
-                .from('volunteer_sessions')
-                .select('id')
-                .eq('volunteer_id', volunteerId)
-                .eq('session_id', sessionId)
-                .single()
-
-            if (!enrollment) {
-                results.push({ scanData, status: 'error', message: 'Not assigned to session' })
-                continue
-            }
-            
-            // Get session rules
-            const { data: session } = await supabase.from('sessions').select('date, start_time').eq('id', sessionId).single()
-            if (!session) {
-                results.push({ scanData, status: 'error', message: 'Session not found' })
-                continue
-            }
-
-            const scanDate = new Date(timestamp)
-            const scanDateStr = scanDate.toISOString().split('T')[0]
-
-            // Check existing
-            const { data: existingAttendance } = await supabase
-                .from('attendance')
-                .select('*')
-                .eq('volunteer_id', volunteerId)
-                .eq('session_id', sessionId)
-                .eq('attendance_date', scanDateStr)
-                .single()
-
-            if (mode === 'check-in') {
-                if (existingAttendance && existingAttendance.check_in_time) {
-                    results.push({ scanData, status: 'error', message: 'Already checked in' })
-                    continue
-                }
-
-                const sessionStartStr = `${session.date}T${session.start_time}`
-                const sessionStartTime = new Date(sessionStartStr).getTime()
-                const scanTimeMs = scanDate.getTime()
-                const gracePeriodMs = 15 * 60 * 1000
-                
-                const status = (scanTimeMs > sessionStartTime + gracePeriodMs) ? 'Late' : 'Present'
-
-                const { error: insertError } = await supabase.from('attendance').insert([{
-                    volunteer_id: volunteerId,
-                    session_id: sessionId,
-                    lecturer_id: lecturerId,
-                    attendance_status: status,
-                    check_in_time: timestamp,
-                    attendance_date: scanDateStr
-                }])
-
-                if (insertError) {
-                    results.push({ scanData, status: 'error', message: 'Database error.' })
-                } else {
-                    results.push({ scanData, status: 'success', message: `✅ Check-in (${status}) for ${volunteerData.full_name}` })
-                    await logActivityAction('BULK_ATTENDANCE_SCAN', `Bulk check-in (${status}) for ${volunteerData.full_name}`)
-                }
-
-            } else if (mode === 'check-out') {
-                if (!existingAttendance) {
-                    results.push({ scanData, status: 'error', message: 'No check-in found' })
-                    continue
-                }
-                if (existingAttendance.check_out_time) {
-                    results.push({ scanData, status: 'error', message: 'Already checked out' })
-                    continue
-                }
-
-                const { error: updateError } = await supabase.from('attendance')
-                    .update({ check_out_time: timestamp })
-                    .eq('id', existingAttendance.id)
-                
-                if (updateError) {
-                    results.push({ scanData, status: 'error', message: 'Database error.' })
-                } else {
-                    results.push({ scanData, status: 'success', message: `✅ Check-out for ${volunteerData.full_name}` })
-                    await logActivityAction('BULK_ATTENDANCE_SCAN', `Bulk check-out for ${volunteerData.full_name}`)
-                }
-            }
-        } catch (err: any) {
-            results.push({ scanData: scan.scanData, status: 'error', message: err.message })
-        }
-    }
-
-    return { success: true, results }
+  const user = await requireOperator()
+  if (!Array.isArray(scans) || scans.length > 200) return { success: false, error: 'Invalid scan batch.', results: [] }
+  const results: Array<{ id: string; scanData: string; status: 'success' | 'error'; message: string; retryable?: boolean }> = []
+  for (let index = 0; index < scans.length; index++) {
+    const scan = scans[index]
+    const id = scan.id || 'legacy-action-' + createHash('sha256').update(user.id + ':' + index + ':' + JSON.stringify(scan)).digest('hex')
+    try {
+      const payload = scanSchema.parse({ ...scan, scanData: normalizeScan(scan.scanData || '') })
+      const item = signServerOperation({ id, entity: 'attendance_scans', action: 'CREATE', payload, timestamp: Date.parse(payload.timestamp), status: 'pending', retryCount: 0, legacy: !scan.id }, user.id, user.app_metadata.role)
+      const result = await applyOperation(item, user.id)
+      results.push({ id, scanData: payload.scanData, status: result.error ? 'error' : 'success', message: result.error || 'Recorded', retryable: result.retryable })
+    } catch (error: any) { results.push({ id, scanData: scan.scanData || '', status: 'error', message: error.message, retryable: false }) }
+  }
+  return { success: results.every(result => result.status === 'success'), results }
 }
