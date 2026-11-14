@@ -16,6 +16,8 @@ The migration is additive for operational records. It adds durable receipts and 
 
 ## Prepare each assigned device
 
+The side menu includes **Install app** for administrators, model heads, and security operators. Supported browsers open their native install prompt. Other browsers show instructions; iPhone/iPad guidance uses Safari's Share → Add to Home Screen flow. The menu changes to **App installed** when installation is confirmed or the portal runs in standalone mode. Installation adds a home-screen entry; complete the preparation steps below separately.
+
 While the internet connection is reliable:
 
 1. Sign in with the operator account assigned to that device. Use an HTTPS production deployment in a supported current browser. Open **Preparation and saved records** or the header sync status.

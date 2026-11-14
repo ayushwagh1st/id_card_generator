@@ -2,12 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChevronDown, LogOut, X } from 'lucide-react'
+import { ChevronDown, Download, LogOut, X } from 'lucide-react'
+import { useAppInstall } from '@/components/AppInstallProvider'
 import { getWorkspaceNavigation, type WorkspaceRole } from './navigation'
 
 export function Sidebar({ userRole, closeMobileMenu }: { userRole: WorkspaceRole; closeMobileMenu?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { installed, install } = useAppInstall()
   const groups = getWorkspaceNavigation(userRole)
   const roleLabel = userRole === 'SUPER_ADMIN' ? 'Administration' : userRole === 'MODEL_HEAD' ? 'Model Head workspace' : 'Security workspace'
 
@@ -36,6 +38,7 @@ export function Sidebar({ userRole, closeMobileMenu }: { userRole: WorkspaceRole
         </details>)}
       </nav>
       <div className="workspace-sidebar-bottom">
+        <button type="button" className="workspace-signout" disabled={installed} onClick={() => { closeMobileMenu?.(); install() }}><Download size={18} aria-hidden="true" />{installed ? 'App installed' : 'Install app'}</button>
         <p><span lang="hi">जागृति</span><span>The Awakening</span></p>
         <button type="button" className="workspace-signout" onClick={() => { void handleLogout(); closeMobileMenu?.() }}><LogOut size={18} aria-hidden="true" />Sign out</button>
       </div>

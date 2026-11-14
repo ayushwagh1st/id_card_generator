@@ -3,17 +3,19 @@
   "short_name": "ID Admin",
   "description": "Exhibition Volunteer Management and ID Scanning System",
   "start_url": "/",
+  "id": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#8C6DFD",
+  "background_color": "#f8f5ee",
+  "theme_color": "#f8f5ee",
   "icons": [
     {
-      "src": "/icon.png",
+      "src": "/icons/app-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icon.png",
+      "src": "/icons/app-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
