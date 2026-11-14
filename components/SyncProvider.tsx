@@ -9,6 +9,7 @@ import { P2PBridgeModal } from '@/web_offline_p2p_sync/components/P2PBridgeModal
 import { createClient } from '@/lib/supabase/client';
 import { ACTIVE_USER, SESSION_LOCK, lockOfflineSession } from '@/lib/offline/session';
 import { errorMessage } from '@/web_offline_p2p_sync/core/errors';
+import { usableOfflineWorker } from '@/lib/offline/worker';
 
 interface SyncContextType {
   syncManager: SyncManager | null;
@@ -29,18 +30,7 @@ async function preparePages(owner: string): Promise<void> {
   if (!process.env.NEXT_PUBLIC_OFFLINE_BUILD_ID) throw new Error('Offline access requires the published app. This development preview cannot verify offline files. Your saved records are safe.');
   if (!('serviceWorker' in navigator)) throw new Error('This browser does not support offline pages. Use a current browser over HTTPS.');
   const registration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
-  await navigator.serviceWorker.ready;
-  const worker = registration.installing || registration.waiting || registration.active;
-  if (!worker) throw new Error('Offline worker is not active. Reload and prepare again.');
-  if (worker.state !== 'activated') await new Promise<void>((resolve, reject) => {
-    const finish = () => { clearTimeout(timer); worker.removeEventListener('statechange', changed); };
-    const changed = () => {
-      if (worker.state === 'activated') { finish(); resolve(); }
-      else if (worker.state === 'redundant') { finish(); reject(new Error('Offline worker update failed. Keep the connection and retry preparation.')); }
-    };
-    const timer = setTimeout(() => { finish(); reject(new Error('Offline worker update timed out. Retry preparation.')); }, 15000);
-    worker.addEventListener('statechange', changed); changed();
-  });
+  const worker = await usableOfflineWorker(registration);
   await new Promise<void>((resolve, reject) => {
     const channel = new MessageChannel();
     const timer = setTimeout(() => { channel.port1.close(); reject(new Error('Offline pages could not be verified. Keep the connection and retry preparation.')); }, 60000);

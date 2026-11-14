@@ -17,4 +17,7 @@ const revision = crypto.createHash('sha256').update(assets.join('\n')).digest('h
 const output = path.join(staticRoot, build, 'offline-assets.json');
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, JSON.stringify({ build, revision, assets }));
+const publicOutput = path.join(base, 'public', 'offline-releases', build, 'assets.json');
+fs.mkdirSync(path.dirname(publicOutput), { recursive: true });
+fs.writeFileSync(publicOutput, JSON.stringify({ build, revision, assets }));
 console.log(`Offline manifest: ${assets.length} assets, build ${build}`);

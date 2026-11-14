@@ -8,8 +8,8 @@ Date: 14 November 2026, Asia/Kolkata.
 
 | Check | Result | Evidence |
 |---|---|---|
-| Complete repository unit/component/action/SQL suite | 182 passed, 0 failed, 26 files | `verification-results/unit-results.json` |
-| Offline and event-access regressions included in that run | 102 passed, 0 failed, 8 files | `__tests__/offline/` |
+| Complete repository unit/component/action/SQL suite | 186 passed, 0 failed, 27 files | `verification-results/unit-results.json` |
+| Offline and event-access regressions included in that run | 106 passed, 0 failed, 9 files | `__tests__/offline/` |
 | Production Chromium integration tests | 7 passed, 0 failed, 0 skipped, 0 flaky | `verification-results/browser-results.json` |
 | Normal production build and isolated verification build | Both passed compilation, TypeScript, and prerendering | `npm run build`, `npm run build:offline-test`, `npm run test:browser` |
 | Required offline assets | 97 production files packaged; build-specific manifest matches the operator page | Generated `.next/static/<build-id>/offline-assets.json` |
@@ -22,7 +22,7 @@ Date: 14 November 2026, Asia/Kolkata.
 | Broader production security advisors | 0 errors; 9 older warnings remain | `verification-results/production-advisors-after.json`; details in the production verification report |
 | Actual event phones, camera scanning, venue Wi-Fi, and router TLS/DNS/power rehearsal | Not performed | Requires the physical event environment |
 
-The full Chromium run finished with all seven cases passing. Its last 1,000-operation test saved the backlog in about **1.53 seconds** on the development machine, retained all 1,000 operations after storage restart, uploaded 1,000 unique IDs, and left zero outstanding items. This is a measured desktop result, not a promised phone throughput or network capacity.
+The full Chromium run finished with all seven cases passing. Its last 1,000-operation test saved the backlog in about **6.70 seconds** on the development machine, retained all 1,000 operations after storage restart, uploaded 1,000 unique IDs, and left zero outstanding items. This is a measured desktop result, not a promised phone throughput or network capacity.
 
 The focused offline test groups cover:
 
@@ -36,6 +36,7 @@ The focused offline test groups cover:
 | Upload API authentication, validation, limits, and per-record responses | 8 |
 | Reachability, captive portals, database failures, timeouts, and probe coalescing | 6 |
 | Persistent local WebSocket relay authorization, deduplication, catch-up, and restart | 7 |
+| Active, replaced, waiting, slow, and timed-out service-worker startup | 4 |
 
 The seven real-browser cases exercise:
 

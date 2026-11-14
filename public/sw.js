@@ -11,7 +11,7 @@ async function prepare() {
   const html = await shell.clone().text();
   const build = html.match(/<meta\s+name="event-offline-build"\s+content="([a-zA-Z0-9_-]+)"\s*\/?\s*>/)?.[1];
   if (!build || build === 'development') throw new Error('Offline access requires the published app. This development preview cannot verify offline files. Your saved records are safe.');
-  const response = await fetch(`/_next/static/${build}/offline-assets.json`, { cache: 'no-store' });
+  const response = await fetch(`/offline-releases/${build}/assets.json`, { cache: 'no-store' });
   if (!response.ok) throw new Error('Offline files for this app release are unavailable. Keep the connection and retry preparation. Your saved records are safe.');
   const manifest = await response.json();
   if (manifest.build !== build) throw new Error('The app release changed during preparation. Retry preparation to save the latest complete release. Your saved records are safe.');
@@ -35,8 +35,9 @@ async function prepare() {
   return { ok: true, preparedAt: Date.now(), assets: manifest.assets.length };
 }
 self.addEventListener('install', event => { event.waitUntil(self.skipWaiting()); });
-self.addEventListener('activate', event => { event.waitUntil((async () => { await caches.delete('app-pwa-v1'); await self.clients.claim(); })()); });
+self.addEventListener('activate', event => { event.waitUntil(self.clients.claim()); });
 self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') event.waitUntil(self.skipWaiting());
   if (event.data?.type === 'PREPARE_OFFLINE') event.waitUntil(prepare().then(result => event.ports[0]?.postMessage(result)).catch(error => event.ports[0]?.postMessage({ ok: false, error: error.message })));
   // Only public code and the anonymous shell are cached. Private records live in per-user IndexedDB partitions.
   if (event.data?.type === 'CLEAR_PRIVATE') event.waitUntil(caches.delete('app-pwa-v1'));

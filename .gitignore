@@ -16,6 +16,7 @@
 /test-results
 /verification-results
 /public/offline-assets.json
+/public/offline-releases/
 /offline-relay.sqlite*
 /scripts/.offline-deploy.sql
 

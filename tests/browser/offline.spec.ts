@@ -57,7 +57,7 @@ test('prepared operator page survives offline restart and retains committed scan
   await prepare(context, page);
   const buildId=await page.locator('meta[name="event-offline-build"]').getAttribute('content');
   expect(buildId).toBe(readFileSync('.next-offline-tests/BUILD_ID','utf8').trim());
-  const manifest=await context.request.get(`http://localhost:3110/_next/static/${buildId}/offline-assets.json`);
+  const manifest=await context.request.get(`http://localhost:3110/offline-releases/${buildId}/assets.json`);
   expect(manifest.ok()).toBe(true);expect((await manifest.json()).build).toBe(buildId);
   const cached = await page.evaluate(async () => {
     const meta = await (await caches.open('event-offline-meta-v2')).match('/__event_offline_manifest');

@@ -10,15 +10,15 @@ The dialog also placed four long controls in one footer row at wider breakpoints
 
 ## Implemented fix
 
-`npm run build` now runs `scripts/build.cjs`, which supplies one unique build ID to Next.js and the asset generator. The operator page contains that identity, and its manifest is packaged at `/_next/static/<build-id>/offline-assets.json`. Isolated builds write only inside their own build directory. The service worker reads the current operator page first, requests that page's manifest, and verifies the identities match before caching. It still requires every asset to succeed and publishes the complete cache pointer last.
+`npm run build` now runs `scripts/build.cjs`, which supplies one unique build ID to Next.js and the asset generator. The operator page contains that identity, and its manifest is packaged at `/offline-releases/<build-id>/assets.json`. Isolated builds write only inside their own build directory. The service worker reads the current operator page first, requests that page's manifest, and verifies the identities match before caching. It still requires every asset to succeed and publishes the complete cache pointer last.
 
-Development previews explicitly explain that offline access must be prepared in the published app. They cannot accidentally certify an old production bundle. A local production rehearsal uses `npm run build` then `npm start`. Online `/offline` navigation requests the current page, with the previous complete page retained as the network-failure fallback. Preparation waits for the current worker to activate before sending its request.
+Development previews explicitly explain that offline access must be prepared in the published app. They cannot accidentally certify an old production bundle. A local production rehearsal uses `npm run build` then `npm start`. Online `/offline` navigation requests the current page, with the previous complete page retained as the network-failure fallback. Preparation uses an activated worker when available and follows the current registration during first activation; a background update does not block an already usable worker.
 
 The dialog follows the existing cream/navy/saffron design. It has a bounded scrolling body, a persistent footer with Close and Prepare actions, readable delivery counts, and separate checks for event data, application files, and authorization. Partial preparation and expired authorization cannot appear ready. Missing-file messages explain recovery and preserve technical details in a disclosure. Backup and router actions remain available in a keyboard-accessible disclosure, and transfer failures are displayed instead of becoming unhandled rejections.
 
 ## Verification
 
-- Full suite: **182 passed, 0 failed, 26 files**.
+- Full suite: **186 passed, 0 failed, 27 files**.
 - Production-browser suite: **7 passed, 0 failed, 0 skipped, 0 flaky**.
 - Production build and strict TypeScript compilation passed.
 - Targeted dialog/provider lint passed with no errors.
@@ -44,3 +44,11 @@ Screenshots and raw test evidence are stored locally under ignored `verification
 The code and local production build are complete. This follow-up does not publish the application. Deploy the complete generated release and prepare devices again in the published app. Venue-phone and network rehearsal remains necessary, as described in `docs/OFFLINE_OPERATIONS.md`.
 
 Investigation learning: an offline cache manifest must identify the same release as its HTML shell. A mutable, shared public manifest cannot safely represent simultaneous production, development, and test builds.
+
+## Published-site follow-up
+
+The subsequent phone screenshot showed `Offline worker update timed out`. The previous client selected `installing || waiting || active` and waited on that single captured instance for 15 seconds, even when another worker was already active. Slow installation or replacement could therefore block preparation unnecessarily. The new helper uses an already activated worker, follows replacement instances during first activation, requests activation of waiting workers, and bounds startup at 60 seconds. Legacy cache deletion no longer blocks activation. Four regression cases cover these states and bounded failure without data deletion.
+
+Public HTTP inspection confirmed that the published `/offline` page identified build `a681ecb5-2827-44d9-bf56-ddc072c0ad82`, but its `/_next/static/<build-id>/offline-assets.json` returned **404**. The generator now additionally publishes the immutable manifest as `public/offline-releases/<build-id>/assets.json`, and the worker requests that public URL. The proxy explicitly permits anonymous access to these code manifests. Build identity verification and complete-asset validation remain required. The browser suite requests the public manifest without authentication and checks it against the served page.
+
+These changes require a new application deployment. The public inspection confirms the existing deployment defect; local tests cannot claim that an unpublished fix has repaired the phone's installed release.
