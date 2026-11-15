@@ -34,6 +34,21 @@ describe('Workspace navigation', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
+  it.each([
+    { isComposing: true, keyCode: 13 },
+    { isComposing: false, keyCode: 229 },
+  ])('keeps IME confirmation in the search input (%j)', async (composition) => {
+    render(<CommandPalette />)
+    fireEvent.click(screen.getByRole('button', { name: 'Search pages and tools' }))
+    const input = await screen.findByRole('combobox', { name: 'Search pages and tools' })
+    fireEvent.change(input, { target: { value: 'Session' } })
+    fireEvent.keyDown(input, { key: 'Enter', ...composition })
+    expect(push).not.toHaveBeenCalled()
+    expect(input).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: false, keyCode: 13 })
+    expect(push).toHaveBeenCalledWith('/admin/sessions')
+  })
+
   it('displays friendly labels for selected values and preserves value callbacks', async () => {
     const onChange = vi.fn()
     render(<><label htmlFor="test-filter">Model filter</label><Select defaultValue="all" onValueChange={onChange}>

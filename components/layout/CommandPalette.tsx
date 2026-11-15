@@ -45,12 +45,15 @@ export function CommandPalette({ role = 'SUPER_ADMIN' }: { role?: WorkspaceRole 
     router.push(item.href)
   }
   const handleArrowNav = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.nativeEvent.isComposing) return
     if (!filteredCommands.length) return
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
       setSelectedIndex(index => (index + (event.key === 'ArrowDown' ? 1 : -1) + filteredCommands.length) % filteredCommands.length)
     } else if (event.key === 'Enter' && filteredCommands[selectedIndex]) {
       event.preventDefault()
+      // Safari can end composition before delivering its confirming Enter.
+      if (event.nativeEvent.keyCode === 229) return
       selectCommand(filteredCommands[selectedIndex])
     }
   }

@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic'
 import { normalizeScan } from '@/web_offline_p2p_sync/core/protocol'
 import { UserCheck, Camera, CheckCircle2, RefreshCw, QrCode, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
-import { motion } from 'framer-motion'
 import { useSyncManager } from '@/components/SyncProvider'
 import { touchFeedback } from '@/lib/touch-feedback'
 

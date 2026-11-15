@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG } from '@/components/ui/qrcode-svg';
 import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 import { createClient } from '@/lib/supabase/client';
 
 export default function BulkQRPage() {
   const [quantity, setQuantity] = useState<number>(10);
-  const [generatedData, setGeneratedData] = useState<{id: string, serial_number: number}[]>([]);
+  const [generatedData, setGeneratedData] = useState<{ id: string, serial_number: number }[]>([]);
   const [loading, setLoading] = useState(false);
 
   const supabase = createClient();
@@ -25,7 +25,7 @@ export default function BulkQRPage() {
         .from('qr_codes')
         .insert(inserts)
         .select('id, serial_number');
-      
+
       if (error) throw error;
       if (data) setGeneratedData(data);
     } catch (err) {
@@ -63,7 +63,7 @@ export default function BulkQRPage() {
 
       for (let i = 0; i < generatedData.length; i++) {
         const item = generatedData[i];
-        
+
         if (i > 0 && i % (stickersPerRow * stickersPerCol) === 0) {
           doc.addPage();
           currentSticker = 0;
@@ -71,7 +71,7 @@ export default function BulkQRPage() {
 
         const row = Math.floor(currentSticker / stickersPerRow);
         const col = currentSticker % stickersPerRow;
-        
+
         const x = marginX + (col * (stickerSize + marginX));
         const y = marginY + (row * (stickerSize + spacingY));
 
@@ -86,7 +86,7 @@ export default function BulkQRPage() {
         const qrSize = stickerSize * 0.38;
         const qrX = x + (stickerSize - qrSize) / 2;
         const qrY = y + (stickerSize - qrSize) / 2 - 3.5; // Adjusted 1mm down as requested
-        
+
         doc.setFillColor(255, 255, 255);
         doc.roundedRect(qrX - 1, qrY - 1, qrSize + 2, qrSize + 2, 2, 2, 'F');
         doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
@@ -94,7 +94,7 @@ export default function BulkQRPage() {
         const serial = `MSS-2027-${String(item.serial_number).padStart(3, '0')}`;
         const textY = qrY + qrSize + 4; // Text directly below QR
         const textX = x + (stickerSize / 2);
-        
+
         doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
         const textWidth = doc.getTextWidth(serial);
@@ -130,13 +130,13 @@ export default function BulkQRPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="quantity">Number of Stickers to Generate</Label>
-            <Input 
-              id="quantity" 
-              type="number" 
-              min={1} 
+            <Input
+              id="quantity"
+              type="number"
+              min={1}
               max={100}
-              value={quantity} 
-              onChange={(e) => setQuantity(Number(e.target.value))} 
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
             />
           </div>
         </CardContent>
@@ -158,7 +158,7 @@ export default function BulkQRPage() {
           <div className="opacity-50 pointer-events-none mb-4 text-sm text-muted-foreground">
             * This is a low-opacity preview. The actual printed page will be full quality.
           </div>
-          
+
 
 
           {/* Screen Preview */}
@@ -167,9 +167,9 @@ export default function BulkQRPage() {
               const serial = `MSS-2027-${String(item.serial_number).padStart(3, '0')}`;
               return (
                 <div key={item.id} className="relative w-full aspect-square border border-dashed border-gray-200 rounded-full overflow-hidden">
-                  <img 
-                    src="/kids_sticker.jpg" 
-                    alt="Sticker Template" 
+                  <img
+                    src="/kids_sticker.jpg"
+                    alt="Sticker Template"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                   />
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pb-2">

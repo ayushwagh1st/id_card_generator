@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { useReactToPrint } from 'react-to-print'
 import { Printer, RefreshCw, Layers, ChevronLeft, ChevronRight, Sliders, Sparkles } from 'lucide-react'
 import { IDCard } from '@/components/volunteers/IDCard'
 import { toast } from 'sonner'
@@ -26,50 +25,14 @@ const mirrorPageForBack = (pageVols: any[]) => {
 export default function PrintCenter() {
   const previewViewportRef = useRef<HTMLDivElement>(null)
   const [fitMode, setFitMode] = useState<'width' | 'page' | null>('width')
-  const [state, dispatch] = React.useReducer(
-    (state: any, action: any) =>
-      typeof action === 'function' ? { ...state, ...action(state) } : { ...state, ...action },
-    {
-      volunteers: [],
-      loading: true,
-      isFiltered: false,
-      cardSize: 'standard',
-      printMode: 'duplex',
-      zoom: 100,
-      currentBatch: 1,
-    }
-  )
+  const [volunteers, setVolunteers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isFiltered, setIsFiltered] = useState(false)
+  const [cardSize, setCardSize] = useState<'standard' | 'large'>('standard')
+  const [printMode, setPrintMode] = useState<'front' | 'back' | 'duplex'>('duplex')
+  const [zoom, setZoom] = useState(100)
+  const [currentBatch, setCurrentBatch] = useState(1)
 
-  const { volunteers, loading, isFiltered, cardSize, printMode, zoom, currentBatch } = state
-
-  const setVolunteers = useCallback(
-    (v: any) => dispatch((s: any) => ({ volunteers: typeof v === 'function' ? v(s.volunteers) : v })),
-    []
-  )
-  const setLoading = useCallback(
-    (v: any) => dispatch((s: any) => ({ loading: typeof v === 'function' ? v(s.loading) : v })),
-    []
-  )
-  const setIsFiltered = useCallback(
-    (v: any) => dispatch((s: any) => ({ isFiltered: typeof v === 'function' ? v(s.isFiltered) : v })),
-    []
-  )
-  const setCardSize = useCallback(
-    (v: any) => dispatch((s: any) => ({ cardSize: typeof v === 'function' ? v(s.cardSize) : v })),
-    []
-  )
-  const setPrintMode = useCallback(
-    (v: any) => dispatch((s: any) => ({ printMode: typeof v === 'function' ? v(s.printMode) : v })),
-    []
-  )
-  const setZoom = useCallback(
-    (v: any) => dispatch((s: any) => ({ zoom: typeof v === 'function' ? v(s.zoom) : v })),
-    []
-  )
-  const setCurrentBatch = useCallback(
-    (v: any) => dispatch((s: any) => ({ currentBatch: typeof v === 'function' ? v(s.currentBatch) : v })),
-    []
-  )
   useEffect(() => {
     const viewport = previewViewportRef.current
     if (!viewport || !fitMode) return
@@ -83,7 +46,8 @@ export default function PrintCenter() {
     const observer = new ResizeObserver(resize)
     observer.observe(viewport)
     return () => observer.disconnect()
-  }, [fitMode, setZoom])
+  }, [fitMode])
+
   const SHEETS_PER_BATCH = 20
 
   const fetchPrintData = useCallback(async () => {
@@ -105,7 +69,7 @@ export default function PrintCenter() {
     } finally {
       setLoading(false)
     }
-  }, [setLoading, setVolunteers, setIsFiltered])
+  }, [])
 
   useEffect(() => {
     fetchPrintData()
@@ -113,10 +77,9 @@ export default function PrintCenter() {
 
   const componentRef = useRef(null)
 
-  const handlePrint = useReactToPrint({
-    documentTitle: 'Volunteer_ID_Cards',
-    contentRef: componentRef,
-  })
+  const handlePrint = () => {
+    window.print()
+  }
 
   const handlePrintSingleCard = (vol: any) => {
     const originalVolunteers = [...volunteers]

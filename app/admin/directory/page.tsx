@@ -14,11 +14,9 @@ import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Checkbox } from '@/components/ui/checkbox'
 import { SearchField } from '@/components/ui/search-field'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useSyncManager } from '@/components/SyncProvider'
 
 export default function DirectoryPage() {
-  const reduceMotion = useReducedMotion()
   const [children, setChildren] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -277,50 +275,42 @@ export default function DirectoryPage() {
       )}
 
       {/* Floating Multi-Select Action Bar */}
-      <AnimatePresence>
-        {selectedIds.size > 0 && (
-          <motion.div
-            initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(12px)' }}
-            animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'translateY(0)' }}
-            exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(12px)' }}
-            transition={{ duration: reduceMotion ? 0.12 : 0.25, ease: [0.23, 1, 0.32, 1] }}
-            className="directory-selection-bar sticky bottom-4 mx-auto w-full max-w-xl z-40"
-          >
-            <div className="glass-panel p-3.5 flex flex-wrap gap-3 items-center justify-between border border-input">
-              <div className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
-                  {selectedIds.size}
-                </span>
-                <span className="text-xs font-medium text-slate-900 dark:text-white">
-                  attendees selected
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setSelectedIds(new Set())}
-                  className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                >
-                  Deselect
-                </button>
-
-                <button
-                  onClick={handleBulkCheckOut}
-                  disabled={bulkLoading}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-500/25 flex items-center gap-2"
-                >
-                  {bulkLoading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <LogOut className="w-3.5 h-3.5" />
-                  )}
-                  Bulk Check Out
-                </button>
-              </div>
+      {selectedIds.size > 0 && (
+        <div className="directory-selection-bar sticky bottom-4 mx-auto w-full max-w-xl z-40 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="glass-panel p-3.5 flex flex-wrap gap-3 items-center justify-between border border-input">
+            <div className="flex items-center gap-3">
+              <span className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
+                {selectedIds.size}
+              </span>
+              <span className="text-xs font-medium text-slate-900 dark:text-white">
+                attendees selected
+              </span>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              >
+                Deselect
+              </button>
+
+              <button
+                onClick={handleBulkCheckOut}
+                disabled={bulkLoading}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-500/25 flex items-center gap-2"
+              >
+                {bulkLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <LogOut className="w-3.5 h-3.5" />
+                )}
+                Bulk Check Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

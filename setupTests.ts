@@ -110,9 +110,3 @@ vi.mock('jspdf', () => {
 vi.mock('jspdf-autotable', () => ({
   default: vi.fn(),
 }))
-
-vi.mock('browser-image-compression', () => {
-  return {
-    default: vi.fn().mockResolvedValue(new File([''], 'compressed.jpg', { type: 'image/jpeg' })),
-  }
-})

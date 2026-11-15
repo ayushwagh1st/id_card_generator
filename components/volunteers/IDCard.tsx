@@ -1,4 +1,4 @@
-import { QRCodeSVG } from 'qrcode.react'
+import { QRCodeSVG } from '@/components/ui/qrcode-svg'
 import Image from 'next/image'
 
 interface IDCardProps {

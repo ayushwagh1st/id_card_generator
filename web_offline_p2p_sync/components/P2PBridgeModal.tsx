@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG } from '@/components/ui/qrcode-svg';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { QrCode, Scan, Wifi, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';

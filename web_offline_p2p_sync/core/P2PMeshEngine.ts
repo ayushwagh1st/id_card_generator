@@ -5,7 +5,40 @@
  */
 
 import { OutboxItem } from './OfflineStore';
-import LZString from 'lz-string';
+
+async function compressSignal(str: string): Promise<string> {
+  if (typeof CompressionStream !== 'undefined') {
+    const stream = new Blob([new TextEncoder().encode(str)])
+      .stream()
+      .pipeThrough(new CompressionStream('deflate-raw'));
+    const buffer = await new Response(stream).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function decompressSignal(str: string): Promise<string> {
+  let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (base64.length % 4) base64 += '=';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  if (typeof DecompressionStream !== 'undefined') {
+    try {
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      return await new Response(stream).text();
+    } catch {
+      return new TextDecoder().decode(bytes);
+    }
+  }
+  return new TextDecoder().decode(bytes);
+}
 
 export type MeshMessageListener = (item: OutboxItem) => boolean | void | Promise<boolean | void>;
 type MeshPacket = { type: 'SYNC_DELTA'; item: OutboxItem } | { type: 'HELLO' } | { type: 'INVENTORY' | 'REQUEST'; ids: string[] };
@@ -68,9 +101,9 @@ export class P2PMeshEngine {
       pc.addEventListener('icegatheringstatechange',done);done();
     });
   }
-  private parseSignal(compressed: string, type: 'offer' | 'answer'): RTCSessionDescriptionInit {
+  private async parseSignal(compressed: string, type: 'offer' | 'answer'): Promise<RTCSessionDescriptionInit> {
     if(compressed.length>3500) throw new Error('Connection QR is too large. Use the local router.');
-    const raw=LZString.decompressFromEncodedURIComponent(compressed);
+    const raw=await decompressSignal(compressed);
     if(!raw || raw.length>20000)throw new Error('Invalid connection QR.');
     const description=JSON.parse(raw);
     if(description.type!==type || typeof description.sdp!=='string')throw new Error(`Expected a connection ${type} QR.`);
@@ -99,7 +132,7 @@ export class P2PMeshEngine {
 
     // Compress SDP for QR Code
     const rawSdp = JSON.stringify(pc.localDescription);
-    const compressedOffer = LZString.compressToEncodedURIComponent(rawSdp);
+    const compressedOffer = await compressSignal(rawSdp);
     if(compressedOffer.length>2500){pc.close();throw new Error('Connection QR is too dense. Use the local router.');}
 
     return { peerId, compressedOffer, pc };
@@ -109,7 +142,7 @@ export class P2PMeshEngine {
    * Scans an offer, generates an answer, and returns a compressed answer.
    */
   public async acceptOffer(compressedOffer: string): Promise<{ peerId: string; compressedAnswer: string; pc: RTCPeerConnection }> {
-    const offer=this.parseSignal(compressedOffer,'offer');
+    const offer=await this.parseSignal(compressedOffer,'offer');
     const peerId = crypto.randomUUID();
     const pc = new RTCPeerConnection(this.rtcConfig);
     this.setupPeerConnection(peerId, pc);
@@ -127,7 +160,7 @@ export class P2PMeshEngine {
     // Wait for ICE gathering
     await this.waitForIce(pc);
 
-    const compressedAnswer = LZString.compressToEncodedURIComponent(JSON.stringify(pc.localDescription));
+    const compressedAnswer = await compressSignal(JSON.stringify(pc.localDescription));
     if(compressedAnswer.length>2500){pc.close();throw new Error('Connection response QR is too dense. Use the local router.');}
     return { peerId, compressedAnswer, pc };
   }
@@ -136,7 +169,7 @@ export class P2PMeshEngine {
    * Completes the connection by accepting the generated answer from the peer.
    */
   public async acceptAnswer(pc: RTCPeerConnection, compressedAnswer: string): Promise<void> {
-    const answer=this.parseSignal(compressedAnswer,'answer');
+    const answer=await this.parseSignal(compressedAnswer,'answer');
     await pc.setRemoteDescription(new RTCSessionDescription(answer));
     await new Promise<void>((resolve, reject) => {
       const peerId=[...this.peerConnections].find(([,connection])=>connection===pc)?.[0];

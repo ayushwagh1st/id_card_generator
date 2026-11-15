@@ -5,11 +5,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { UploadCloud, CheckCircle2, AlertCircle, Download, Loader2, FileSpreadsheet } from 'lucide-react'
-import Papa from 'papaparse'
 import { toast } from 'sonner'
 import { bulkImportVolunteersAction } from '@/server/actions/volunteers'
 import { getModelsDataAction } from '@/app/admin/models/actions.server'
 import { GlassCard } from '@/components/ui/GlassCard'
+
+function parseCSV(text: string): Record<string, string>[] {
+  const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0)
+  if (lines.length < 2) return []
+  const splitLine = (l: string) => {
+    const res: string[] = []
+    let curr = ''
+    let inQuotes = false
+    for (let i = 0; i < l.length; i++) {
+      const c = l[i]
+      if (c === '"') inQuotes = !inQuotes
+      else if (c === ',' && !inQuotes) { res.push(curr.trim()); curr = '' }
+      else curr += c
+    }
+    res.push(curr.trim())
+    return res
+  }
+  const headers = splitLine(lines[0])
+  return lines.slice(1).map(line => {
+    const values = splitLine(line)
+    const row: Record<string, string> = {}
+    headers.forEach((h, i) => { row[h] = values[i] || '' })
+    return row
+  })
+}
 
 const downloadTemplate = () => {
   const headers = "Full Name,Mobile Number,Gender,Age,Model Name,Emergency Contact,Designation,Team,Address,Remarks"
@@ -26,26 +50,12 @@ const downloadTemplate = () => {
 }
 
 export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[]) => void }) {
-  const [state, dispatch] = React.useReducer(
-    (state: any, action: Partial<any>) => ({ ...state, ...action }),
-    {
-      file: null,
-      error: null,
-      parsedData: [],
-      validationResults: null,
-      importing: false,
-      results: null
-    }
-  )
-
-  const { file, error, parsedData, validationResults, importing, results } = state
-
-  const setFile = (v: any) => dispatch({ file: typeof v === 'function' ? v(file) : v })
-  const setError = (v: any) => dispatch({ error: typeof v === 'function' ? v(error) : v })
-  const setParsedData = (v: any) => dispatch({ parsedData: typeof v === 'function' ? v(parsedData) : v })
-  const setValidationResults = (v: any) => dispatch({ validationResults: typeof v === 'function' ? v(validationResults) : v })
-  const setImporting = (v: any) => dispatch({ importing: typeof v === 'function' ? v(importing) : v })
-  const setResults = (v: any) => dispatch({ results: typeof v === 'function' ? v(results) : v })
+  const [file, setFile] = useState<File | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [parsedData, setParsedData] = useState<any[]>([])
+  const [validationResults, setValidationResults] = useState<{ valid: any[]; invalid: any[]; errors: string[] } | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [results, setResults] = useState<any>(null)
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -60,58 +70,54 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
   const previewCSV = async () => {
     if (!file) return
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (result) => {
-        const data = result.data as any[]
-        const valid: any[] = []
-        const invalid: any[] = []
-        const errors: string[] = []
+    try {
+      const text = await file.text()
+      const data = parseCSV(text)
+      const valid: any[] = []
+      const invalid: any[] = []
+      const errors: string[] = []
+      
+      const modelsData = await getModelsDataAction()
+      const modelMap: Record<string, string> = {}
+      if (modelsData) {
+        modelsData.forEach((m: any) => {
+          modelMap[m.name.toLowerCase()] = m.id
+        })
+      }
+
+      data.forEach((row, index) => {
+        const name = row['Full Name']?.trim()
+        const mobile = (row['Mobile Number'] || row['Mobile'])?.trim()
         
-        const modelsData = await getModelsDataAction()
-        const modelMap: Record<string, string> = {}
-        if (modelsData) {
-          modelsData.forEach((m: any) => {
-            modelMap[m.name.toLowerCase()] = m.id
+        if (!name || !mobile) {
+          invalid.push(row)
+          errors.push(`Row ${index + 2}: Missing required fields (Full Name or Mobile Number)`)
+        } else {
+          const rowModelName = (row['Model Name'] || row['Model'] || '').trim()
+          const matchedModelId = modelMap[rowModelName.toLowerCase()] || null
+
+          valid.push({
+            full_name: name,
+            mobile_number: mobile,
+            gender: row['Gender'] || 'Male',
+            age: row['Age'] ? parseInt(row['Age']) : null,
+            emergency_contact: row['Emergency Contact'] || row['Emergency'] || '',
+            address: row['Address'] || '',
+            role: row['Role'] || row['Designation'] || 'Volunteer',
+            model_id: matchedModelId,
+            original_model_name: rowModelName,
+            status: 'Approved',
+            accommodation: (row['Accommodation'] || '').toLowerCase() === 'yes' || (row['Accommodation'] || '').toLowerCase() === 'true',
+            branch: row['Branch'] || row['City'] || 'General'
           })
         }
+      })
 
-        data.forEach((row, index) => {
-          const name = row['Full Name']?.trim()
-          const mobile = (row['Mobile Number'] || row['Mobile'])?.trim()
-          
-          if (!name || !mobile) {
-            invalid.push(row)
-            errors.push(`Row ${index + 2}: Missing required fields (Full Name or Mobile Number)`)
-          } else {
-            const rowModelName = (row['Model Name'] || row['Model'] || '').trim()
-            const matchedModelId = modelMap[rowModelName.toLowerCase()] || null
-
-            valid.push({
-              full_name: name,
-              mobile_number: mobile,
-              gender: row['Gender'] || 'Male',
-              age: row['Age'] ? parseInt(row['Age']) : null,
-              emergency_contact: row['Emergency Contact'] || row['Emergency'] || '',
-              address: row['Address'] || '',
-              role: row['Role'] || row['Designation'] || 'Volunteer',
-              model_id: matchedModelId,
-              original_model_name: rowModelName,
-              status: 'Approved',
-              accommodation: (row['Accommodation'] || '').toLowerCase() === 'yes' || (row['Accommodation'] || '').toLowerCase() === 'true',
-              branch: row['Branch'] || row['City'] || 'General'
-            })
-          }
-        })
-
-        setParsedData(valid)
-        setValidationResults({ valid, invalid, errors })
-      },
-      error: (err) => {
-        setError(`CSV Parsing Failed: ${err.message}`)
-      }
-    })
+      setParsedData(valid)
+      setValidationResults({ valid, invalid, errors })
+    } catch (err: any) {
+      setError(`CSV Parsing Failed: ${err.message}`)
+    }
   }
 
   const confirmImport = async () => {
@@ -158,7 +164,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
 
       <div className="space-y-6 pt-6">
         {!validationResults && !results && (
-          <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center hover:border-blue-500/50 transition-colors relative bg-white/40 dark:bg-slate-900/40">
+          <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center hover:border-blue-500/50 focus-within:outline-2 focus-within:outline-ring focus-within:outline-offset-4 transition-colors relative bg-white/40 dark:bg-slate-900/40">
             <input 
               aria-label="Upload volunteer CSV file"
               type="file" 
