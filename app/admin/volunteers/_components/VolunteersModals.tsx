@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { ActionForm } from '@/components/ui/action-form'
 import { Plus } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -17,12 +18,12 @@ interface VolunteersModalsProps {
   // Add Dialog
   isAddOpen: boolean
   onAddOpenChange: (open: boolean) => void
-  onCreate: (e: React.FormEvent) => void
+  onCreate: (e: React.FormEvent) => Promise<unknown> | void
 
   // Edit Dialog
   isEditOpen: boolean
   onEditOpenChange: (open: boolean) => void
-  onUpdate: (e: React.FormEvent) => void
+  onUpdate: (e: React.FormEvent) => Promise<unknown> | void
 
   // Form Fields (passed in from parent/reducer state)
   fullName: string
@@ -88,7 +89,7 @@ export function VolunteersModals({
             <DialogTitle className="text-xl font-bold">Add Volunteer Manually</DialogTitle>
             <DialogDescription>SNK IDs are generated automatically. Fields marked * are required.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={onCreate} className="space-y-4 py-2">
+          <ActionForm onSubmit={onCreate} className="space-y-4 py-2">
             <fieldset className="volunteer-form-section"><legend>Personal details</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -198,7 +199,7 @@ export function VolunteersModals({
               <Button type="button" variant="outline" onClick={() => onAddOpenChange(false)}>Cancel</Button>
               <Button type="submit">Create Volunteer</Button>
             </DialogFooter>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
 
@@ -208,7 +209,7 @@ export function VolunteersModals({
             <DialogTitle className="text-xl font-bold">Edit Volunteer Profile</DialogTitle>
             <DialogDescription>Modify fields and upload new assets for this volunteer card.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={onUpdate} className="space-y-4 py-2">
+          <ActionForm onSubmit={onUpdate} className="space-y-4 py-2">
             <fieldset className="volunteer-form-section"><legend>Personal details</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -317,7 +318,7 @@ export function VolunteersModals({
               <Button type="button" variant="outline" onClick={() => onEditOpenChange(false)}>Cancel</Button>
               <Button type="submit">Save Changes</Button>
             </DialogFooter>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
     </>

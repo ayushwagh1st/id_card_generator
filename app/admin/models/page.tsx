@@ -1,4 +1,5 @@
 'use client'
+import { ActionForm } from '@/components/ui/action-form'
 
 import { useEffect, useReducer } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -275,7 +276,7 @@ export default function ModelsPage() {
                 Create a new exhibition model division and link a model head.
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleCreateModel} className="space-y-4 py-2">
+            <ActionForm onSubmit={handleCreateModel} className="space-y-4 py-2">
               <div className="space-y-1.5">
                 <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Model Name</Label>
                 <Input id="name" placeholder="e.g. Ground Traffic" value={state.name} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'name', value: e.target.value })} required />
@@ -318,7 +319,7 @@ export default function ModelsPage() {
                 <Button type="button" variant="outline" onClick={() => dispatch({ type: 'CLOSE_ADD' })}>Cancel</Button>
                 <Button type="submit">Create Model</Button>
               </DialogFooter>
-            </form>
+            </ActionForm>
           </DialogContent>
         </Dialog>
       </div>
@@ -333,7 +334,7 @@ export default function ModelsPage() {
               Modify name, assignment and categories for this model.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleUpdateModel} className="space-y-4 py-2">
+          <ActionForm onSubmit={handleUpdateModel} className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="edit-name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Model Name</Label>
               <Input id="edit-name" value={state.name} onChange={e => dispatch({ type: 'SET_FORM_FIELD', field: 'name', value: e.target.value })} required />
@@ -376,7 +377,7 @@ export default function ModelsPage() {
               <Button type="button" variant="outline" onClick={() => dispatch({ type: 'CLOSE_EDIT' })}>Cancel</Button>
               <Button type="submit">Save changes</Button>
             </DialogFooter>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
 

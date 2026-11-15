@@ -65,7 +65,7 @@ export default function LiveAttendancePage() {
             <h3 className="font-bold text-base text-slate-900 dark:text-white tracking-tight">Recent Scans Feed</h3>
             <p className="text-xs text-slate-400">Live feed of the latest 50 scans recorded today</p>
           </div>
-          <Activity className="w-5 h-5 text-blue-500 animate-pulse" />
+          <Activity className="w-5 h-5 text-blue-500" />
         </div>
 
         <div className="p-0">

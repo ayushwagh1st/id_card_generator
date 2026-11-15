@@ -78,6 +78,8 @@ const initialState: State = {
 
 function reducer(state: State, action: any): State {
   switch (action.type) {
+    case 'STATUS_CONFIRMED':
+      return { ...state, volunteers: state.volunteers.map(volunteer => volunteer.id === action.id ? { ...volunteer, status: action.status } : volunteer) }
     case 'APPLY_QUERY':
       return Object.keys(action.payload).every(key => state[key as keyof State] === action.payload[key]) ? state : { ...state, ...action.payload }
     case 'SET_STATE':
@@ -128,6 +130,8 @@ export function useVolunteersState() {
   const [state, dispatch] = useReducer(reducer, { ...initialState, ...readVolunteerQuery(searchParams) })
   const requestSequence = useRef(0)
   const currentVolunteerRef = useRef<any>(null)
+  const statusRequests = useRef(new Map<string, Promise<void>>())
+  const refreshRosterRef = useRef<() => Promise<void>>(async () => {})
   const cropOriginalFileRef = useRef<File | null>(null)
   const router = useRouter()
   const limit = 20
@@ -176,6 +180,8 @@ export function useVolunteersState() {
     }
   }, [state.page, state.searchTerm, state.filterStatus, state.filterModel, dispatchField])
 
+  useEffect(() => { refreshRosterRef.current = fetchVolunteers }, [fetchVolunteers])
+
   useEffect(() => {
     fetchModels()
   }, [fetchModels])
@@ -191,7 +197,7 @@ export function useVolunteersState() {
     e.preventDefault()
     if (!state.fullName.trim()) return toast.error('Full Name is required')
     if (!state.mobileNumber.trim()) return toast.error('Contact Number is required')
-    if (!state.photoUrl) return toast.error('Photo is required')
+    if (!state.photoUrl) return toast.error('Add a portrait to continue', { id: 'volunteer-validation', description: 'Choose a clear volunteer photo, then save the profile.', duration: 8000 })
 
     try {
       const payload: any = {
@@ -214,7 +220,7 @@ export function useVolunteersState() {
       const res = await addVolunteerAction(payload)
       if (res?.error) throw new Error(res.error)
 
-      toast.success('Volunteer added successfully')
+      toast.success('Profile ready for review', { description: `${state.fullName.trim()} was added with pending approval.` })
       dispatchField('isAddOpen', false)
       dispatch({ type: 'RESET_FORM' })
       fetchVolunteers()
@@ -231,7 +237,7 @@ export function useVolunteersState() {
   const handleUpdateVolunteer = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!currentVolunteerRef.current) return
-    if (!state.photoUrl) return toast.error('Photo is required')
+    if (!state.photoUrl) return toast.error('Add a portrait to continue', { id: 'volunteer-validation', description: 'Choose a clear volunteer photo, then save the profile.', duration: 8000 })
 
     try {
       const payload = {
@@ -253,7 +259,7 @@ export function useVolunteersState() {
       const res = await updateVolunteerAction(currentVolunteerRef.current.id, payload)
       if (res?.error) throw new Error(res.error)
 
-      toast.success('Volunteer updated successfully')
+      toast.success('Profile changes saved', { description: `${state.fullName.trim()}'s details are up to date.` })
       dispatchField('isEditOpen', false)
       fetchVolunteers()
     } catch (err: any) {
@@ -261,15 +267,23 @@ export function useVolunteersState() {
     }
   }
 
-  const handleStatusChange = async (id: string, status: string) => {
-    try {
+  const handleStatusChange = (id: string, status: string): Promise<void> => {
+    const existing = statusRequests.current.get(id)
+    if (existing) return existing
+    const notificationId = `volunteer-status:${id}`
+    const volunteerName = state.volunteers.find(volunteer => volunteer.id === id)?.full_name || 'Volunteer'
+    const request = (async () => { try {
       const res = await updateVolunteerAction(id, { status })
       if (res?.error) throw new Error(res.error)
-      toast.success(`Status updated to ${status}`)
-      fetchVolunteers()
+      dispatch({ type: 'STATUS_CONFIRMED', id, status })
+      toast.success(status === 'Approved' ? 'Volunteer approved' : status === 'Rejected' ? 'Volunteer marked rejected' : 'Moved to pending review', { id: notificationId, description: `${volunteerName}'s status is now ${status.toLowerCase()}.` })
+      await refreshRosterRef.current()
     } catch (err: any) {
-      toast.error(err.message || 'Could not update status')
-    }
+      toast.error('Status was not changed', { id: notificationId, description: err.message || 'The previous status is still in place. Try again.', duration: 10000, action: { label: 'Retry', onClick: event => { event.preventDefault(); toast.loading('Trying again…', { id: notificationId, description: `Saving the status for ${volunteerName}.` }); void handleStatusChange(id, status).catch(() => {}) } } })
+      throw err
+    } })().finally(() => { statusRequests.current.delete(id) })
+    statusRequests.current.set(id, request)
+    return request
   }
 
   const handleBulkApprove = async () => {
@@ -277,7 +291,7 @@ export function useVolunteersState() {
     try {
       const res = await bulkApproveVolunteersAction(state.selectedIds)
       if (res?.error) throw new Error(res.error)
-      toast.success(`Approved ${state.selectedIds.length} volunteers`)
+      toast.success('Approvals saved', { description: `${state.selectedIds.length} volunteer ${state.selectedIds.length === 1 ? 'profile is' : 'profiles are'} now approved.` })
       dispatchField('selectedIds', [])
       fetchVolunteers()
     } catch (err: any) {

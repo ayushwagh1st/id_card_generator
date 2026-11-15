@@ -1,4 +1,6 @@
-import { Users, Edit, Printer, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { touchFeedback } from '@/lib/touch-feedback'
+import { Users, Edit, Printer, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -11,12 +13,25 @@ interface VolunteersTableProps {
   volunteers: VolunteerRecord[]; loading: boolean; selectedIds: string[]; page: number; totalPages: number; totalCount: number
   searchTerm: string; filterStatus: string; filterModel: string
   onToggleSelectAll: () => void; onToggleSelect: (id: string) => void; onOpenEdit: (volunteer: VolunteerRecord) => void
-  onPrintSingle: (id: string) => void; onStatusChange: (id: string, status: string) => void
+  onPrintSingle: (id: string) => void; onStatusChange: (id: string, status: string) => Promise<void> | void
   onPageChange: (updater: number | ((previous: number) => number)) => void
 }
 
 function StatusControl({ volunteer, onChange }: { volunteer: VolunteerRecord; onChange: VolunteersTableProps['onStatusChange'] }) {
-  return <Select value={volunteer.status} onValueChange={value => { if (value && ['Pending', 'Approved', 'Rejected'].includes(value)) onChange(volunteer.id, value) }}><SelectTrigger aria-label={`Status for ${volunteer.full_name}`} className={`roster-status-select status-${volunteer.status.toLowerCase()}`}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Pending">Pending</SelectItem><SelectItem value="Approved">Approved</SelectItem><SelectItem value="Rejected">Rejected</SelectItem></SelectContent></Select>
+  const locked = useRef(false)
+  const [saving, setSaving] = useState<string | null>(null)
+  const [error, setError] = useState(false)
+  const changeStatus = async (value: string | null) => {
+    if (!value || !['Pending', 'Approved', 'Rejected'].includes(value) || value === volunteer.status || locked.current) return
+    locked.current = true
+    setSaving(value)
+    setError(false)
+    touchFeedback()
+    try { await onChange(volunteer.id, value) }
+    catch { setError(true) }
+    finally { locked.current = false; setSaving(null) }
+  }
+  return <div className="roster-status-feedback" aria-busy={!!saving}><Select disabled={!!saving} value={volunteer.status} onValueChange={value => { void changeStatus(value) }}><SelectTrigger aria-label={`Status for ${volunteer.full_name}`} className={`roster-status-select status-${volunteer.status.toLowerCase()}`}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Pending">Pending</SelectItem><SelectItem value="Approved">Approved</SelectItem><SelectItem value="Rejected">Rejected</SelectItem></SelectContent></Select><span className="roster-status-message" role="status" aria-live="polite">{saving ? <><Loader2 className="operation-spinner" size={13} aria-hidden="true" />Saving {saving.toLowerCase()}…</> : error ? 'Not saved. Try again.' : null}</span></div>
 }
 
 export function VolunteersTable({ volunteers, loading, selectedIds, page, totalPages, totalCount, searchTerm, filterStatus, filterModel, onToggleSelectAll, onToggleSelect, onOpenEdit, onPrintSingle, onStatusChange, onPageChange }: VolunteersTableProps) {

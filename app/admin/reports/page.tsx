@@ -190,12 +190,12 @@ export default function AdminReportsPage() {
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-        toast.success(`${title} (CSV) generated!`)
+        toast.success('Your report is ready', { description: `${title} has been prepared as CSV.` })
       } else {
         exportToPDF({
           title, subtitle, filename: `${filename}.pdf`, headers, data: rows, themeColor, summaryStats: stats
         })
-        toast.success(`${title} (PDF) generated!`)
+        toast.success('Your report is ready', { description: `${title} has been prepared as PDF.` })
       }
     } catch (err: any) {
       toast.error(err.message || 'Error generating report')

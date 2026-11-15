@@ -125,7 +125,7 @@ export function CSVUpload({ onUploadSuccess }: { onUploadSuccess?: (data: any[])
       } else {
         setResults(res)
         const importedCount = (res as any).count ?? (res as any).successful ?? validationResults.valid.length
-        toast.success(`Imported ${importedCount} volunteers`)
+        toast.success('Roster import complete', { description: `${importedCount} volunteer ${importedCount === 1 ? 'profile was' : 'profiles were'} imported. Review the results below.` })
         if (onUploadSuccess) onUploadSuccess(validationResults.valid)
       }
     } catch (err: any) {

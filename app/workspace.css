@@ -1,4 +1,19 @@
 /* Shared workspace surfaces keep task pages consistent without changing their data or actions. */
+.roster-status-feedback { min-width: 120px; }
+.roster-status-message { display: flex; align-items: center; gap: 5px; min-height: 20px; margin-top: 3px; font-size: 12px; line-height: 1.4; color: var(--muted-foreground); }
+.roster-status-feedback[aria-busy="true"] .roster-status-select { opacity: 1; cursor: progress; }
+.operation-spinner { flex-shrink: 0; animation: operation-spin 800ms linear infinite; }
+@keyframes operation-spin { to { transform: rotate(360deg); } }
+.action-form-fields { display: contents; border: 0; padding: 0; margin: 0; min-width: 0; }
+.action-form-feedback { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 22px; color: var(--muted-foreground); font-size: 13px; }
+.action-form-feedback[role="alert"] { color: var(--destructive); }
+form[aria-busy="true"] button[type="submit"] { cursor: progress; }
+.async-action { display: inline-flex; flex-direction: column; gap: 5px; }
+.async-button-labels { display: grid; align-items: center; }
+.async-button-labels > span { grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.touch-feedback-help { display: block; color: var(--muted-foreground); font-size: 11px; font-weight: 400; }
+.workspace-content > .animate-in { animation: none; }
+@media (prefers-reduced-motion: reduce) { .operation-spinner { animation: none; } }
 .app-workspace, .workspace-drawer, .ui-modal, [data-slot="alert-dialog-content"], [data-slot="select-content"], .workspace-account-menu {
   --color-slate-50: #f8f5ee;
   --color-slate-100: #efeae1;
@@ -116,7 +131,8 @@
 .workspace-account-info { padding: 12px 12px 14px; border-bottom: 1px solid var(--border); margin-bottom: 4px; overflow-wrap: anywhere; }
 .workspace-account-info strong { display: block; font-size: 13px; font-weight: 600; }
 .workspace-account-info span { font-size: 11px; color: var(--muted-foreground); }
-.workspace-account-action { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 12px; border-radius: 4px; font-size: 13px; color: var(--destructive); cursor: pointer; }
+.workspace-account-action { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 12px; border-radius: 4px; font-size: 13px; color: var(--foreground); cursor: pointer; }
+.workspace-account-action[data-destructive] { color: var(--destructive); }
 .workspace-account-action[data-highlighted] { background: var(--muted); outline: 2px solid var(--ring); outline-offset: -2px; }
 
 .workspace-sidebar { display: flex; flex-direction: column; min-width: 0; height: 100%; background: var(--card); color: var(--foreground); }

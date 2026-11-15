@@ -1,4 +1,5 @@
 'use client'
+import { ActionForm } from '@/components/ui/action-form'
 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -86,7 +87,7 @@ export function LecturersModals({
               Create a new security account. They'll receive credentials to access the portal.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleCreate} className="space-y-4 py-2">
+          <ActionForm onSubmit={handleCreate} className="space-y-4 py-2">
             {/* Name & Email */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -190,7 +191,7 @@ export function LecturersModals({
                 <Shield className="h-4 w-4 mr-1.5" /> Create Security
               </Button>
             </DialogFooter>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
 
@@ -201,7 +202,7 @@ export function LecturersModals({
             <DialogTitle className="text-xl font-bold">Edit Security</DialogTitle>
             <DialogDescription>Update security personnel information.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleUpdate} className="space-y-4 py-2">
+          <ActionForm onSubmit={handleUpdate} className="space-y-4 py-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="edit-security-name" className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
@@ -232,7 +233,7 @@ export function LecturersModals({
               <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
               <Button type="submit">Save Changes</Button>
             </DialogFooter>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
 
@@ -246,7 +247,7 @@ export function LecturersModals({
             <DialogTitle className="text-xl font-bold">Reset Password</DialogTitle>
             <DialogDescription>Assign a new temporary password to {currentLecturer?.name}.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleResetPassword} className="space-y-4 py-2">
+          <ActionForm onSubmit={handleResetPassword} className="space-y-4 py-2">
             <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
               <Label htmlFor="reset-security-password" className="text-[11px] font-bold text-muted-foreground uppercase">New Password *</Label>
               <div className="flex items-center gap-2">
@@ -296,7 +297,7 @@ export function LecturersModals({
               <Button type="button" variant="outline" onClick={() => setIsResetPassOpen(false)}>Cancel</Button>
               <Button type="submit">Reset Password</Button>
             </DialogFooter>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
     </>

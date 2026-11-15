@@ -1,4 +1,5 @@
 'use client'
+import { ActionForm } from '@/components/ui/action-form'
 
 import React, { useEffect, useState, useCallback, useReducer } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -276,7 +277,7 @@ export default function SessionsPage() {
             <DialogHeader>
               <DialogTitle>Create New Session</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4 py-2">
+            <ActionForm onSubmit={handleCreate} className="space-y-4 py-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="session-name">Session Name</Label>
@@ -342,7 +343,7 @@ export default function SessionsPage() {
                 <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
                 <Button type="submit">Create</Button>
               </DialogFooter>
-            </form>
+            </ActionForm>
           </DialogContent>
         </Dialog>
       </div>
@@ -353,7 +354,7 @@ export default function SessionsPage() {
           <DialogHeader>
             <DialogTitle>Edit Session</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleUpdate} className="space-y-4 py-2">
+          <ActionForm onSubmit={handleUpdate} className="space-y-4 py-2">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-session-name">Session Name</Label>
@@ -419,7 +420,7 @@ export default function SessionsPage() {
               <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
               <Button type="submit">Save Changes</Button>
             </DialogFooter>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
 

@@ -8,6 +8,7 @@ import { UserCheck, Camera, CheckCircle2, RefreshCw, QrCode, Sparkles } from 'lu
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import { useSyncManager } from '@/components/SyncProvider'
+import { touchFeedback } from '@/lib/touch-feedback'
 
 const Scanner = dynamic(() => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner), {
   ssr: false,
@@ -86,10 +87,10 @@ export function SpotRegistration() {
           ...(newStatus === 'Checked In' ? { checked_in_at: now } : { checked_out_at: now }),
         })
         setChildData({ ...data, status: newStatus, session: { name: session?.name || '' } })
-        navigator.vibrate?.(100)
-        toast.success('Attendance saved on this device; awaiting server confirmation.')
+        touchFeedback()
+        toast.success('Attendance saved on this device', { id: 'child-attendance', description: 'Server confirmation is still pending.', duration: 3000 })
         setTimeout(() => { setScannedId(null); setScannedSerial(null); setChildData(null) }, 2000)
-      } else toast.info('This QR badge is already registered.')
+      } else toast.info('This badge is already registered', { id: 'child-registration', description: 'Use attendance mode to record a check-in or checkout.' })
     } catch (error: any) {
       toast.error(error.message || 'Could not save this badge. Try again.')
       setScannedId(null)
@@ -106,7 +107,7 @@ export function SpotRegistration() {
       const payload = { id: crypto.randomUUID(), name: name.trim(), contact_number: contact.trim(), session_id: sessionId, qr_id: scannedId, serial_number: scannedSerial || 'UNASSIGNED', status: 'Registered' }
       await syncManager.mutate('children', 'CREATE', payload)
       setChildData({ ...payload, session: { name: sessions.find(row => row.id === sessionId)?.name || '' } })
-      toast.success('Registration saved on this device; awaiting server confirmation.')
+      toast.success('Registration saved on this device', { id: 'child-registration', description: 'Server confirmation is still pending.' })
     } catch (error: any) { toast.error(error.message || 'Registration was not saved. Try again.') }
     finally { setLoading(false) }
   }

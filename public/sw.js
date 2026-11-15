@@ -59,7 +59,8 @@ self.addEventListener('fetch', event => {
     const meta = await metadata();
     const cached = meta ? await (await caches.open(meta.cache)).match(SHELL) : null;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
+    // Only race the network when a verified offline page can replace it.
+    const timeout = cached ? setTimeout(() => controller.abort(), 4000) : null;
     try {
       const response = await fetch(request, { signal: controller.signal });
       if (response.status >= 500 && cached && /^\/(admin|lecturer|head)(\/|$)/.test(url.pathname)) return Response.redirect(new URL(SHELL, self.location.origin), 307);
@@ -67,6 +68,6 @@ self.addEventListener('fetch', event => {
     } catch {
       if (cached) return url.pathname === SHELL ? cached : Response.redirect(new URL(SHELL, self.location.origin), 307);
       return new Response('This device has not been prepared for offline use. Reconnect, sign in, and choose Prepare offline access.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
-    } finally { clearTimeout(timeout); }
+    } finally { if (timeout !== null) clearTimeout(timeout); }
   })());
 });

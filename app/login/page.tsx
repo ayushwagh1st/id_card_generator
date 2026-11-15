@@ -36,7 +36,7 @@ export default function LoginPage() {
         return
       }
 
-      toast.success('Signed in successfully')
+      toast.success('Welcome back', { description: 'You are signed in. Opening your workspace…', id: 'sign-in' })
       const role = data.user.app_metadata?.role
       if (data.user.id) openOfflineSession(data.user.id)
       router.refresh()

@@ -1,4 +1,5 @@
 'use client'
+import { ActionForm } from '@/components/ui/action-form'
 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -85,7 +86,7 @@ export function HeadsModals({
               Create a new model head account. They'll receive credentials to access the portal.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleCreateHead} className="space-y-4 py-2">
+          <ActionForm onSubmit={handleCreateHead} className="space-y-4 py-2">
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -154,7 +155,7 @@ export function HeadsModals({
                 {state.isCreatingHead ? <><AnimatedLoader className="mr-2 h-4 w-4" /> Creating...</> : 'Create Account'}
               </Button>
             </DialogFooter>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
 
@@ -165,7 +166,7 @@ export function HeadsModals({
             <DialogTitle className="text-xl font-bold">Edit Model Head</DialogTitle>
             <DialogDescription>Update the name or login email for this user.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleUpdateHead} className="space-y-4 py-2">
+          <ActionForm onSubmit={handleUpdateHead} className="space-y-4 py-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="edit-head-name" className="text-[11px] font-bold text-muted-foreground uppercase">Full Name *</Label>
@@ -182,7 +183,7 @@ export function HeadsModals({
                 {state.isUpdating ? <AnimatedLoader className="h-4 w-4" /> : 'Save Changes'}
               </Button>
             </DialogFooter>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
 
@@ -193,7 +194,7 @@ export function HeadsModals({
             <DialogTitle className="text-xl font-bold">Reset Password</DialogTitle>
             <DialogDescription>Assign a new temporary password to {state.currentHead?.full_name}.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleResetPassword} className="space-y-4 py-2">
+          <ActionForm onSubmit={handleResetPassword} className="space-y-4 py-2">
             <div className="space-y-1.5 p-4 border border-dashed rounded-lg bg-muted/30">
               <Label htmlFor="reset-head-password" className="text-[11px] font-bold text-muted-foreground uppercase">New Password *</Label>
               <div className="flex items-center gap-2">
@@ -245,7 +246,7 @@ export function HeadsModals({
                 {state.isUpdating ? <AnimatedLoader className="h-4 w-4" /> : 'Reset Password'}
               </Button>
             </DialogFooter>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
 

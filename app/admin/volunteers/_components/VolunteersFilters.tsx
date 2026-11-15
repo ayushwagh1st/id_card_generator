@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { AsyncButton } from '@/components/ui/async-button'
 import { CheckCircle, Filter, Printer, Trash2, X } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { SearchField } from '@/components/ui/search-field'
@@ -15,7 +16,7 @@ interface ModelOption { id: string; name: string; category?: string | null }
 interface VolunteersFiltersProps {
   searchTerm: string; filterModel: string; filterStatus: string; models: ModelOption[]; selectedIdsCount: number
   onSearchChange: (value: string) => void; onModelChange: (value: string) => void; onStatusChange: (value: string) => void
-  onPrintSelected: () => void; onBulkApprove: () => void; onBulkDelete: () => void; onClearSelection?: () => void
+  onPrintSelected: () => void; onBulkApprove: () => Promise<unknown> | void; onBulkDelete: () => void; onClearSelection?: () => void
 }
 
 function ModelFilter({ id, value, models, onChange }: { id: string; value: string; models: ModelOption[]; onChange: (value: string) => void }) {
@@ -39,7 +40,7 @@ export function VolunteersFilters({ searchTerm, filterModel, filterStatus, model
     {filterModel !== 'all' && <div className="active-filter-row"><span>Model: {activeModel ? formatModelLabel(activeModel) : 'Selected model'}</span><Button variant="ghost" size="sm" onClick={() => onModelChange('all')} aria-label="Clear model filter"><X size={14} aria-hidden="true" />Clear</Button></div>}
     {selectedIdsCount > 0 && <div className="roster-selection-bar" aria-label="Selected volunteer actions">
       <div><strong>{selectedIdsCount} selected</strong><small>Selection is retained across pages and filters.</small></div>
-      <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={onPrintSelected}><Printer size={15} aria-hidden="true" />Print selected</Button><Button variant="outline" size="sm" onClick={onBulkApprove}><CheckCircle size={15} aria-hidden="true" />Approve selected</Button>
+      <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={onPrintSelected}><Printer size={15} aria-hidden="true" />Print selected</Button><AsyncButton variant="outline" size="sm" onClick={onBulkApprove} busyLabel="Approving…"><CheckCircle size={15} aria-hidden="true" />Approve selected</AsyncButton>
         <AlertDialog><AlertDialogTrigger render={<Button variant="ghost" size="sm" className="text-destructive" />}><Trash2 size={15} aria-hidden="true" />Delete</AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete selected volunteers?</AlertDialogTitle><AlertDialogDescription>This permanently deletes {selectedIdsCount} selected volunteer records, including any selected on other pages. This cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={onBulkDelete}>Delete {selectedIdsCount} records</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
         {onClearSelection && <Button variant="ghost" size="sm" onClick={onClearSelection}>Clear selection</Button>}
       </div>

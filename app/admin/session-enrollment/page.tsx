@@ -18,6 +18,7 @@ import { getModelsDataAction } from '@/app/admin/models/actions.server'
 import { formatSessionLabel, formatModelLabel, formatVolunteerLabel } from '@/lib/formatters'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { AsyncButton } from '@/components/ui/async-button'
 
 export default function SessionEnrollmentPage() {
   const [mobileView, setMobileView] = useState<'available' | 'enrolled'>('available')
@@ -167,7 +168,7 @@ export default function SessionEnrollmentPage() {
     try {
         const res = await enrollVolunteersAction(selectedSessionId, selectedVolunteers)
         if (res?.error) throw new Error(res.error)
-        toast.success(`Successfully enrolled ${selectedVolunteers.length} volunteer(s)`)
+        toast.success('Session assignments saved', { description: `${selectedVolunteers.length} ${selectedVolunteers.length === 1 ? 'volunteer was' : 'volunteers were'} enrolled in the selected session.` })
         setSelectedVolunteers([])
         fetchEnrollments() // This will also trigger searchVolunteers to refresh the list
     } catch (err: any) {
@@ -179,7 +180,7 @@ export default function SessionEnrollmentPage() {
     try {
         const res = await removeEnrollmentAction(enrollmentId)
         if (res?.error) throw new Error(res.error)
-        toast.success('Volunteer removed from session')
+        toast.success('Session assignment removed', { description: 'The volunteer profile remains in the roster.' })
         fetchEnrollments()
     } catch (err: any) {
         toast.error(err.message || 'Failed to remove')
@@ -271,14 +272,15 @@ export default function SessionEnrollmentPage() {
                       })()}
                     </Button>
 
-                    <Button 
+                    <AsyncButton
                       size="sm" 
                       onClick={handleBulkEnroll} 
+                      busyLabel="Enrolling…"
                       disabled={selectedVolunteers.length === 0}
                       className="h-8 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20"
                     >
                       Enroll Selected
-                    </Button>
+                    </AsyncButton>
                   </div>
                 </div>
               </CardHeader>
@@ -420,15 +422,16 @@ export default function SessionEnrollmentPage() {
                             {e.volunteer?.full_name}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button 
+                            <AsyncButton
                               variant="ghost" 
                               size="icon-sm" 
                               onClick={() => handleRemove(e.id)} 
+                              busyLabel=""
                               className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
                               aria-label="Remove enrollment"
                             >
                               <Trash2 className="w-4 h-4" />
-                            </Button>
+                            </AsyncButton>
                           </TableCell>
                         </TableRow>
                       ))}

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Inter, Geist_Mono, Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 import "./workspace.css";
+import "./notifications.css";
 import { Toaster } from "@/components/ui/sonner";
 import { PWAInstaller } from "@/components/PWAInstaller";
 import { ThemeProvider } from "@/components/ThemeProvider";
