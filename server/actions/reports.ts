@@ -160,7 +160,7 @@ export async function getRegisteredChildrenReportData() {
 
   const { data: children, error } = await supabase
     .from('children')
-    .select(`id, qr_id, name, contact_number, created_at, session:sessions(name)`)
+    .select(`id, qr_id, name, contact_number, status, checked_in_at, checked_out_at, created_at, session:sessions(name)`)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -180,11 +180,15 @@ export async function getRegisteredChildrenReportData() {
   }) || []
 
   const total = enrichedChildren.length
+  const checkedIn = enrichedChildren.filter(c => c.status === 'Checked In').length
+  const checkedOut = enrichedChildren.filter(c => c.status === 'Checked Out').length
   
   return {
     data: enrichedChildren,
     stats: [
-      { label: 'Total Registered Children', value: total }
+      { label: 'Total Registered Children', value: total },
+      { label: 'Checked In', value: checkedIn },
+      { label: 'Checked Out', value: checkedOut }
     ]
   }
 }

@@ -97,16 +97,19 @@ export default function AdminReportsPage() {
       if (type === 'children') {
         const res = await getRegisteredChildrenReportData()
         if (res.error) throw new Error(res.error)
-        headers = ['Serial No', 'Name', 'Contact', 'Session', 'Registered At']
+        headers = ['Serial No', 'Name', 'Contact', 'Session', 'Status', 'Check-In', 'Check-Out', 'Registered At']
         rows = res.data!.map(c => [
           c.serial_number || 'N/A',
           c.name,
           c.contact_number || 'N/A',
           c.session_name || 'N/A',
+          c.status || 'Registered',
+          c.checked_in_at ? new Date(c.checked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
+          c.checked_out_at ? new Date(c.checked_out_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
           new Date(c.created_at).toLocaleString()
         ])
         title = 'Registered Children Directory'
-        subtitle = 'List of all children registered via QR stickers'
+        subtitle = 'List of all children registered via QR stickers with attendance records'
         filename = 'Registered_Children_Report'
         themeColor = [139, 92, 246] // purple/lavender
         stats = res.stats
