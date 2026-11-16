@@ -69,13 +69,22 @@ export default function HeadReportsPage() {
         v.models?.name || ''
     ])
 
+    const approved = volunteers.filter(v => v.status === 'Approved').length
+    const pending = volunteers.filter(v => v.status === 'Pending').length
+    const modelsCount = new Set(volunteers.map(v => v.models?.name).filter(Boolean)).size
+
     exportToPDF({
       title: 'Division Volunteers Report',
-      subtitle: 'Official list of volunteers assigned to your models',
+      subtitle: 'Official list of volunteers assigned to your supervised exhibition models',
       filename: 'Division_Report.pdf',
       headers,
       data: rows,
-      themeColor: [59, 130, 246]
+      summaryStats: [
+        { label: 'Assigned Volunteers', value: volunteers.length },
+        { label: 'Approved', value: approved },
+        { label: 'Pending Review', value: pending },
+        { label: 'Active Models', value: modelsCount }
+      ]
     })
   }
 

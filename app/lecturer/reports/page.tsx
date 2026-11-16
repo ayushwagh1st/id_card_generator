@@ -106,14 +106,22 @@ export default function LecturerReportsPage() {
         r.status || 'Present'
     ])
 
+    const presentCount = attendanceRecords.filter(r => (r.status || 'Present').toLowerCase() === 'present').length
+    const lateCount = attendanceRecords.filter(r => (r.status || '').toLowerCase() === 'late').length
+
     exportToPDF({
-        title: `Attendance: ${sessionName}`,
-        subtitle: `Official attendance records logged for ${session?.date || 'Session'}`,
-        filename: `${sessionName.replace(/\s+/g, '_')}_Attendance.pdf`,
-        headers,
-        data: rows,
-        themeColor: [59, 130, 246]
-      })
+      title: `Attendance: ${sessionName}`,
+      subtitle: `Official attendance records logged for ${session?.date || 'Session'} • ${session?.venue || 'Venue'}`,
+      filename: `${sessionName.replace(/\s+/g, '_')}_Attendance.pdf`,
+      headers,
+      data: rows,
+      summaryStats: [
+        { label: 'Total Attendees', value: attendanceRecords.length },
+        { label: 'Present', value: presentCount },
+        { label: 'Late Arrival', value: lateCount },
+        { label: 'Venue Location', value: session?.venue || 'Main Hall' }
+      ]
+    })
   }
 
   return (

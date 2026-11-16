@@ -189,13 +189,20 @@ export default function LecturersPage() {
         l.mobile || 'N/A',
         l.status || 'Active'
     ])
+    const activeCount = lecturers.filter((l: any) => l.status === 'Active').length
+    const inactiveCount = lecturers.filter((l: any) => l.status === 'Inactive').length
+
     exportToPDF({
       title: 'Security Directory',
-      subtitle: 'Complete list of all registered security personnel',
+      subtitle: 'Official roster of authorized security personnel and access officers',
       filename: 'Security_Directory.pdf',
       headers,
       data: rows,
-      themeColor: [59, 130, 246] // Blue
+      summaryStats: [
+        { label: 'Total Personnel', value: lecturers.length },
+        { label: 'Active Staff', value: activeCount },
+        { label: 'Inactive', value: inactiveCount }
+      ]
     })
   }
 

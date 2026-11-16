@@ -329,13 +329,22 @@ export function useVolunteersState() {
       v.models?.name || 'N/A',
     ])
 
+    const approvedCount = state.volunteers.filter(v => v.status === 'Approved').length
+    const pendingCount = state.volunteers.filter(v => v.status === 'Pending').length
+    const assignedCount = state.volunteers.filter(v => v.models?.name).length
+
     exportToPDF({
       title: 'Volunteers Directory',
-      subtitle: 'Official list of all registered volunteers',
+      subtitle: 'Official roster of registered volunteers, status approvals, and model assignments',
       filename: 'Volunteers_Directory.pdf',
       headers,
       data: rows,
-      themeColor: [79, 70, 229], // Indigo
+      summaryStats: [
+        { label: 'Total Volunteers', value: state.totalCount || state.volunteers.length },
+        { label: 'Approved', value: approvedCount },
+        { label: 'Pending Review', value: pendingCount },
+        { label: 'Assigned to Model', value: assignedCount }
+      ]
     })
   }
 

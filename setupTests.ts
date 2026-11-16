@@ -83,6 +83,9 @@ vi.mock('@/lib/email', () => ({ sendRegistrationEmail: vi.fn(async () => ({ succ
 
 // Provide a mock for jsPDF
 const mockSave = vi.fn()
+const mockLine = vi.fn()
+const mockRoundedRect = vi.fn()
+const mockSetPage = vi.fn()
 
 vi.mock('jspdf', () => {
   return {
@@ -97,8 +100,13 @@ vi.mock('jspdf', () => {
       text = vi.fn()
       setDrawColor = vi.fn()
       setLineWidth = vi.fn()
-      roundedRect = vi.fn()
+      roundedRect = mockRoundedRect
       save = mockSave
+      line = mockLine
+      getTextWidth = vi.fn(() => 20)
+      splitTextToSize = vi.fn((text: string) => (Array.isArray(text) ? text : [text]))
+      getNumberOfPages = vi.fn().mockReturnValue(1)
+      setPage = mockSetPage
       internal = {
         getNumberOfPages: vi.fn().mockReturnValue(1),
         pageSize: { width: 297, height: 210 },

@@ -171,13 +171,20 @@ export default function HeadVolunteersPage() {
       v.models?.name || 'N/A'
     ])
 
+    const approvedCount = state.volunteers.filter((v: any) => v.status === 'Approved').length
+    const pendingCount = state.volunteers.filter((v: any) => v.status === 'Pending').length
+
     exportToPDF({
       title: 'My Volunteers Directory',
-      subtitle: 'Official list of all registered volunteers in my models',
+      subtitle: 'Official list of all registered volunteers in my supervised models',
       filename: 'My_Volunteers_Directory.pdf',
       headers,
       data: rows,
-      themeColor: [249, 115, 22] // Orange theme
+      summaryStats: [
+        { label: 'Total Supervised', value: state.volunteers.length },
+        { label: 'Approved', value: approvedCount },
+        { label: 'Pending Review', value: pendingCount }
+      ]
     })
   }
 

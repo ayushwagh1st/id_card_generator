@@ -186,13 +186,20 @@ export default function SessionsPage() {
         `${s.start_time} - ${s.end_time}`,
         s.status || ''
     ])
+    const activeSessionsCount = sessions.filter((s: any) => s.status === 'Ongoing' || s.status === 'Scheduled').length
+    const completedSessionsCount = sessions.filter((s: any) => s.status === 'Completed').length
+
     exportToPDF({
       title: 'Sessions Directory',
-      subtitle: 'Complete list of all scheduled sessions',
+      subtitle: 'Official record of scheduled training workshops and venue allocations',
       filename: 'Sessions_Directory.pdf',
       headers,
       data: rows,
-      themeColor: [16, 185, 129] // Emerald
+      summaryStats: [
+        { label: 'Total Sessions', value: sessions.length },
+        { label: 'Active / Scheduled', value: activeSessionsCount },
+        { label: 'Completed', value: completedSessionsCount }
+      ]
     })
   }
 

@@ -168,13 +168,20 @@ export default function ModelsPage() {
         m.profiles?.full_name || 'Unassigned',
         m.status || 'Active'
     ])
+    const activeCount = state.models.filter((m: any) => m.status === 'Active').length
+    const assignedHeadsCount = state.models.filter((m: any) => m.profiles?.full_name).length
+
     exportToPDF({
-      title: 'Exhibition Models',
-      subtitle: 'Complete list of all models and their assigned heads',
+      title: 'Exhibition Models Directory',
+      subtitle: 'Official allocation of exhibition models, zones, and supervising heads',
       filename: 'Exhibition_Models.pdf',
       headers,
       data: rows,
-      themeColor: [147, 51, 234] // Purple
+      summaryStats: [
+        { label: 'Total Models', value: state.models.length },
+        { label: 'Active Zones', value: activeCount },
+        { label: 'Assigned Leads', value: assignedHeadsCount }
+      ]
     })
   }
 
