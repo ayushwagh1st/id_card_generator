@@ -8,7 +8,7 @@ export async function getVolunteerReportData() {
 
   const { data: volunteers, error } = await supabase
     .from('volunteers')
-    .select(`id, snk_id, full_name, mobile_number, age, gender, model_id, status, designation, branch, accommodation, duty_timing, created_at`)
+    .select('*')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -18,16 +18,18 @@ export async function getVolunteerReportData() {
 
   const { data: models } = await supabase.from('models').select('id, name')
 
-  const enrichedVolunteers = volunteers?.map(v => {
+  const enrichedVolunteers = (volunteers || []).map(v => {
     const assignedModel = Array.isArray(models) ? models.find(m => m.id === v.model_id) : undefined
+    const roleValue = v.role || (v as any).designation || 'Volunteer'
     return {
       ...v,
       status: v.status || 'Pending',
-      designation: v.designation || 'Volunteer',
+      role: roleValue,
+      designation: roleValue,
       branch: v.branch || 'General',
       models: { name: assignedModel?.name || 'Unassigned' }
     }
-  }) || []
+  })
 
   const total = enrichedVolunteers.length
   const approved = enrichedVolunteers.filter(v => v.status === 'Approved').length

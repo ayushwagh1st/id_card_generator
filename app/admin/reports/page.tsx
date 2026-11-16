@@ -177,12 +177,12 @@ export default function AdminReportsPage() {
       } else if (type === 'volunteers') {
         const res = await getVolunteerReportData()
         if (res.error) throw new Error(res.error)
-        headers = ['SNK ID', 'Full Name', 'Mobile', 'Designation / Role', 'Branch', 'Assigned Model', 'Accomm.', 'Status']
+        headers = ['SNK ID', 'Full Name', 'Mobile', 'Role', 'Branch', 'Assigned Model', 'Accomm.', 'Status']
         rows = (res.data || []).map(v => [
           v.snk_id || 'N/A',
           v.full_name,
           v.mobile_number || 'N/A',
-          v.designation || 'Volunteer',
+          v.role || (v as any).designation || 'Volunteer',
           v.branch || 'General',
           (Array.isArray(v.models) ? v.models[0]?.name : (v.models as any)?.name) || 'Unassigned',
           v.accommodation === true || String(v.accommodation).toLowerCase() === 'yes' ? 'Yes' : 'No',
